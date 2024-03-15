@@ -24,7 +24,7 @@ public:
     Point head = Point(0.0l, 0.0l, 0.0l);
     Point tail = BigO;
 
-    Vec(Point, Point);
+    Vec(Point origin, Point direction);
     explicit Vec(Point);
 
     //explicit Vec(Ray &ray);
@@ -34,11 +34,15 @@ public:
     [[maybe_unused]] [[nodiscard]] Vec getNormalized() const;
 
     Vec operator*(const double multiplier) const {
-        Point result = this->tail;
-        result.x *= multiplier;
-        result.y *= multiplier;
-        result.z *= multiplier;
-        return Vec(result);
+        Point t_direction = this->tail;
+        t_direction.x *= multiplier;
+        t_direction.y *= multiplier;
+        t_direction.z *= multiplier;
+        Point t_origin = this->head;
+        t_origin.x *= multiplier;
+        t_origin.y *= multiplier;
+        t_origin.z *= multiplier;
+        return Vec(t_origin, t_direction);
     }
     Point operator+(const Point& point) const {
         Point result = this->tail;

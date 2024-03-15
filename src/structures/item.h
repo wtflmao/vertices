@@ -5,17 +5,16 @@
 #ifndef VERTICES_ITEM_H
 #define VERTICES_ITEM_H
 
+#include "triangle.h"
 #include <vector>
 #include <string>
-#include "triangle.h"
 
 class Item {
 private:
-
     std::vector<Triangle> faces;
-    bool isNilItem = false;
-public:
+    std::vector<Point> vertices;
 
+public:
     /*
      * Ns 10.0000000: 镜面指数为10.0,控制镜面高光的尖锐程度。
      * Ni 1.5000000: 折射指数为1.5。
@@ -43,14 +42,12 @@ public:
     std::string map_Ka = "F22.jpg";
     std::string map_Kd = "F22.jpg";
 
-    explicit Item(bool nilItem);
     [[nodiscard]] const std::vector<Triangle> &getFaces() const;
-
+    [[nodiscard]] const std::vector<Point> &getVertices() const;
     std::vector<Triangle> &getMutFaces();
+    std::vector<Point> &getMutVertices();
 
-    [[nodiscard]] bool isNil() const;
+    Item();
 };
-
-//Item NIL = Item(true);
 
 #endif //VERTICES_ITEM_H

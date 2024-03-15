@@ -19,18 +19,14 @@ private:
 
 public:
     Ray(const Point &origin, const Vec &direction);
-    explicit Ray(Point);
+    explicit Ray(const Point& direction);
 
     [[nodiscard]] Vec crossVec(const Vec& vec) const;
     [[nodiscard]] double dotVec(const Vec& vec) const;
-    //[[nodiscard]] Point intersects(const Triangle& tri) const;
     [[nodiscard]] const Point& getOrigin() const;
     [[nodiscard]] const Vec& getDirection() const;
-
-    //[[nodiscard]] Point intersects2(const Triangle &tri) const;
     [[nodiscard]] Point mollerTrumboreIntersection(const Triangle &tri) const;
 };
 
-//const Ray BigRay = ;
 
 #endif //VERTICES_RAY_H

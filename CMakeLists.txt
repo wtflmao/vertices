@@ -14,14 +14,18 @@ add_executable(vertices main.cpp
         src/structures/vec.h
         src/structures/item.cpp
         src/structures/item.h
-        src/io/readObj.cpp
-        src/io/readObj.h
+        src/io/readLines.cpp
+        src/io/readLines.h
         src/io/readFace.cpp
         src/io/readFace.h
         src/io/readVertex.cpp
         src/io/readVertex.h
         src/io/readTexture.cpp
         src/io/readTexture.h
-        src/io/readers.h
+        src/io/readNewItem.h
         src/common.h
+        src/io/readMtl.cpp
+        src/io/readMtl.h
+        src/io/readNewItem.cpp
+        main.h
 )

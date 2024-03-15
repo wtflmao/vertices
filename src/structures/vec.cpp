@@ -2,7 +2,6 @@
 // Created by root on 2024/3/13.
 //
 
-#include <valarray>
 #include "vec.h"
 
 // Constructor
@@ -60,28 +59,3 @@ double Vec::getLength() const {
 double Vec::dot(const Vec &other) const {
     return this->tail.x * other.tail.x + this->tail.y * other.tail.y + this->tail.z * other.tail.z;
 }
-
-/*Point Vec::intersects(const Triangle& tri) const {
-    // Implement the Möller-Trumbore intersection algorithm here
-    // Return true if the ray intersects the triangle, false otherwise
-
-
-    // Compute the normal vector of the triangle
-    // Compute the distance from the head to the plane of the triangle
-    double dist = tri.getNormal().dot(Vec(origin, tri.v0));
-
-    // Check if the ray intersects the plane
-    if (dist <= 1e-6) {
-        return Point{DBL_MAX, DBL_MAX, DBL_MAX}; // No intersection
-    }
-
-    // Compute the intersection point with the plane
-    Point intersection = Vec(direction) * dist + origin;
-
-    // Check if the intersection point is inside the triangle
-    if (!tri.is_inside_triangle(intersection)) {
-        return Point{DBL_MAX, DBL_MAX, DBL_MAX}; // No intersection
-    }
-
-    return intersection;
-}*/

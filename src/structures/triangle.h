@@ -11,19 +11,20 @@
 
 class Triangle {
 private:
+
+
     Vec normal = Vec(BigO, BigO);
 
 public:
     Point v0 = BigO, v1 = BigO, v2 = BigO;
 
-    Triangle(Point, Point, Point);
-    [[nodiscard]] Vec getNormal() const;
-
-    void setNormalVec(Vec n);
-
+    [[nodiscard]] const Vec & getNormal() const;
+    void setNormalVec(Vec& n);
     void updateNormalVec();
-
-    [[nodiscard]] bool is_inside_triangle(const Point &p) const;
+    Triangle(const Point &v0, const Point &v1, const Point &v2);
+    Triangle(const Point &v0, const Point &v1, const Point &v2, Vec &n);
+    Triangle();
+    [[maybe_unused]] [[nodiscard]] bool is_inside_triangle(const Point &p) const;
 };
 
 

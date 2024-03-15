@@ -2,18 +2,15 @@
 // Created by root on 2024/3/13.
 //
 
-#include <valarray>
 #include "ray.h"
-#include <cfloat>
 
 // Constructor
 Ray::Ray(const Point& origin, const Vec& direction)
     : origin(origin), direction(direction) {
 
 }
-Ray::Ray(Point direction)
-    : origin(Point(0.0l, 0.0l, 0.0l)),      // Explaining Variable
-        direction(Vec(direction)) {
+Ray::Ray(const Point& direction)
+    : direction(Vec(direction)) {
 
 }
 
@@ -51,32 +48,42 @@ Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
     Vec pvec = this->crossVec(edge2);
     det = edge1.dot(pvec);
 
-    if (det > -1e-6 && det < 1e-6) {
-        return intersection; // Ray is parallel to the triangle, no intersection
-    }
+    // Check if ray is parallel to triangle
+    if (det > -(1e-6) && det < 1e-6) {
+        // Ray is parallel to the triangle, no intersection
+        return intersection; }
 
+    // Calculate distance from v0 to ray origin
     inv_det = 1.0 / det;
-
     Vec tvec = Vec(tri.v0, this->origin);
     u = tvec.dot(pvec) * inv_det;
 
-    if (u < 0.0 || u > 1.0){
-        return intersection; // The intersection lies outside of the triangle DBL_MAX
+    // Check if intersection point is outside the first edge
+    if (u < 0.0 || u > 1.0) {
+        // The intersection lies outside of the first edge
+        return intersection;
     }
 
+    // Prepare to test the second edge
     auto qvec = tvec.cross(edge1);
     v = this->dotVec(qvec) * inv_det;
 
-    if (v < 0.0 || u + v > 1.0) {
-        return intersection; // The intersection lies outside of the triangle DBL_MAX
+    // Check if intersection point is outside the second edge
+    if (v < 0 || u + v > 1.0) {
+        // The intersection lies outside of the triangle 2nd egde
+        return intersection;
     }
 
+    // Compute the t value for the intersection point
     t = edge2.dot(qvec) * inv_det;
 
-    if (t > 1e-6) {
-        intersection = this->direction * t + this->origin;
-        return intersection; // Ray intersect the triangle
+    // Check if the intersection point is behind the ray
+    if (t < 0.0) {
+        // The intersection lies behind the ray
+        return intersection;
     }
 
+    // Intersection point is t distance away from ray origin in direction of ray
+    intersection = this->direction * t + this->origin;
     return intersection;
 }

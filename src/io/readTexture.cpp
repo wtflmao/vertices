@@ -4,6 +4,6 @@
 
 #include "readTexture.h"
 
-void processTexture(const char* line, ptr<Item>&) {
-    // todo: process texture
+void processTexture(const char* line, Item& p) {
+    // nah, we don't do textures
 }
