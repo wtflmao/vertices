@@ -2,16 +2,14 @@
 // Created by root on 2024/3/15.
 //
 
-#include "readers.h"
-#include "../structures/item.h"
+#include "readObj.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <memory>
 #include <cctype>
 
 // a dummy function
-void processLine(const char* line) {
+void processLine(const char* line, ptr<Item>& p_item) {
     if (line == nullptr) {
         return;
     }
@@ -37,13 +35,13 @@ void processLine(const char* line) {
 
     // to check if it is a vertex
     if (line[0] == 'v' && line[1] == ' ') {
-        processVertex(line);
+        processVertex(line, p_item);
         return;
     }
 
     // to check if it is a face
     if (line[0] == 'f' && line[1] == ' ') {
-        processFace(line);
+        processFace(line, p_item);
         return;
     }
 
@@ -56,7 +54,7 @@ void processLine(const char* line) {
 
     // to check if it is a texture
     if (line[0] == 'v' && line[1] == 't' && line[2] == ' ') {
-        processTexture(line);
+        processTexture(line, p_item);
         return;
     }
 
@@ -65,7 +63,8 @@ void processLine(const char* line) {
 // We use C style I/O cuz it may faster than the C++ one
 // even if we use std::ios::sync_with_stdio(false);
 std::unique_ptr<Item> readAndPass(const char *filename) {
-    auto nilPtr = std::make_unique<Item>(true);
+    auto nilPtr = make_ptr<Item>(true);
+    auto item = make_ptr<Item>(false);
     FILE *fp = fopen(filename, "rt");
     if (fp == nullptr) {
         fprintf(stderr, "Cannot open %s\a\n", filename);
@@ -96,18 +95,19 @@ std::unique_ptr<Item> readAndPass(const char *filename) {
 
     char line[MAX_LINE_LENGTH] = {0};
     int count = 0;
-    auto itemPtr = std::make_unique<Item>(false);
 
     while (fgets(line, sizeof(line), fp)) {
         // replace all \r to \0 so we can no longer care about if it is CRLF or LF
         char *p = strchr(line, '\r');
         if (p) *p = '\0';
-        processLine(line);
+        // pass the reference to the call, without losing the ownership to that unique_ptr
+        // sounds like something in Rust? OWNERSHIP!
+        processLine(line, item);
         count++;
     }
 
     fclose(fp);
     fprintf(stdout, "Processed %d lines from %s\n", count, filename);
-    return itemPtr;
+    return item;
 }
 

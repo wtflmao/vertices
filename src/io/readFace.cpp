@@ -4,6 +4,6 @@
 
 #include "readFace.h"
 
-void processFace(const char* line) {
+void processFace(const char* line, ptr<Item>& ptr) {
     // todo: process face
 }

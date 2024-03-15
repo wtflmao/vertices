@@ -5,6 +5,9 @@
 #ifndef VERTICES_READFACE_H
 #define VERTICES_READFACE_H
 
-void processFace(const char*);
+#include "readers.h"
+#include "../structures/item.h"
+
+void processFace(const char*, ptr<Item>&);
 
 #endif //VERTICES_READFACE_H

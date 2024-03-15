@@ -4,6 +4,6 @@
 
 #include "readVertex.h"
 
-void processVertex(const char* line) {
+void processVertex(const char* line, ptr<Item>&) {
     // todo: process vertex
 }

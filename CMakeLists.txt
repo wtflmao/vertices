@@ -23,4 +23,5 @@ add_executable(vertices main.cpp
         src/io/readTexture.cpp
         src/io/readTexture.h
         src/io/readers.h
+        src/common.h
 )

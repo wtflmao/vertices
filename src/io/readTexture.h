@@ -5,6 +5,9 @@
 #ifndef VERTICES_READTEXTURE_H
 #define VERTICES_READTEXTURE_H
 
-void processTexture(const char*);
+#include "readers.h"
+#include "../structures/item.h"
 
-#endif
+void processTexture(const char*, ptr<Item>&);
+
+#endif //VERTICES_READTEXTURE_H

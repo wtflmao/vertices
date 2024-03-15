@@ -5,9 +5,7 @@
 #ifndef VERTICES_READERS_H
 #define VERTICES_READERS_H
 
-#include "readFace.h"
-#include "readTexture.h"
-#include "readVertex.h"
-#include "readObj.h"
+#include "../common.h"
+
 
 #endif //VERTICES_READERS_H
