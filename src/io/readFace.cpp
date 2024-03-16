@@ -7,21 +7,37 @@
 void processFace(const char* line, Item& p) {
     /*
      * example:
-     * f 5/1/1 3/2/1 1/3/1
-     *   vertex / texcoord / normal
+     * f  5/1/1 3/2/1 1/3/1
+     * f  vertex/texcoord/normal  vertex/texcoord/normal  vertex/texcoord/normal
+     *
+     * f  1/3 2/6 9/8
+     * f  vertex/texcoord  vertex/texcoord  vertex/texcoord
+     *
+     * f  3 4 10
+     * f  vertex  vertex  vertex
      */
 
-    // we assume it always like f 1/2/3 4/5/6 7/8/9
-    // rather than f 1 2 3
-    // and here we don't care about textures
+    // we don't care about textures
     const std::vector<Point>& p_v = p.getVertices();
-    //std::cout<<"p_v.size"<<p_v.size()<<std::endl;
     std::vector<Triangle>& p_f = p.getMutFaces();
     p_f.emplace_back();
-    //std::cout<<"p_f.size"<<p_f.size()<<std::endl;
     Triangle& p_t = p_f.back();
     int v_i[3] = {0};
-    sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+
+    int count = 0;
+    for (int i = 0; line[i] != '\0'; i++) {
+        if (line[i] == '/') {
+            count++;
+        }
+    }
+
+    if (count == 6) {
+        sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+    } else if (count == 3) {
+        sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+    } else {
+        sscanf(line, "f %d %d %d", &v_i[0], &v_i[1], &v_i[2]);
+    }
     v_i[0]--;
     v_i[1]--;
     v_i[2]--;

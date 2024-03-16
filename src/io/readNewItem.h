@@ -11,8 +11,8 @@
 #include <cstdio>
 #include <cstring>
 
-#define MAX_FILE_SIZE (100 * 1024 * 1024)
-#define MAX_LINE_LENGTH 64
+constexpr size_t MAX_FILE_SIZE (4LL * 100LL * 1024LL * 1024LL);
+constexpr size_t MAX_LINE_LENGTH (64);
 
 void processLine(const char* line, Item& p_item);
 
