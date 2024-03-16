@@ -28,4 +28,8 @@ add_executable(vertices main.cpp
         src/io/readMtl.h
         src/io/readNewItem.cpp
         main.h
+        src/structures/box.cpp
+        src/structures/box.h
+        src/structures/field.cpp
+        src/structures/field.h
 )
