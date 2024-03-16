@@ -21,6 +21,9 @@ void Triangle::setNormalVec(Vec& n) {
 
 void Triangle::updateNormalVec() {
     normal = Vec(v0, v1).cross(Vec(v0, v2));
+    if (normal.dot(Vec(v0, v1)) < 0) {
+        normal *= -1;
+    }
 }
 
 const Vec & Triangle::getNormal() const {

@@ -35,13 +35,9 @@ public:
 
     Vec operator*(const double multiplier) const {
         Point t_direction = this->tail;
-        t_direction.x *= multiplier;
-        t_direction.y *= multiplier;
-        t_direction.z *= multiplier;
+        t_direction *= multiplier;
         Point t_origin = this->head;
-        t_origin.x *= multiplier;
-        t_origin.y *= multiplier;
-        t_origin.z *= multiplier;
+        t_origin *= multiplier;
         return Vec(t_origin, t_direction);
     }
     Point operator+(const Point& point) const {
@@ -57,6 +53,13 @@ public:
         head = vec.head;
         tail = vec.tail;
         length = vec.length;
+        return *this;
+    }
+
+    // invert the vector
+    Vec& operator*=(const double multiplier) {
+        this->head *= multiplier;
+        this->tail *= multiplier;
         return *this;
     }
 };

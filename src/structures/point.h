@@ -26,6 +26,12 @@ public:
         z -= otherPoint.z;
         return *this;
     }
+    Point& operator*=(const double multiplier) {
+        x *= multiplier;
+        y *= multiplier;
+        z *= multiplier;
+        return *this;
+    }
     bool operator==(const Point& otherPoint) const {
         double epsilon = 1e-6;
         return std::abs(this->x - otherPoint.x) < epsilon && std::abs(this->y - otherPoint.y) < epsilon && std::abs(this->z - otherPoint.z) < epsilon;
