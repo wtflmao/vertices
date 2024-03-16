@@ -8,11 +8,15 @@
 #include "triangle.h"
 #include <vector>
 #include <string>
+#include <array>
 
 class Item {
 private:
     std::vector<Triangle> faces;
     std::vector<Point> vertices;
+    std::array<double, 3> scaleFactor = {1.0, 1.0, 1.0};
+    // This center should be the center AFTER applied the zoom factor
+    Point center = BigO;
 
 public:
     /*
@@ -48,6 +52,10 @@ public:
     std::vector<Point> &getMutVertices();
 
     Item();
+    [[nodiscard]] const std::array<double, 3>& getScaleFactor() const noexcept;
+    [[nodiscard]] const Point &getCenter() const noexcept;
+    void setScaleFactor(std::array<double, 3>& factor) noexcept;
+    void setCenter(Point &pos) noexcept;
 };
 
 #endif //VERTICES_ITEM_H

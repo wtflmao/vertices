@@ -11,6 +11,7 @@
 #include "src/structures/item.h"
 
 #include <iostream>
+#include <array>
 
 bool readNewItem(const char *filename, Item& item);
 
