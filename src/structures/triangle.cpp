@@ -5,28 +5,30 @@
 #include "triangle.h"
 
 // using member initialization list
-Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2): v0(v0), v1(v1), v2(v2) {
-    updateNormalVec();
+Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2) noexcept
+    : v0(v0), v1(v1), v2(v2) {
+        updateNormalVec();
 }
 
-Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2, Vec &n): v0(v0), v1(v1), v2(v2) {
-    setNormalVec(n);
+Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2, Vec &n) noexcept
+    : v0(v0), v1(v1), v2(v2) {
+        setNormalVec(n);
 }
 
-Triangle::Triangle() = default;
+Triangle::Triangle() noexcept = default;
 
-void Triangle::setNormalVec(Vec& n) {
+void Triangle::setNormalVec(Vec& n) noexcept {
     normal = n;
 }
 
-void Triangle::updateNormalVec() {
+void Triangle::updateNormalVec() noexcept {
     normal = Vec(v0, v1).cross(Vec(v0, v2));
     if (normal.dot(Vec(v0, v1)) < 0) {
         normal *= -1;
     }
 }
 
-const Vec & Triangle::getNormal() const {
+const Vec & Triangle::getNormal() const noexcept {
     return normal;
 }
 

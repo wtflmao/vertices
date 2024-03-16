@@ -5,19 +5,19 @@
 #include "vec.h"
 
 // Constructor
-[[maybe_unused]] Vec::Vec(Point direction, double len) {
+[[maybe_unused]] Vec::Vec(Point direction, double len) noexcept {
     this->tail = direction;
     setLength(len);
 }
 // Constructor, but make head at (0, 0, 0)
-Vec::Vec(Point origin, Point direction) {
+Vec::Vec(Point origin, Point direction) noexcept {
     const double v[3] = {direction.x - origin.x, direction.y - origin.y, direction.z - origin.z};
     this->tail = Point(v[0], v[1], v[2]);
     this->updateLength();
 }
 
 // Constructor
-Vec::Vec(Point direction) {
+Vec::Vec(Point direction) noexcept {
     this->tail = direction;
     this->updateLength();
 }
@@ -28,27 +28,27 @@ Vec::Vec(Point direction) {
     setLength(tmp.getLength());
 }*/
 
-void Vec::updateLength() {
+void Vec::updateLength() noexcept {
     const double v[3] = {tail.x - head.x, tail.y - head.y, tail.z - head.z};
     setLength(sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]));
 }
 
-void Vec::setLength(double len) {
+void Vec::setLength(double len) noexcept {
     this->length = len;
 }
 
-double Vec::getLength() const {
+double Vec::getLength() const noexcept {
     return this->length;
 }
 
 
 
-[[maybe_unused]] Vec Vec::getNormalized() const {
+[[maybe_unused]] Vec Vec::getNormalized() const noexcept {
     return Vec(Point(tail.x / getLength(), tail.y / getLength(), tail.z / getLength()));
 }
 
 // Cross product: self x other
-[[maybe_unused]] Vec Vec::cross(const Vec &other) const {
+[[maybe_unused]] Vec Vec::cross(const Vec &other) const noexcept {
     const double v[3] = {this->tail.y * other.tail.z - this->tail.z * other.tail.y,
                          this->tail.z * other.tail.x - this->tail.x * other.tail.z,
                          this->tail.x * other.tail.y - this->tail.y * other.tail.x};
@@ -56,6 +56,6 @@ double Vec::getLength() const {
 }
 
 // Dot product: self . other
-double Vec::dot(const Vec &other) const {
+double Vec::dot(const Vec &other) const noexcept {
     return this->tail.x * other.tail.x + this->tail.y * other.tail.y + this->tail.z * other.tail.z;
 }

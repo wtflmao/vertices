@@ -46,10 +46,10 @@ public:
     std::string map_Ka = "F22.jpg";
     std::string map_Kd = "F22.jpg";
 
-    [[nodiscard]] const std::vector<Triangle> &getFaces() const;
-    [[nodiscard]] const std::vector<Point> &getVertices() const;
-    std::vector<Triangle> &getMutFaces();
-    std::vector<Point> &getMutVertices();
+    [[nodiscard]] const std::vector<Triangle> &getFaces() const noexcept;
+    [[nodiscard]] const std::vector<Point> &getVertices() const noexcept;
+    std::vector<Triangle> &getMutFaces() noexcept;
+    std::vector<Point> &getMutVertices() noexcept;
 
     Item();
     [[nodiscard]] const std::array<double, 3>& getScaleFactor() const noexcept;

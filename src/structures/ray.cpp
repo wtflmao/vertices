@@ -5,25 +5,25 @@
 #include "ray.h"
 
 // Constructor
-Ray::Ray(const Point& origin, const Vec& direction)
+Ray::Ray(const Point& origin, const Vec& direction) noexcept
     : origin(origin), direction(direction) {
 
 }
-Ray::Ray(const Point& direction)
+Ray::Ray(const Point& direction) noexcept
     : direction(Vec(direction)) {
 
 }
 
-const Point& Ray::getOrigin() const {
+const Point& Ray::getOrigin() const noexcept {
     return this->origin;
 }
 
-const Vec& Ray::getDirection() const {
+const Vec& Ray::getDirection() const noexcept {
     return this->direction;
 }
 
 // Cross product: self x other
-[[maybe_unused]] [[maybe_unused]] Vec Ray::crossVec(const Vec &other) const {
+[[maybe_unused]] [[maybe_unused]] Vec Ray::crossVec(const Vec &other) const noexcept {
     const double v[3] = {this->direction.tail.y*other.tail.z - this->direction.tail.z * other.tail.y,
                          this->direction.tail.z*other.tail.x - this->direction.tail.x * other.tail.z,
                          this->direction.tail.x*other.tail.y - this->direction.tail.y * other.tail.x};
@@ -31,7 +31,7 @@ const Vec& Ray::getDirection() const {
 }
 
 // Dot product: self . other
-double Ray::dotVec(const Vec &other) const {
+double Ray::dotVec(const Vec &other) const noexcept {
     return this->direction.tail.x*other.tail.x + this->direction.tail.y * other.tail.y + this->direction.tail.z * other.tail.z;
 }
 

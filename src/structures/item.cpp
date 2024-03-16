@@ -4,19 +4,19 @@
 
 #include "item.h"
 
-const std::vector<Triangle>& Item::getFaces() const {
+const std::vector<Triangle>& Item::getFaces() const noexcept {
     return faces;
 }
 
-const std::vector<Point>& Item::getVertices() const {
+const std::vector<Point>& Item::getVertices() const noexcept {
     return vertices;
 }
 
-std::vector<Triangle>& Item::getMutFaces() {
+std::vector<Triangle>& Item::getMutFaces() noexcept {
     return faces;
 }
 
-std::vector<Point>& Item::getMutVertices() {
+std::vector<Point>& Item::getMutVertices() noexcept {
     return vertices;
 }
 
