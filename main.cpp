@@ -7,7 +7,7 @@
 
 int main() {
     Field field = Field(
-            Point(-200, 200, 0),
+            Point(-200, -200, 0),
             Point(200, 200, 30)
             );
     field.insertObject(
