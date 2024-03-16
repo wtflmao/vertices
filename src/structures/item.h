@@ -54,7 +54,7 @@ public:
     Item();
     [[nodiscard]] const std::array<double, 3>& getScaleFactor() const noexcept;
     [[nodiscard]] const Point &getCenter() const noexcept;
-    void setScaleFactor(std::array<double, 3>& factor) noexcept;
+    void setScaleFactor(std::array<double, 3> factor) noexcept;
     void setCenter(Point &pos) noexcept;
 };
 

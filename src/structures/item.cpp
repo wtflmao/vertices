@@ -20,7 +20,7 @@ std::vector<Point>& Item::getMutVertices() noexcept {
     return vertices;
 }
 
-void Item::setScaleFactor(std::array<double, 3>& factor) noexcept {
+void Item::setScaleFactor(std::array<double, 3> factor) noexcept {
     scaleFactor = factor;
 }
 

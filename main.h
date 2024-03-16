@@ -9,6 +9,7 @@
 #include "src/structures/ray.h"
 #include "src/structures/triangle.h"
 #include "src/structures/item.h"
+#include "src/structures/field.h"
 
 #include <iostream>
 #include <array>
