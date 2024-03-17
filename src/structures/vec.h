@@ -15,14 +15,14 @@ private:
     void setLength(double len) noexcept;
 
 protected:
-    [[maybe_unused]] Vec(Point, double) noexcept;
+    [[maybe_unused]] Vec(const Point&, double) noexcept;
 
 public:
     Point head = Point(0.0l, 0.0l, 0.0l);
     Point tail = BigO;
 
-    Vec(Point origin, Point direction) noexcept;
-    explicit Vec(Point) noexcept;
+    Vec(const Point& origin, const Point& direction) noexcept;
+    explicit Vec(const Point&) noexcept;
 
     //explicit Vec(Ray &ray);
     [[nodiscard]] double getLength() const noexcept;

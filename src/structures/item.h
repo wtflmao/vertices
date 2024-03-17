@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <iostream> // for debug
 
 class Item {
 private:
@@ -54,8 +55,10 @@ public:
     Item();
     [[nodiscard]] const std::array<double, 3>& getScaleFactor() const noexcept;
     [[nodiscard]] const Point &getCenter() const noexcept;
-    void setScaleFactor(std::array<double, 3> factor) noexcept;
+    void setScaleFactor(const std::array<double, 3>& factor) noexcept;
     void setCenter(Point &pos) noexcept;
+
+    [[nodiscard]] std::vector<Triangle*> getFaceRefs() noexcept;
 };
 
 #endif //VERTICES_ITEM_H

@@ -5,19 +5,19 @@
 #include "vec.h"
 
 // Constructor
-[[maybe_unused]] Vec::Vec(Point direction, double len) noexcept {
+[[maybe_unused]] Vec::Vec(const Point& direction, double len) noexcept {
     this->tail = direction;
     setLength(len);
 }
 // Constructor, but make head at (0, 0, 0)
-Vec::Vec(Point origin, Point direction) noexcept {
+Vec::Vec(const Point& origin, const Point& direction) noexcept {
     const double v[3] = {direction.x - origin.x, direction.y - origin.y, direction.z - origin.z};
     this->tail = Point(v[0], v[1], v[2]);
     this->updateLength();
 }
 
 // Constructor
-Vec::Vec(Point direction) noexcept {
+Vec::Vec(const Point& direction) noexcept {
     this->tail = direction;
     this->updateLength();
 }

@@ -46,8 +46,8 @@ int main() {
     for (int rayIndex=0; rayIndex < rays.size(); rayIndex++) {
         auto & ray = rays[rayIndex];
         // Iterate over all objects
-        for (int objIndex=0; objIndex < field.objects.size(); objIndex++) {
-            auto & obj = field.objects[objIndex];
+        for (int objIndex=0; objIndex < field.getObjects().size(); objIndex++) {
+            auto & obj = field.getObjects()[objIndex];
             // Iterate over all faces of each object
             for (int faceIndex=0; faceIndex < obj.getFaces().size(); faceIndex++) {
                 auto & face = obj.getFaces()[faceIndex];

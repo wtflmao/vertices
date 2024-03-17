@@ -8,16 +8,20 @@
 Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2) noexcept
     : v0(v0), v1(v1), v2(v2) {
         updateNormalVec();
+        computeCentroid();
 }
 
-Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2, Vec &n) noexcept
+Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2, const Vec &n) noexcept
     : v0(v0), v1(v1), v2(v2) {
         setNormalVec(n);
+        computeCentroid();
 }
 
-Triangle::Triangle() noexcept = default;
+Triangle::Triangle() noexcept {
+    computeCentroid();
+};
 
-void Triangle::setNormalVec(Vec& n) noexcept {
+void Triangle::setNormalVec(const Vec& n) noexcept {
     normal = n;
 }
 
@@ -32,6 +36,10 @@ const Vec & Triangle::getNormal() const noexcept {
     return normal;
 }
 
+std::array<std::reference_wrapper<Point>, 3> Triangle::getVertices() noexcept {
+    return {std::ref(v0), std::ref(v1), std::ref(v2)};
+}
+
 // Function to check if a point is inside a triangle
 [[maybe_unused]] bool Triangle::is_inside_triangle(const Point& p) const {
     // Compute the barycentric coordinates of the point
@@ -41,4 +49,15 @@ const Vec & Triangle::getNormal() const noexcept {
 
     // Check if the point is inside the triangle
     return (alpha >= -1e-6 && beta >= -1e-6 && gamma >= -1e-6);
+}
+
+// calculate centroid
+void Triangle::computeCentroid() noexcept {
+    double sumX = 0, sumY = 0, sumZ = 0;
+    for (const auto& v : getVertices()) {
+        sumX += v.get().x;
+        sumY += v.get().y;
+        sumZ += v.get().z;
+    }
+    centroid = {sumX / getVertices().size(), sumY / getVertices().size(), sumZ / getVertices().size()};
 }
