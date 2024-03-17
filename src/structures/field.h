@@ -19,7 +19,7 @@ bool readNewItem(const char *filename, Item& item);
 class Field {
 private:
     std::unique_ptr<Box> tree;
-    std::vector<Triangle*> p_faces;
+    std::vector<Triangle *> p_faces;
     std::vector<Item> objects;
 
 public:
@@ -29,7 +29,9 @@ public:
     void buildBVHTree();
     //void insertObject(Item &item);
     bool insertObject(const std::string& objPath, const std::string& mtlPath, const std::array<double, 3> &scaleFactor, Point center);
+
     std::vector<Item> &getObjects();
+
     void initPfaces(const std::vector<Triangle *> &p_faces_t);
 };
 

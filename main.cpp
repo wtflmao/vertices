@@ -11,6 +11,12 @@ int main() {
             Point(200, 200, 30)
             );
     field.insertObject(
+        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.obj)"),
+        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+        {2, 2, 0.5},
+        Point(0, 0, 0.15)
+    );
+    field.insertObject(
             std::string(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj.obj)"),
             std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
             {200, 400, 2},
@@ -21,12 +27,6 @@ int main() {
             std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
             {200, 400, 2},
             Point(25, 25, -0.1)
-            );
-    field.insertObject(
-            std::string(R"(C:\Users\root\3D Objects\mycube\mycube.obj)"),
-            std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
-            {2, 2, 0.5},
-            Point(0, 0, 0.15)
             );
     field.insertObject(
             std::string(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)"),
@@ -46,8 +46,8 @@ int main() {
     for (int rayIndex=0; rayIndex < rays.size(); rayIndex++) {
         auto & ray = rays[rayIndex];
         // Iterate over all objects
-        for (int objIndex=0; objIndex < field.getObjects().size(); objIndex++) {
-            auto & obj = field.getObjects()[objIndex];
+        for (int objIndex = 0; objIndex < field.getObjects().size(); objIndex++) {
+            auto &obj = field.getObjects()[objIndex];
             // Iterate over all faces of each object
             for (int faceIndex=0; faceIndex < obj.getFaces().size(); faceIndex++) {
                 auto & face = obj.getFaces()[faceIndex];

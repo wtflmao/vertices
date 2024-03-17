@@ -13,6 +13,7 @@
 
 constexpr std::size_t BVH_NODE_CHILDREN = 4;
 constexpr std::size_t MAX_FACES_PER_BOX = 5;
+
 // BVH node as box
 class Box {
 private:
@@ -21,7 +22,7 @@ public:
     // bounds[0]: (minX, minY, minZ), bounds[1]: (maxX, maxY, maxZ)
     std::array<Point, 2> bounds;
     std::array<std::unique_ptr<Box>, BVH_NODE_CHILDREN> children;
-    std::vector<Triangle*> boxedFaces;
+    std::vector<Triangle *> boxedFaces;
 
     Box() noexcept;
     Box(const Point &min, const Point &max) noexcept;

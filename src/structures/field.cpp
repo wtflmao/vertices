@@ -14,10 +14,9 @@ Field::Field(Point min, Point max) noexcept
 
 }
 
-void Field::initPfaces(const std::vector<Triangle*> &p_faces_t) {
+void Field::initPfaces(const std::vector<Triangle *> &p_faces_t) {
     p_faces = p_faces_t;
 }
-
 
 
 void Field::buildBVHTree() {
@@ -53,6 +52,6 @@ bool Field::insertObject(const std::string& objPath, const std::string& mtlPath,
     return true;
 }
 
-std::vector<Item>& Field::getObjects() {
+std::vector<Item> &Field::getObjects() {
     return objects;
 }

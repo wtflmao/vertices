@@ -55,10 +55,12 @@ public:
     Item();
     [[nodiscard]] const std::array<double, 3>& getScaleFactor() const noexcept;
     [[nodiscard]] const Point &getCenter() const noexcept;
-    void setScaleFactor(const std::array<double, 3>& factor) noexcept;
+
+    void setScaleFactor(const std::array<double, 3> &factor) noexcept;
+
     void setCenter(Point &pos) noexcept;
 
-    [[nodiscard]] std::vector<Triangle*> getFaceRefs() noexcept;
+    [[nodiscard]] std::vector<Triangle *> getFaceRefs() noexcept;
 };
 
 #endif //VERTICES_ITEM_H

@@ -11,7 +11,7 @@ Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2) noexcept
         computeCentroid();
 }
 
-Triangle::Triangle(const Point& v0, const Point& v1, const Point& v2, const Vec &n) noexcept
+Triangle::Triangle(const Point &v0, const Point &v1, const Point &v2, const Vec &n) noexcept
     : v0(v0), v1(v1), v2(v2) {
         setNormalVec(n);
         computeCentroid();
@@ -21,7 +21,7 @@ Triangle::Triangle() noexcept {
     computeCentroid();
 };
 
-void Triangle::setNormalVec(const Vec& n) noexcept {
+void Triangle::setNormalVec(const Vec &n) noexcept {
     normal = n;
 }
 
@@ -54,7 +54,7 @@ std::array<std::reference_wrapper<Point>, 3> Triangle::getVertices() noexcept {
 // calculate centroid
 void Triangle::computeCentroid() noexcept {
     double sumX = 0, sumY = 0, sumZ = 0;
-    for (const auto& v : getVertices()) {
+    for (const auto &v: getVertices()) {
         sumX += v.get().x;
         sumY += v.get().y;
         sumZ += v.get().z;

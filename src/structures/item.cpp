@@ -7,12 +7,12 @@
 // this won't return the WHOLE vector to the caller,
 // instead, the compiler would directly construct the vector at the call site
 // thanks to C++11 RVO
-std::vector<Triangle*> Item::getFaceRefs() noexcept {
-    std::vector<Triangle*> refs;
-    for (auto& face : faces) {
+std::vector<Triangle *> Item::getFaceRefs() noexcept {
+    std::vector<Triangle *> refs;
+    for (auto &face: faces) {
         refs.emplace_back(&face);
     }
-    std::cout<<"oooo"<<refs.size()<<std::endl;
+    std::cout << "oooo" << refs.size() << std::endl;
     return refs;
 }
 
@@ -32,7 +32,7 @@ std::vector<Point>& Item::getMutVertices() noexcept {
     return vertices;
 }
 
-void Item::setScaleFactor(const std::array<double, 3>& factor) noexcept {
+void Item::setScaleFactor(const std::array<double, 3> &factor) noexcept {
     scaleFactor = factor;
 }
 

@@ -5,16 +5,14 @@
 #ifndef VERTICES_MAIN_H
 #define VERTICES_MAIN_H
 
-#include "src/common.h"
 #include "src/structures/ray.h"
 #include "src/structures/triangle.h"
-#include "src/structures/item.h"
 #include "src/structures/field.h"
 
 #include <iostream>
 #include <array>
+#include <vector>
 
-bool readNewItem(const char *filename, Item& item);
 
 const Point NO_INTERSECT = Point(DBL_MAX, DBL_MAX, DBL_MAX);
 
