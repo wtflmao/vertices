@@ -32,4 +32,6 @@ add_executable(vertices main.cpp
         src/structures/box.h
         src/structures/field.cpp
         src/structures/field.h
+        src/structures/node.cpp
+        src/structures/node.h
 )

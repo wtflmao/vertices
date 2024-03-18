@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <memory>
 #include <iostream> // for debug
 
 class Item {

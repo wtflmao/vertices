@@ -4,13 +4,13 @@
 
 #include "item.h"
 
-// this won't return the WHOLE vector to the caller,
-// instead, the compiler would directly construct the vector at the call site
-// thanks to C++11 RVO
-std::vector<Triangle *> Item::getFaceRefs() noexcept {
-    std::vector<Triangle *> refs;
-    for (auto &face: faces) {
-        refs.emplace_back(&face);
+#include <memory>
+
+// make a vector of raw pointers for every Triangle from the Item
+std::vector<std::shared_ptr<Triangle>> Item::getFaceRefs() noexcept {
+    std::vector<std::shared_ptr<Triangle>> refs;
+    for (auto face : faces) {
+        refs.emplace_back(std::make_shared<Triangle>(face));
     }
     std::cout << "oooo" << refs.size() << std::endl;
     return refs;
