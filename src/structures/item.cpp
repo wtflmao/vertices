@@ -7,9 +7,9 @@
 #include <memory>
 
 // make a vector of raw pointers for every Triangle from the Item
-std::vector<std::shared_ptr<Triangle>> Item::getFaceRefs() noexcept {
-    std::vector<std::shared_ptr<Triangle>> refs;
-    for (auto face : faces) {
+std::vector<std::shared_ptr<Triangle> > Item::getFaceRefs() noexcept {
+    std::vector<std::shared_ptr<Triangle> > refs;
+    for (auto face: faces) {
         refs.emplace_back(std::make_shared<Triangle>(face));
     }
     std::cout << "oooo" << refs.size() << std::endl;

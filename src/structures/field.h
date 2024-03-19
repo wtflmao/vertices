@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <memory>
+#include <queue>
 
 constexpr std::size_t randomPicks = 1000LL;
 
@@ -18,13 +19,15 @@ bool readNewItem(const char *filename, Item& item);
 
 class Field {
 private:
-    std::unique_ptr<Node> tree;
-    std::vector<std::shared_ptr<Triangle>> allFaces;
+    std::shared_ptr<Node> tree;
+    std::vector<std::shared_ptr<Triangle> > allFaces;
     std::vector<Item> objects;
 
 public:
     std::array<Point, 2> bounds;
     std::size_t nodeCount = 0;
+    std::size_t maxDepth = 0;
+
     Field() noexcept;
     Field(Point min, Point max) noexcept;
     void buildBVHTree();
@@ -33,11 +36,11 @@ public:
 
     std::vector<Item> &getObjects();
 
-    void initPfaces(const std::vector<std::shared_ptr<Triangle>> &p_faces_t);
+    void initPfaces(const std::vector<std::shared_ptr<Triangle> > &p_faces_t);
 
     void build();
 
-    static std::size_t countLeafNodes(const std::unique_ptr<Node> &root);
+    static std::array<std::size_t, 3> countLeafNodes(const std::shared_ptr<Node> &root);
 
     //static std::size_t countNodes(const std::unique_ptr<Node> &node);
 };

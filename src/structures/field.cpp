@@ -6,15 +6,13 @@
 
 Field::Field() noexcept
     : bounds({BigO, BigO}), tree() {
-
 }
 
 Field::Field(Point min, Point max) noexcept
     : bounds({min, max}), tree() {
-
 }
 
-void Field::initPfaces(const std::vector<std::shared_ptr<Triangle>> &p_faces_t) {
+void Field::initPfaces(const std::vector<std::shared_ptr<Triangle> > &p_faces_t) {
     allFaces = p_faces_t;
 }
 
@@ -25,7 +23,7 @@ void Field::build() {
             auto ptrVec = object.getFaceRefs();
 
             if (!ptrVec.empty()) {
-                allFaces.reserve( allFaces.size() + ptrVec.size());
+                allFaces.reserve(allFaces.size() + ptrVec.size());
                 if (!ptrVec.empty()) {
                     allFaces.insert(allFaces.end(), ptrVec.begin(), ptrVec.end());
                 }
@@ -37,33 +35,36 @@ void Field::build() {
 }
 
 // calculate how many nodes in the tree
-std::size_t Field::countLeafNodes(const std::unique_ptr<Node>& root)
-{
-    if(root == nullptr) return 0;
+std::array<std::size_t, 3> Field::countLeafNodes(const std::shared_ptr<Node> &root) {
+    if (root == nullptr) return {0, 0, 1};
 
     std::size_t leafCount = 0;
-    std::queue<Node*> nodeQueue;
-    nodeQueue.push(root.get());
+    std::size_t nodeCount = 0;
+    std::size_t maxDepth_t = 0;
+    std::queue<std::shared_ptr<Node> > nodeQueue;
+    nodeQueue.push(root);
 
-    while(!nodeQueue.empty())
-    {
-        const Node* currentNode = nodeQueue.front();
+    while (!nodeQueue.empty()) {
+        auto currentNode = nodeQueue.front();
         nodeQueue.pop();
 
         bool isLeaf = true;
-        for(auto& child : currentNode->children)
-        {
-            if(child != nullptr)
-            {
-                nodeQueue.push(child.get());
+        for (const auto &child: currentNode->children) {
+            if (child != nullptr) {
+                nodeQueue.push(child);
                 isLeaf = false;
             }
         }
 
-        if(isLeaf)
+        if (isLeaf)
             leafCount++;
+        nodeCount++;
+
+        if (currentNode->depth > maxDepth_t) {
+            maxDepth_t = currentNode->depth;
+        }
     }
-    return leafCount;
+    return std::array{leafCount, nodeCount, maxDepth_t};
 }
 
 
@@ -71,11 +72,13 @@ void Field::buildBVHTree() {
     // this "tree" should be the root node
     //initPfaces(p_faces);
     build();
-    tree = std::make_unique<Node>(allFaces, 1LL);
+    tree = std::make_shared<Node>(allFaces, 1LL);
     tree->split();
     std::cout << "BVH tree has been built." << std::endl;
-    nodeCount = countLeafNodes(tree);
-    std::cout << "There are " << nodeCount << " nodes in the tree." << std::endl;
+    const std::array<std::size_t, 3> nodeCountArr = countLeafNodes(tree);
+    std::cout << "There are " << (nodeCount = nodeCountArr[1]) << " nodes and " << nodeCountArr[0] <<
+            " leaf nodes in the tree." << std::endl;
+    std::cout << "Root node's height is " << (maxDepth = nodeCountArr[2]) << std::endl;
 }
 
 bool Field::insertObject(const std::string& objPath, const std::string& mtlPath, const std::array<double, 3>& scaleFactor, Point center) {

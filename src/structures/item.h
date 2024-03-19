@@ -61,7 +61,7 @@ public:
 
     void setCenter(Point &pos) noexcept;
 
-    [[nodiscard]] std::vector<Triangle *> getFaceRefs() noexcept;
+    [[nodiscard]] std::vector<std::shared_ptr<Triangle> > getFaceRefs() noexcept;
 };
 
 #endif //VERTICES_ITEM_H
