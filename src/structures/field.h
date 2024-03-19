@@ -36,9 +36,11 @@ public:
 
     std::vector<Item> &getObjects();
 
+    std::vector<std::shared_ptr<Node>> generateNodeList() const;
+
     void initPfaces(const std::vector<std::shared_ptr<Triangle> > &p_faces_t);
 
-    void build();
+    void mergeFacesOfObjects();
 
     static std::array<std::size_t, 3> countLeafNodes(const std::shared_ptr<Node> &root);
 

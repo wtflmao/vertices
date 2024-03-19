@@ -87,3 +87,34 @@ Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
     intersection = this->direction * t + this->origin;
     return intersection;
 }
+
+bool Ray::intersectsWithBox(const Box& box) {
+    double tMin = -std::numeric_limits<double>::infinity();
+    double tMax = std::numeric_limits<double>::infinity();
+
+    const auto directionXYZ = direction.tail.getXYZ();
+    const auto originXYZ = origin.getXYZ();
+    const auto minBoundXYZ = box.getBounds()[0].getXYZ();
+    const auto maxBoundXYZ = box.getBounds()[1].getXYZ();
+
+    for (int i = 0; i < 3; i++) {
+        double invDir = 1.0 / directionXYZ[i];
+        double t1 = (minBoundXYZ[i] - originXYZ[i]) / directionXYZ[i];
+        double t2 = (maxBoundXYZ[i] - originXYZ[i]) / directionXYZ[i];
+        if (t1 > t2) {
+            const double tmp = t1;
+            t1 = t2;
+            t2 = tmp;
+        }
+        if (t1 > tMin) {
+            tMin = t1;
+        }
+        if (t2 < tMax) {
+            tMax = t2;
+        }
+        if (tMin > tMax) {
+            return false;
+        }
+    }
+    return true;
+}

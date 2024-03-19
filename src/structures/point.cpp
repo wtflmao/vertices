@@ -24,6 +24,9 @@ void Point::updatePoint(double xx, double yy, double zz) noexcept {
     this->z = zz;
 }
 
+std::array<double, 3> Point::getXYZ() const noexcept {
+    return std::array<double, 3>{this->x, this->y, this->z};
+}
 
 
 

@@ -8,6 +8,7 @@
 #include <cfloat>
 #include <ostream>
 #include <valarray>
+#include <array>
 
 class Point {
 public:
@@ -51,6 +52,7 @@ public:
     }
 
     void updatePoint(double xx, double yy, double zz) noexcept;
+    std::array<double, 3> getXYZ() const noexcept;
 };
 
 const Point BigO = Point(0.0l, 0.0l, 0.0l);

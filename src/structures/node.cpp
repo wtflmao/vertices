@@ -58,7 +58,7 @@ void Node::updateBox() {
 // Stdev means standard deviation
 double computeStdev(const std::vector<std::shared_ptr<Triangle> > &samples, int axis) {
     std::vector<double> positions(samples.size());
-    std::ranges::transform(samples, positions.begin(), [axis](const std::shared_ptr<Triangle>& face) {
+    std::ranges::transform(samples, positions.begin(), [axis](const std::shared_ptr<Triangle> &face) {
         return face->centroid[axis];
     });
     double mean = std::accumulate(positions.begin(), positions.end(), 0.0, std::plus<>()) / positions.size();
@@ -131,7 +131,7 @@ void Node::split() {
     children_axis = splitAxis;
 
     // sort the faces along the chosen axis
-    std::ranges::sort(boxedFaces, [splitAxis](const std::shared_ptr<Triangle>& a, const std::shared_ptr<Triangle>& b) {
+    std::ranges::sort(boxedFaces, [splitAxis](const std::shared_ptr<Triangle> &a, const std::shared_ptr<Triangle> &b) {
         return a->centroid[splitAxis] < b->centroid[splitAxis];
     });
 

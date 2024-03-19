@@ -9,6 +9,7 @@
 #include "point.h"
 #include "vec.h"
 #include "triangle.h"
+#include "box.h"
 
 
 class Ray {
@@ -26,6 +27,8 @@ public:
     [[nodiscard]] const Point& getOrigin() const noexcept;
     [[nodiscard]] const Vec& getDirection() const noexcept;
     [[nodiscard]] Point mollerTrumboreIntersection(const Triangle &tri) const;
+
+    bool intersectsWithBox(const Box &box);
 };
 
 

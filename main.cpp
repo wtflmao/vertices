@@ -42,6 +42,13 @@ int main() {
     rays.emplace_back(Point(3, 3, 3), Vec(Point(-1,-1,-1)));
     rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1,1.1,1.2)));
 
+
+    std::cout << "-------Now----traversing----every----face--------" << std::endl;
+
+    // only for timing
+    // Get the starting timepoint
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Iterate over all rays
     for (int rayIndex=0; rayIndex < rays.size(); rayIndex++) {
         auto & ray = rays[rayIndex];
@@ -60,6 +67,46 @@ int main() {
             }
         }
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Time taken: " << duration << " seconds." << std::endl;
+
+
+    std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
+    // generate an vector of all nodes' const shared pointers
+    // so that I can conveiently traverse all nodes many times without visiting the multi-arch tree again and again
+    // thanks to modern C++, RVO or NRVO is possible
+    const std::vector<std::shared_ptr<Node>> node_ptrs = field.generateNodeList();
+
+    // only for timing
+    start = std::chrono::high_resolution_clock::now();
+
+    // use BVH to accelerate the determination of whether the ray intersecting
+    for (int rayIndex=0; rayIndex < rays.size(); rayIndex++) {
+        auto & ray = rays[rayIndex];
+        // Iterate over all nodes(boxes) and using BVH algorithm
+        for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
+            auto & node = node_ptrs[nodeIndex];
+            // Check if the ray intersects with the node (box)
+            if (ray.intersectsWithBox(node->bbox)) {
+                // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
+                for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
+                    auto & face = node->boxedFaces[faceIndex];
+                    if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
+                        std::cout << "The ray " << rayIndex+1 << " intersects the face #" << faceIndex+1 << " at " << intersection << std::endl;
+                    }
+                }
+            } else {
+            // If not intersects, skip all children
+                nodeIndex += node->boxedFaces.size();
+            }
+        }
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Time taken: " << duration << " seconds." << std::endl;
 
     return 0;
 }

@@ -12,6 +12,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <chrono>
 
 
 const Point NO_INTERSECT = Point(DBL_MAX, DBL_MAX, DBL_MAX);

@@ -12,7 +12,7 @@
 constexpr std::size_t BVH_NODE_CHILDREN = 4;
 constexpr std::size_t MAX_FACES_PER_BOX = 16;
 constexpr std::size_t MAX_DEPTH = 12;
-constexpr std::size_t SAMPLINGS = 8192;
+constexpr std::size_t SAMPLINGS = 128;
 
 // node is for BVH Tree(Bounding Volume Hierarchy Tree)\
 // box is box, node is node
