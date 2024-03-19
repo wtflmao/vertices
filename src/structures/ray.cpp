@@ -7,11 +7,17 @@
 // Constructor
 Ray::Ray(const Point& origin, const Vec& direction) noexcept
     : origin(origin), direction(direction) {
-
+    scatteredLevel = 0;
+    intensity = 100.0;
 }
 Ray::Ray(const Point& direction) noexcept
     : direction(Vec(direction)) {
+    scatteredLevel = 0;
+    intensity = 100.0;
+}
 
+Ray::Ray() noexcept {
+    intensity = 0;
 }
 
 const Point& Ray::getOrigin() const noexcept {
@@ -88,7 +94,7 @@ Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
     return intersection;
 }
 
-bool Ray::intersectsWithBox(const Box& box) {
+bool Ray::intersectsWithBox(const Box &box) {
     double tMin = -std::numeric_limits<double>::infinity();
     double tMax = std::numeric_limits<double>::infinity();
 
@@ -98,23 +104,142 @@ bool Ray::intersectsWithBox(const Box& box) {
     const auto maxBoundXYZ = box.getBounds()[1].getXYZ();
 
     for (int i = 0; i < 3; i++) {
-        double invDir = 1.0 / directionXYZ[i];
-        double t1 = (minBoundXYZ[i] - originXYZ[i]) / directionXYZ[i];
-        double t2 = (maxBoundXYZ[i] - originXYZ[i]) / directionXYZ[i];
-        if (t1 > t2) {
-            const double tmp = t1;
-            t1 = t2;
-            t2 = tmp;
-        }
-        if (t1 > tMin) {
-            tMin = t1;
-        }
-        if (t2 < tMax) {
-            tMax = t2;
-        }
-        if (tMin > tMax) {
-            return false;
+        if (directionXYZ[i] != 0.0) {
+            double t1 = (minBoundXYZ[i] - originXYZ[i]) / directionXYZ[i];
+            double t2 = (maxBoundXYZ[i] - originXYZ[i]) / directionXYZ[i];
+            if (t1 > t2) {
+                const double tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+            }
+            if (t1 > tMin) {
+                tMin = t1;
+            }
+            if (t2 < tMax) {
+                tMax = t2;
+            }
+            if (tMin > tMax) {
+                return false;
+            }
+        } else {
+            if (originXYZ[i] < minBoundXYZ[i] || originXYZ[i] > maxBoundXYZ[i]) {
+                return false;
+            }
         }
     }
     return true;
+}
+
+// compute two Vecs that zhengjiao to teh normal vector
+void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent) {
+    tangent = std::fabs(normal.tail.x) > std::fabs(normal.tail.z)
+                  ? Vec(Point(-normal.tail.y, normal.tail.x, 0.0))
+                  : Vec(Point(0.0, -normal.tail.z, normal.tail.y));
+    tangent = tangent.getNormalized();
+    bitangent = normal.cross(tangent);
+}
+
+// 在上半球空间里随机生成一个向量
+Vec uniformHemisphereDirection(const Vec &normal) {
+    // generate two random numbers stored as u and v
+    double u = rand01();
+    double v = rand01();
+
+    // this is a random angle theta, from 0 to pi/2.
+    double theta = std::acos(std::sqrt(1.0 - v));
+
+    // this is a random angle phi, ranges from 0 to 2*pi
+    double phi = 2.0 * M_PI * u;
+
+    // get random xyz
+    double x = std::cos(phi) * std::sin(theta);
+    double y = std::sin(phi) * std::sin(theta);
+    double z = std::cos(theta);
+
+    // construct a random direction
+    const Vec dir = Vec(Point(x, y, z));
+
+    // rotate the normal vector to the upper hemisphere
+    auto tangent = Vec(BigO), bitangent = Vec(BigO);
+    computeCoordinateSystem(normal, tangent, bitangent);
+    return tangent * dir.tail.x + bitangent * dir.tail.y + normal * dir.tail.z;
+}
+
+Ray::Ray(const Point &origin, const Vec &direction, const double intesity, const int scatteredCount)
+    : origin(origin), direction(direction), intensity(intesity), scatteredLevel(scatteredCount) {
+}
+
+// scatter the ray with a give triangle(needs its normal vector) and intersection point
+// returns a Ray object
+// ior means index of refraction, for materials that non-transparent we set ior = 1.0
+std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &intersection,
+                                           const double reflectance) const {
+    if (scatteredLevel >= 2) {
+        std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
+        return {std::array<Ray, SCATTER_RAYS>{}};
+    }
+
+    /* refletance is a value between 0 and 1
+     * 1.0: total mirror reflection
+     * 0.0: total scatter, direction is random
+     * 0.0-1.0: include both
+     */
+    // todo: fetch the reflectance from the material
+
+    std::array<Ray, SCATTER_RAYS> theRays;
+    const Vec incidentDirection = direction.getNormalized();
+    const Vec normal = tri.getNormal();
+
+    // get the reflection direction
+    Vec reflectedDirection = incidentDirection - normal * (2.0 * incidentDirection.dot(normal));
+    int reflectionRayIdx = -1;
+    int reflectionCnt = 0;
+    //reflectedDirection = reflectedDirection.getNormalized();
+
+    // assign the intensity
+    const double reflectedIntensity = intensity * reflectance;
+    const double scatteredIntensity = intensity * (1.0 - reflectance);
+
+    // create reflected ray
+    for (int i = 0; i < SCATTER_RAYS; i++) {
+        if (rand01() < reflectance) {
+            // generate a reflected ray
+            if (reflectionRayIdx == -1) {
+                theRays[0] = (Ray(intersection, reflectedDirection, reflectedIntensity, scatteredLevel + 1));
+                reflectionRayIdx = 0;
+            } else {
+                theRays[reflectionRayIdx].intensity += reflectedIntensity / SCATTER_RAYS;
+            }
+            reflectionCnt++;
+        }
+    }
+
+    // create scattered rays
+    if (reflectionCnt != 0) {
+        for (int i = 1; i <= SCATTER_RAYS - reflectionCnt; i++) {
+            Vec scatteredDirection = uniformHemisphereDirection(normal);
+            theRays[i] = (Ray(intersection, scatteredDirection,
+                              (intensity - theRays[reflectionRayIdx].intensity) / (SCATTER_RAYS - reflectionCnt),
+                              scatteredLevel + 1));
+            std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
+                    " " << theRays[i].intensity << std::endl;
+        }
+    } else {
+        for (int i = 0; i < SCATTER_RAYS; i++) {
+            Vec scatteredDirection = uniformHemisphereDirection(normal);
+            theRays[i] = (Ray(intersection, scatteredDirection,
+                              (intensity - theRays[reflectionRayIdx].intensity) / (SCATTER_RAYS - reflectionCnt),
+                              scatteredLevel + 1));
+            std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
+                    " " << theRays[i].intensity << std::endl;
+        }
+    }
+
+    if (reflectionRayIdx != -1) {
+        std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
+                theRays[reflectionRayIdx].intensity << std::endl;
+    } else {
+        std::cout << "...level " << scatteredLevel << "...has no reflectedDirection." << std::endl;
+    }
+    return theRays;
 }

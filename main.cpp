@@ -33,7 +33,7 @@ int main() {
             std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
             {9.5, 9.5, 3},
             Point(-15, 2, 0.5)
-            );
+            );*/
 
     field.buildBVHTree();
 
@@ -59,8 +59,14 @@ int main() {
             for (int faceIndex=0; faceIndex < obj.getFaces().size(); faceIndex++) {
                 auto & face = obj.getFaces()[faceIndex];
                 auto intersection = ray.mollerTrumboreIntersection(face);
-                if (NO_INTERSECT != intersection) {
+                if (intersection = ray.mollerTrumboreIntersection(face); NO_INTERSECT != intersection) {
                     std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
+                    const auto scatteredRays = ray.scatter(face, intersection, 1);
+                    for (const auto &ray_sp: scatteredRays) {
+                        if (ray_sp.intensity > 1e-6) {
+                            rays.push_back(ray_sp);
+                        }
+                    }
                 } else {
                     //std::cout << "The ray " << rayIndex+1 << " does not intersect the face " << faceIndex+1 << " of object " << objIndex+1 << "." << std::endl;
                 }
@@ -70,35 +76,49 @@ int main() {
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Time taken: " << duration << " seconds." << std::endl;
+    std::cout << "Time taken: " << duration << "." << std::endl;
+    std::cout << "Ray count: " << rays.size() << "." << std::endl;
+
+
+    rays.clear();
+    rays.emplace_back(Point(2, 0, 2), Vec(Point(-1, 0, -1)));
+    rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
+    rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
 
     std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
     // generate an vector of all nodes' const shared pointers
     // so that I can conveiently traverse all nodes many times without visiting the multi-arch tree again and again
     // thanks to modern C++, RVO or NRVO is possible
-    const std::vector<std::shared_ptr<Node>> node_ptrs = field.generateNodeList();
+    const std::vector<std::shared_ptr<Node> > node_ptrs = field.generateNodeList();
 
     // only for timing
     start = std::chrono::high_resolution_clock::now();
 
     // use BVH to accelerate the determination of whether the ray intersecting
-    for (int rayIndex=0; rayIndex < rays.size(); rayIndex++) {
-        auto & ray = rays[rayIndex];
+    for (int rayIndex = 0; rayIndex < rays.size(); rayIndex++) {
+        auto &ray = rays[rayIndex];
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
-            auto & node = node_ptrs[nodeIndex];
+            auto &node = node_ptrs[nodeIndex];
             // Check if the ray intersects with the node (box)
             if (ray.intersectsWithBox(node->bbox)) {
                 // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                 for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
-                    auto & face = node->boxedFaces[faceIndex];
+                    auto &face = node->boxedFaces[faceIndex];
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
-                        std::cout << "The ray " << rayIndex+1 << " intersects the face #" << faceIndex+1 << " at " << intersection << std::endl;
+                        std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
+                                << intersection << std::endl;
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, 1); const auto &ray_sp:
+                             scatteredRays) {
+                            if (ray_sp.intensity > 1e-6) {
+                                rays.push_back(ray_sp);
+                            }
+                        }
                     }
                 }
             } else {
-            // If not intersects, skip all children
+                // If not intersects, skip all children
                 nodeIndex += node->boxedFaces.size();
             }
         }
@@ -106,7 +126,8 @@ int main() {
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Time taken: " << duration << " seconds." << std::endl;
+    std::cout << "Time taken: " << duration << "." << std::endl;
+    std::cout << "Ray count: " << rays.size() << "." << std::endl;
 
     return 0;
 }

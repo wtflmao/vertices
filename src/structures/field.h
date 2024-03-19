@@ -13,8 +13,6 @@
 #include <memory>
 #include <queue>
 
-constexpr std::size_t randomPicks = 1000LL;
-
 bool readNewItem(const char *filename, Item& item);
 
 class Field {
@@ -36,7 +34,7 @@ public:
 
     std::vector<Item> &getObjects();
 
-    std::vector<std::shared_ptr<Node>> generateNodeList() const;
+    std::vector<std::shared_ptr<Node> > generateNodeList() const;
 
     void initPfaces(const std::vector<std::shared_ptr<Triangle> > &p_faces_t);
 

@@ -7,8 +7,6 @@
 
 #include "item.h"
 #include <iostream>//for debug purpose
-#include <memory>
-#include <random>
 
 
 // BVH node as box

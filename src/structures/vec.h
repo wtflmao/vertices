@@ -45,6 +45,18 @@ public:
         result.z += point.z;
         return result;
     }
+
+    Vec operator+(const Vec &anotherVec) const noexcept {
+        return {head + anotherVec.head, tail + anotherVec.tail};
+    }
+
+    Vec operator-(const Vec &anotherVec) const noexcept {
+        Point new_head = head;
+        Point new_tail = tail;
+        new_head -= anotherVec.head;
+        new_tail -= anotherVec.tail;
+        return {new_head, new_tail};
+    }
     Vec& operator=(const Vec& vec) noexcept {
         if (&vec == this)
             return *this;

@@ -113,20 +113,20 @@ std::vector<Item> &Field::getObjects() {
 }
 
 // BFS Traversal method, same as the leaf-counting function above
-std::vector<std::shared_ptr<Node>> Field::generateNodeList() const {
+std::vector<std::shared_ptr<Node> > Field::generateNodeList() const {
     // Create empty vector for bfs nodes
-    std::vector<std::shared_ptr<Node>> bfs_nodes;
+    std::vector<std::shared_ptr<Node> > bfs_nodes;
 
     // Base case: If tree is null
-    if(tree == nullptr)
-       return bfs_nodes;
+    if (tree == nullptr)
+        return bfs_nodes;
 
     // Create a queue for BFS
-    std::queue<std::shared_ptr<Node>> nodeQueue;
+    std::queue<std::shared_ptr<Node> > nodeQueue;
 
     nodeQueue.push(tree);
 
-    while(!nodeQueue.empty()) {
+    while (!nodeQueue.empty()) {
         // Dequeue a node from front and push it into the vector
         std::shared_ptr<Node> current_node = nodeQueue.front();
         bfs_nodes.push_back(current_node);
@@ -134,8 +134,8 @@ std::vector<std::shared_ptr<Node>> Field::generateNodeList() const {
         nodeQueue.pop();
 
         // Enqueue all children of the dequeued node
-        for(auto& child : current_node->children){
-            if(child != nullptr){
+        for (auto &child: current_node->children) {
+            if (child != nullptr) {
                 nodeQueue.push(child);
             }
         }

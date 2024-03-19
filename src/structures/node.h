@@ -5,14 +5,14 @@
 #ifndef VERTICES_NODE_H
 #define VERTICES_NODE_H
 
-
+#include "../common.h"
 #include "box.h"
 
 
-constexpr std::size_t BVH_NODE_CHILDREN = 4;
-constexpr std::size_t MAX_FACES_PER_BOX = 16;
+/*constexpr std::size_t BVH_NODE_CHILDREN = 6;
+constexpr std::size_t MAX_FACES_PER_BOX = 32;
 constexpr std::size_t MAX_DEPTH = 12;
-constexpr std::size_t SAMPLINGS = 128;
+constexpr std::size_t SAMPLINGS = 64;*/
 
 // node is for BVH Tree(Bounding Volume Hierarchy Tree)\
 // box is box, node is node
@@ -23,7 +23,6 @@ public:
     std::vector<std::shared_ptr<Triangle> > boxedFaces;
     std::array<std::shared_ptr<Node>, BVH_NODE_CHILDREN> children;
     std::size_t depth = 0;
-    std::random_device rd = std::random_device();
     int children_axis = -1;
 
 

@@ -5,15 +5,24 @@
 #ifndef SRC_COMMON_H
 #define SRC_COMMON_H
 
-#include <memory>
-template<class T> using ptr = std::unique_ptr<T>;
-template <typename T, typename... Args> std::unique_ptr<T> make_ptr(Args&&... args) {
-    return std::make_unique<T>(std::forward<Args>(args)...);
+#include <random>
+inline std::random_device rd;
+inline std::mt19937 generator(rd());
+inline std::uniform_real_distribution<double> distribution(0.0, 1.0);
+
+inline double rand01() {
+    return distribution(generator);
 }
 
-template<class T> using ptr_s = std::shared_ptr<T>;
-template <typename T, typename... Args> std::shared_ptr<T> make_ptr_s(Args&&... args) {
-    return std::make_shared<T>(std::forward<Args>(args)...);
-}
+// VERTICES_RAY_H
+constexpr int SCATTER_RAYS = 1;
+
+
+// VERTICES_NODE_H
+constexpr std::size_t BVH_NODE_CHILDREN = 6;
+constexpr std::size_t MAX_FACES_PER_BOX = 32;
+constexpr std::size_t MAX_DEPTH = 12;
+constexpr std::size_t SAMPLINGS = 64;
+
 
 #endif //SRC_COMMON_H

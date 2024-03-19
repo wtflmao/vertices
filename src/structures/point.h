@@ -27,6 +27,15 @@ public:
         z -= otherPoint.z;
         return *this;
     }
+
+    Point operator+(const Point &otherPoint) const noexcept {
+        Point ret = *this;
+        ret.x = x + otherPoint.x;
+        ret.y = y + otherPoint.y;
+        ret.z = z + otherPoint.z;
+        return ret;
+    }
+
     Point& operator*=(const double multiplier) noexcept {
         x *= multiplier;
         y *= multiplier;
@@ -52,6 +61,7 @@ public:
     }
 
     void updatePoint(double xx, double yy, double zz) noexcept;
+
     std::array<double, 3> getXYZ() const noexcept;
 };
 
