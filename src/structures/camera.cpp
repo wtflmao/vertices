@@ -39,20 +39,19 @@ void Camera::buildSunlightSpectrum() {
         fprintf(stderr, "Cannot open %s\a\n", R"(C:\PcModWin5\Bin\out_0.000000.csv)");
         exit(2);
     }
-    //int waveNuumber_t = 0;
+    int waveLength_t = 0;
     double totalRadiance_t = 0.0;
     double maximumTotRad = 0.0;
 
-    std::queue<double> radiance_t;
-    while (fscanf(fp, "%*d,%lf", &totalRadiance_t) != EOF) {
-        radiance_t.push(totalRadiance_t);
+    std::map<int, double> sunlightSpectrumMap_t;
+    while (fscanf(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
+        sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t;
         if (totalRadiance_t > maximumTotRad) maximumTotRad = totalRadiance_t;
     }
 
     int cnt = 0;
-    while (!radiance_t.empty()) {
-        sunlightSpectrum[cnt++] = radiance_t.back() / maximumTotRad;
-        radiance_t.pop();
+    for (int i = UPPER_WAVELENGTH; i <= LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
+        sunlightSpectrum[cnt++] = sunlightSpectrumMap_t[i] / maximumTotRad;
     }
     std::cout << "Default sunlight spectrum has been built." << std::endl;
 }

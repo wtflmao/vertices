@@ -20,8 +20,9 @@ private:
     Vec direction = Vec(Point(2,2,2));
 
 public:
-    double intensity = 100.0;
+    std::array<double, spectralBands> intensity = {};
     int scatteredLevel = 0;
+    std::array<double, spectralBands> spectrum;
 
     Ray(const Point &origin, const Vec &direction) noexcept;
     explicit Ray(const Point& direction) noexcept;
@@ -36,7 +37,8 @@ public:
 
     bool intersectsWithBox(const Box &box);
 
-    Ray(const Point &origin, const Vec &direction, double intesity, int scatteredCount);
+    Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
+        int scatteredCount);
 
     [[nodiscard]] std::array<Ray, SCATTER_RAYS> scatter(const Triangle &tri, const Point &intersection,
                                                         double reflectance) const;

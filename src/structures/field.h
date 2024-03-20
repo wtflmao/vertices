@@ -25,6 +25,7 @@ public:
     std::array<Point, 2> bounds;
     std::size_t nodeCount = 0;
     std::size_t maxDepth = 0;
+    const Vec sunlightDirectionToGround = Vec(Point(-std::sqrt(3), 0, -1));
 
     Field() noexcept;
     Field(Point min, Point max) noexcept;

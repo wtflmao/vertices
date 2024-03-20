@@ -10,8 +10,8 @@
 #include "ray.h"
 #include <valarray>
 #include <array>
-#include <queue>
 #include <cstdio>
+#include <map>
 
 
 class Camera {
