@@ -34,4 +34,8 @@ add_executable(vertices main.cpp
         src/structures/field.h
         src/structures/node.cpp
         src/structures/node.h
+        src/structures/camera.cpp
+        src/structures/camera.h
+        src/structures/pixel.cpp
+        src/structures/pixel.h
 )
