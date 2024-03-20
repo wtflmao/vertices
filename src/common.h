@@ -28,13 +28,24 @@ constexpr std::size_t SAMPLINGS = 64;
 
 // VERTICES_PIXEL_H
 // 1024 by 768 pixels
-constexpr int resolutionX = 8;
-constexpr int resolutionY = 6;
+constexpr int resolutionX = 800;
+constexpr int resolutionY = 600;
 constexpr int spectralBands = 100;
 // all in nanometer, please be in integer
 constexpr int UPPER_WAVELENGTH = 380;
 constexpr int LOWER_WAVELENGTH = 780;
 constexpr int WAVELENGTH_STEP = (LOWER_WAVELENGTH - UPPER_WAVELENGTH) / spectralBands;
+
+
+// VERTICES_CAMERA_H
+// this eight means the first pixel's height
+constexpr double CAMERA_HEIGHT = 300.0;
+// pixel distance in micron 6969
+constexpr double pixelSize = 6.9;
+// GSD in meter
+constexpr double gsd = 0.12;
+// focalLength in millimeter
+constexpr double focalLength = 20;
 
 
 #endif //SRC_COMMON_H

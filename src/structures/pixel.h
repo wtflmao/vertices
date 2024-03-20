@@ -15,12 +15,11 @@ public:
     // let's say it's ranges from 380 - 780 nm, and we have 100 bands
     std::array<double, spectralBands> pixelSpectralResp;
 
-    // pixel overlap control
-    void overlap();
-
     std::array<double, spectralBands> &getPixelSpectralResp() noexcept;
 
     void setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept;
+
+    double overlapRatio(int delta_i, int delta_j);
 };
 
 

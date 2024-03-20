@@ -19,15 +19,10 @@ private:
 
 public:
 
-    // FOV in degrees
-    double FOV = 18;
-
-    // focalLength in millimeter
-    double focalLength = 100.0;
-    // F/# = f/D = 1 / (2 * tan(FOV / 2))
-    // when FOV = 18 and focal = 420, F/# = 3.16
-    double relativeF = 1 / (2 * std::tan(FOV / 2));
-    double apetureD = focalLength * relativeF;
+    // FOVx
+    double FOVx = 2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength));
+    // FOVy
+    double FOVy = 2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength));
 
     std::array<double, spectralBands> sunlightSpectrum = {};
 

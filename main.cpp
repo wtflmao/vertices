@@ -138,7 +138,7 @@ int main() {
     // use default constructor for now
     auto camera = Camera();
     // commonly the height from ground is 200m
-    camera.spatialPosition = {Point(-0.08, -0.06, 200), Point(0.08, 0.06, 200)};
+    camera.spatialPosition = {Point(-0.008, -0.006, CAMERA_HEIGHT), Point(0.008, 0.006, CAMERA_HEIGHT)};
     rays.clear();
     // after this there should be resolution X*Y rays
     rays = camera.shootRaysOut(field.sunlightDirectionToGround);
