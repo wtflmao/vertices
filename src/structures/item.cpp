@@ -49,3 +49,122 @@ const Point& Item::getCenter() const noexcept {
 }
 
 Item::Item() = default;
+
+std::vector<std::array<int, 3> > &Item::getMutFWVR() noexcept {
+    return facesWithVertexRefs;
+}
+
+const std::vector<std::array<int, 3> > &Item::getFWVR() const noexcept {
+    return facesWithVertexRefs;
+}
+
+inline double votingPower(const double x, const double y, const double z) noexcept {
+    return std::abs(x + y + z) < 1e-6
+               ? 1
+               : (2.0 / (1.0 + -4.0 * x / (x + y + z) + std::exp(-4.0 * x / (x + y + z))) + 2.0 / (
+                      1.0 + -4.0 * y / (x + y + z) + std::exp(-4.0 * y / (x + y + z))) + 2.0 / (
+                      1.0 + -4.0 * z / (x + y + z) + std::exp(-4.0 * z / (x + y + z)))) / 3.0;
+}
+
+void Item::normalVecInspector() noexcept {
+    if (faces.empty()) {
+        return;
+    }
+
+    if (isOpenMesh) {
+        // open mesh has its unique way to propagate correct normal vector direction
+        // it needs a pre-given face with its CORRECT normal vector direction
+        // and propagate to its neighboring faces in the space
+
+        // create a vertices list to record which vertex is shared by which face
+        // vector is generally faster than map when traversing and inserting one by one
+        std::vector<std::vector<int> > vertexAdjList(vertices.size());
+
+        const auto &fwvr = facesWithVertexRefs;
+        // traverse the face list to update the adj list
+        for (int i = 0; i < fwvr.size(); i++) {
+            vertexAdjList[fwvr[i][0]].emplace_back(i);
+            vertexAdjList[fwvr[i][1]].emplace_back(i);
+            vertexAdjList[fwvr[i][2]].emplace_back(i);
+        }
+
+        // todo: choose the real correct one, here's just a dummy one
+        // remember it start from 1, but vertexAdjList start from 0
+        const std::array<int, 3> thatCorrectFaceVertices = {1, 2, 4};
+        const int thatCorrectFaceIndex = 0;
+
+        // the checked faces
+        std::set<int> checkedFaces;
+        checkedFaces.insert(thatCorrectFaceIndex);
+
+        // vertices of unchecked faces
+        std::queue<int> verticesOfUncheckedFaces;
+        verticesOfUncheckedFaces.push(thatCorrectFaceVertices[0]);
+        verticesOfUncheckedFaces.push(thatCorrectFaceVertices[1]);
+        verticesOfUncheckedFaces.push(thatCorrectFaceVertices[2]);
+
+        // traverse adjacent list
+        // i and l is vertex index, j and k are face index figures
+        // sometimes not every face is reachable from the correct face, but idc
+        while (!verticesOfUncheckedFaces.empty()) {
+            const int i = verticesOfUncheckedFaces.front();
+            for (auto j: vertexAdjList[i]) {
+                if (!checkedFaces.contains(j)) {
+                    // not found, inspect the face
+                    // find the neighboring face that is correct
+                    for (int k = 0; k < vertexAdjList[i].size(); k++) {
+                        if (checkedFaces.contains(k)) {
+                            if (faces[k].getNormal().dot(faces[j].getNormal()) < 0) {
+                                // j's normal is wrong, revise it
+                                faces[j].setNormalVec(Vec(faces[j].getNormal()) *= -1);
+                            }
+                            checkedFaces.insert(j);
+                            // find face j's all vertices
+                            for (auto l: fwvr[j]) {
+                                if (l == i) continue;
+                                verticesOfUncheckedFaces.push(l);
+                            }
+                        } else {
+                            // not found, what the duck???
+                        }
+                    }
+                } else {
+                    // face found, the normal vec is correct
+                }
+            }
+            verticesOfUncheckedFaces.pop();
+        }
+    } else {
+        // closed mesh needs some pre-given points that INSIDE the object
+        // and use Vec(insider point A, centroid of a face) cross face's normal vector to
+        // determine if the normal vec direction held by this face is correct or not
+        // and then traverse every insider points, let them vote, use the vote result to determine
+        // the farther insider point is, the less voting power it has at this face will be
+
+        // todo: change the innerPoints to real data, here's some dummy data
+        const std::vector<Point> innerPoints = {Point(0.1, 0.1, 0.1), Point(-0.2, -0.2, -0.2)};
+
+        for (auto &face: faces) {
+            double sumCorrect = 0.0;
+            double sumWrong = 0.0;
+            // traverse every inner point
+            for (auto &point: innerPoints) {
+                if (face.getNormal().dot(Vec(point, face.getCentroid())) < 0) {
+                    sumWrong += votingPower(std::abs(point.x - face.getCentroid().x),
+                                            std::abs(point.y - face.getCentroid().y),
+                                            std::abs(point.z - face.getCentroid().z));
+                } else {
+                    sumCorrect += votingPower(std::abs(point.x - face.getCentroid().x),
+                                              std::abs(point.y - face.getCentroid().y),
+                                              std::abs(point.z - face.getCentroid().z));
+                }
+            }
+
+            if (sumWrong > sumCorrect) {
+                face.setNormalVec(Vec(face.getNormal()) *= -1);
+            }
+        }
+    }
+    // free the memory it consumed, as I shouldn't use it anymore
+    facesWithVertexRefs.clear();
+}

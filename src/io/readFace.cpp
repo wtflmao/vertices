@@ -45,4 +45,7 @@ void processFace(const char* line, Item& p) {
     p_t.v1.updatePoint(p_v[v_i[1]].x, p_v[v_i[1]].y, p_v[v_i[1]].z);
     p_t.v2.updatePoint(p_v[v_i[2]].x, p_v[v_i[2]].y, p_v[v_i[2]].z);
     p_t.updateNormalVec();
+
+    // for Item::normalVecInspector()
+    p.getMutFWVR().push_back({v_i[0], v_i[1], v_i[2]});
 }

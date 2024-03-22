@@ -97,6 +97,9 @@ bool Field::insertObject(const std::string& objPath, const std::string& mtlPath,
         return false;
     }
 
+    // check normal vec's directon is correct or not, if not, revise it
+    object.normalVecInspector();
+
     std::cout<<"Object #"<<objects.size()<<" has "<<object.getFaces().size()<<" faces."<<std::endl;
     std::cout<<"Object #"<<objects.size()<<" has "<<object.getVertices().size()<<" vertices."<<std::endl;
     std::cout<<"Object #"<<objects.size()<<"'s refraction index is "<<object.Ni<<std::endl;

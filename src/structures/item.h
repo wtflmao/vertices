@@ -11,11 +11,14 @@
 #include <array>
 #include <memory>
 #include <iostream> // for debug
+#include <set>
+#include <queue>
 
 class Item {
 private:
     std::vector<Triangle> faces;
     std::vector<Point> vertices;
+    std::vector<std::array<int, 3> > facesWithVertexRefs;
     std::array<double, 3> scaleFactor = {1.0, 1.0, 1.0};
     // This center should be the center AFTER applied the zoom factor
     Point center = BigO;
@@ -35,6 +38,9 @@ public:
      * map_Ka F22.jpg: 使用名为"F22.jpg"的纹理贴图作为环境光反射贴图。
      * map_Kd F22.jpg: 使用同样的"F22.jpg"纹理作为漫反射贴图。
      */
+    // open mesh be like plane, ground, etc.
+    // closed mesh be like ball, cube, cylinder
+    bool isOpenMesh = false;
     double Ns = 10.0;
     double Ni = 1.5;
     double d = 1.0;
@@ -62,6 +68,12 @@ public:
     void setCenter(Point &pos) noexcept;
 
     [[nodiscard]] std::vector<std::shared_ptr<Triangle> > getFaceRefs() noexcept;
+
+    std::vector<std::array<int, 3> > &getMutFWVR() noexcept;
+
+    [[nodiscard]] const std::vector<std::array<int, 3> > &getFWVR() const noexcept;
+
+    void normalVecInspector() noexcept;
 };
 
 #endif //VERTICES_ITEM_H

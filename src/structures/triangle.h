@@ -33,6 +33,8 @@ public:
     [[nodiscard]] std::array<std::reference_wrapper<Point>, 3> getVertices() noexcept;
 
     void computeCentroid() noexcept;
+
+    [[nodiscard]] Point getCentroid() const noexcept;
 };
 
 

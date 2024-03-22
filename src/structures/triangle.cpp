@@ -27,9 +27,6 @@ void Triangle::setNormalVec(const Vec &n) noexcept {
 
 void Triangle::updateNormalVec() noexcept {
     normal = Vec(v0, v1).cross(Vec(v0, v2));
-    if (normal.dot(Vec(v0, v1)) < 0) {
-        normal *= -1;
-    }
 }
 
 const Vec & Triangle::getNormal() const noexcept {
@@ -60,4 +57,8 @@ void Triangle::computeCentroid() noexcept {
         sumZ += v.get().z;
     }
     centroid = {sumX / getVertices().size(), sumY / getVertices().size(), sumZ / getVertices().size()};
+}
+
+Point Triangle::getCentroid() const noexcept {
+    return {centroid[0], centroid[1], centroid[2]};
 }
