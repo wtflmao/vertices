@@ -5,12 +5,13 @@
 #include "ray.h"
 
 // Constructor
-Ray::Ray(const Point& origin, const Vec& direction) noexcept
+Ray::Ray(const Point &origin, const Vec &direction) noexcept
     : origin(origin), direction(direction) {
     scatteredLevel = 0;
     *intensity_p = {};
 }
-Ray::Ray(const Point& direction) noexcept
+
+Ray::Ray(const Point &direction) noexcept
     : direction(Vec(direction)) {
     scatteredLevel = 0;
     *intensity_p = {};
@@ -20,29 +21,32 @@ Ray::Ray() noexcept {
     *intensity_p = {};
 }
 
-const Point& Ray::getOrigin() const noexcept {
+const Point &Ray::getOrigin() const noexcept {
     return this->origin;
 }
 
-const Vec& Ray::getDirection() const noexcept {
+const Vec &Ray::getDirection() const noexcept {
     return this->direction;
 }
 
 // Cross product: self x other
 [[maybe_unused]] [[maybe_unused]] Vec Ray::crossVec(const Vec &other) const noexcept {
-    const double v[3] = {this->direction.tail.y*other.tail.z - this->direction.tail.z * other.tail.y,
-                         this->direction.tail.z*other.tail.x - this->direction.tail.x * other.tail.z,
-                         this->direction.tail.x*other.tail.y - this->direction.tail.y * other.tail.x};
+    const double v[3] = {
+        this->direction.tail.y * other.tail.z - this->direction.tail.z * other.tail.y,
+        this->direction.tail.z * other.tail.x - this->direction.tail.x * other.tail.z,
+        this->direction.tail.x * other.tail.y - this->direction.tail.y * other.tail.x
+    };
     return Vec(Point(v[0], v[1], v[2]));
 }
 
 // Dot product: self . other
 double Ray::dotVec(const Vec &other) const noexcept {
-    return this->direction.tail.x*other.tail.x + this->direction.tail.y * other.tail.y + this->direction.tail.z * other.tail.z;
+    return this->direction.tail.x * other.tail.x + this->direction.tail.y * other.tail.y + this->direction.tail.z *
+           other.tail.z;
 }
 
 // Member function
-Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
+Point Ray::mollerTrumboreIntersection(const Triangle &tri) const {
     double det, inv_det, u, v, t;
     Point intersection = Point{DBL_MAX, DBL_MAX, DBL_MAX};
 
@@ -55,9 +59,10 @@ Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
     det = edge1.dot(pvec);
 
     // Check if ray is parallel to triangle
-    if (det > -(1e-6) && det < 1e-6) {
+    if (det > -(1e-10) && det < 1e-10) {
         // Ray is parallel to the triangle, no intersection
-        return intersection; }
+        return intersection;
+    }
 
     // Calculate distance from v0 to ray origin
     inv_det = 1.0 / det;
@@ -90,7 +95,7 @@ Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
     }
 
     // to check if the intersection is viable
-    if (t > Vec(origin, stopPoint).getLength()) {
+    if (t > static_cast<double>(stopLength)) {
         return intersection;
     }
 
@@ -203,10 +208,10 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
 
     std::array<Ray, SCATTER_RAYS> theRays;
     const Vec incidentDirection = direction.getNormalized();
-    const Vec normal = tri.getNormal();
+    const Vec normal = tri.getNormal().getNormalized();
 
     // get the reflection direction
-    Vec reflectedDirection = incidentDirection - normal * (2.0 * incidentDirection.dot(normal));
+    Vec reflectedDirection = (incidentDirection - (normal * normal.dot(incidentDirection)) * 2.0).getNormalized();
     int reflectionRayIdx = -1;
     int reflectionCnt = 0;
     //reflectedDirection = reflectedDirection.getNormalized();
@@ -226,7 +231,8 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
                 // here we make use of randomness to construct "sky absorption" LOL
                 for (int j = 0; j < reflectedIntensity.size(); j++) {
                     reflectedIntensity[j] +=
-                            intensity_p->at(j) * reflectance * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+                            intensity_p->at(j) * reflectance * reflectanceCorrection(
+                                UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
                 }
             }
             reflectionCnt++;
@@ -249,19 +255,19 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
         }
         theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
         std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail << " "
-                  << theRays[i].intensity_p->at(0) << std::endl;
+                << theRays[i].intensity_p->at(0) << std::endl;
     }
 
     if (reflectionRayIdx != -1) {
         std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
-                                                                                                                    theRays[reflectionRayIdx].intensity_p->at(0)
-                                                                                                                    << std::endl;
+                theRays[reflectionRayIdx].intensity_p->at(0)
+                << std::endl;
     } else {
         std::cout << "...level " << scatteredLevel << "...has no reflectedDirection." << std::endl;
     }
     return theRays;
 }
 
-void Ray::setRayStopPoint(const Point& stopPoint_t) noexcept {
-    stopPoint = stopPoint_t;
+void Ray::setRayStopPoint(const Point &stopPoint_t) noexcept {
+    stopLength = Vec(origin, stopPoint_t).getLength();
 }

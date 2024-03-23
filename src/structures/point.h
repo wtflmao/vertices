@@ -43,7 +43,7 @@ public:
         return *this;
     }
     bool operator==(const Point& otherPoint) const noexcept {
-        constexpr double epsilon = 1e-6;
+        constexpr double epsilon = 1e-10;
         return std::abs(this->x - otherPoint.x) < epsilon && std::abs(this->y - otherPoint.y) < epsilon && std::abs(this->z - otherPoint.z) < epsilon;
     }
     Point& operator=(const Point& point) noexcept {

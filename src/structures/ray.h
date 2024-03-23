@@ -19,10 +19,11 @@ private:
     // direction is a vector(starts at wherever) and has nothing to do with origin
     Vec direction = Vec(Point(2,2,2));
     // stopPoint is for when the ray intersects with a surface or is out of the box and we should stop the ray from goin any further
-    Point stopPoint = Point(9999, 9999, 9999);
+    size_t stopLength = 200 * 200;
 
 public:
-    std::shared_ptr<std::array<double, spectralBands>> intensity_p = std::make_shared<std::array<double, spectralBands>>();
+    std::shared_ptr<std::array<double, spectralBands> > intensity_p = std::make_shared<std::array<double,
+        spectralBands> >();
     int scatteredLevel = 0;
     //std::shared_ptr<std::array<double, spectralBands>> spectrum_p = std::make_shared<std::array<double, spectralBands>>();
 

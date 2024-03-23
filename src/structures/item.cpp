@@ -59,7 +59,7 @@ const std::vector<std::array<int, 3> > &Item::getFWVR() const noexcept {
 }
 
 inline double votingPower(const double x, const double y, const double z) noexcept {
-    return std::abs(x + y + z) < 1e-6
+    return std::abs(x + y + z) < 1e-10
                ? 1
                : (2.0 / (1.0 + -4.0 * x / (x + y + z) + std::exp(-4.0 * x / (x + y + z))) + 2.0 / (
                       1.0 + -4.0 * y / (x + y + z) + std::exp(-4.0 * y / (x + y + z))) + 2.0 / (
@@ -79,9 +79,11 @@ void Item::normalVecInspector() noexcept {
         // create a vertices list to record which vertex is shared by which face
         // vector is generally faster than map when traversing and inserting one by one
 
-        std::cout<<"closedmesh normal here"<<std::endl;
+        std::cout << "openmesh normal here" << std::endl;
         std::vector<std::vector<int> > vertexAdjList;
-        vertexAdjList.reserve(vertices.size());
+        vertexAdjList.reserve(vertices.size() + 1);
+
+        //std::cout << "openmesh normal hererrrrrrrrr" << std::endl;
 
         const auto &fwvr = facesWithVertexRefs;
         // traverse the face list to update the adj list
@@ -90,18 +92,21 @@ void Item::normalVecInspector() noexcept {
             vertexAdjList[fwvr[i][1]].emplace_back(i);
             vertexAdjList[fwvr[i][2]].emplace_back(i);
         }
+        //std::cout << "openmesh normal herecccc" << std::endl;
 
         // remember `thatCorrectedFaceVertices` and `that...Index` and `vertexAdjList` start from 0
 
         // the checked faces
         std::set<int> checkedFaces;
         checkedFaces.insert(thatCorrectFaceIndex);
+        //std::cout << "openmesh normal heresssssssssss" << std::endl;
 
         // vertices of unchecked faces
         std::queue<int> verticesOfUncheckedFaces;
         verticesOfUncheckedFaces.push(thatCorrectFaceVertices[0]);
         verticesOfUncheckedFaces.push(thatCorrectFaceVertices[1]);
         verticesOfUncheckedFaces.push(thatCorrectFaceVertices[2]);
+        //std::cout << "openmesh normal here ddd" << std::endl;
 
         // traverse adjacent list
         // i and l is vertex index, j and k are face index figures
@@ -141,7 +146,7 @@ void Item::normalVecInspector() noexcept {
         // and then traverse every insider points, let them vote, use the vote result to determine
         // the farther insider point is, the less voting power it has at this face will be
 
-        std::cout<<"openmesh normal here"<<std::endl;
+        std::cout << "closedmesh normal here" << std::endl;
         for (auto &face: faces) {
             double sumCorrect = 0.0;
             double sumWrong = 0.0;

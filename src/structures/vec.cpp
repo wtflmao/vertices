@@ -44,7 +44,8 @@ double Vec::getLength() const noexcept {
 
 
 [[maybe_unused]] Vec Vec::getNormalized() const noexcept {
-    return Vec(Point(tail.x / getLength(), tail.y / getLength(), tail.z / getLength()));
+    return Vec(Point((tail.x - head.x) / getLength(), (tail.y - head.y) / getLength(),
+                     (tail.z - head.z) / getLength()));
 }
 
 // Cross product: self x other

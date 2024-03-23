@@ -84,18 +84,23 @@ void Field::buildBVHTree() {
     std::cout << "Root node's height is " << (maxDepth = nodeCountArr[2]) << std::endl;
 }
 
-bool Field::insertObject(const std::string& objPath, const std::string& mtlPath, const std::array<double, 3>& scaleFactor, Point center, std::array<int, 3> correctFaceVertices, int tCFI, std::vector<Point> innerPoints, bool isOpenMesh) {
+bool Field::insertObject(const std::string &objPath, const std::string &mtlPath,
+                         const std::array<double, 3> &scaleFactor, Point center, std::array<int, 3> correctFaceVertices,
+                         int tCFI, std::vector<Point> innerPoints, bool isOpenMesh, int forwardAxis, int upAxis) {
     objects.emplace_back();
     Item& object = objects.back();
     object.setScaleFactor(scaleFactor);
     object.setCenter(center);
+    object.forwardAxis = forwardAxis;
+    object.upAxis = upAxis;
     if (!readNewItem(objPath.c_str(), object)) {
         std::cerr << "Error when doing readNewItem(#" << objects.size() << ") in Field::insertObject(" << objPath << ")" << std::endl;
         return false;
     }
 
     if (!readNewItem(mtlPath.c_str(), object)) {
-        std::cerr << "Error when doing readNewItem(#" << objects.size() << ") in Field::insertObject(" << mtlPath << ")" << std::endl;
+        std::cerr << "Error when doing readNewItem(#" << objects.size() << ") in Field::insertObject(" << mtlPath << ")"
+                << std::endl;
         return false;
     }
 

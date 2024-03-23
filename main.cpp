@@ -6,6 +6,8 @@
 #include "main.h"
 
 int main() {
+    std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
+            getNormal().tail << std::endl;
     Field field = Field(
             Point(-200, -200, 0),
             Point(200, 200, 30)
@@ -15,37 +17,53 @@ int main() {
         std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
         {1, 1, 1},
         Point(0, 0, 0),
+        // correctFaceVertices starts from 0
         {},
+        // tCFI starts from 0
         0,
         {Point(-1, -1, -1), Point(1, 1, 1)},
-        false
+        false, 6, 2
+    );
+    field.insertObject(
+        std::string(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)"),
+        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+        {200, 400, 1},
+        Point(-50, -50, 0),
+        // correctFaceVertices starts from 1, reason same as tCFI
+        {599, 1, 2},
+        // tCFI starts from 1, just use the index from OBJ directly
+        1,
+        {},
+        true, 6, 2
     );
     /*field.insertObject(
-            std::string(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj.obj)"),
-            std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
-            {200, 400, 2},
-            Point(-50, -50, 0)
-            );
+        std::string(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)"),
+        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+        {200, 400, 2},
+        Point(25, 25, -0.1),
+        {},
+        0,
+        {},
+        true, 6, 2
+    );
     field.insertObject(
-            std::string(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher.obj)"),
-            std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
-            {200, 400, 2},
-            Point(25, 25, -0.1)
-            );
-    field.insertObject(
-            std::string(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)"),
-            std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
-            {9.5, 9.5, 3},
-            Point(-15, 2, 0.5)
-            );*/
+        std::string(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)"),
+        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+        {9.5, 9.5, 3},
+        Point(-15, 2, 0.5),
+        {},
+        0,
+        {todo},
+        false, 6, 2
+    );*/
 
     field.buildBVHTree();
 
 
     std::vector<Ray> rays;
-    rays.emplace_back(Point(2, 0, 2), Vec(Point(-1, 0, -1)));
-    //rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0,0,-1)));
-    //rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1,1.1,1.2)));
+    rays.emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
+    rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
+    rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
     std::cout << "-------Now----traversing----every----face--------" << std::endl;
 
@@ -70,7 +88,7 @@ int main() {
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
                         for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
-                            if (scatteredRays[j].intensity_p->at(k) > 1e-6) flag = true;
+                            if (scatteredRays[j].intensity_p->at(k) > 1e-10) flag = true;
                         if (flag) rays.push_back(scatteredRays[j]);
                     }
                 } else {
@@ -87,9 +105,9 @@ int main() {
 
 
     rays.clear();
-    rays.emplace_back(Point(2, 0, 2), Vec(Point(-1, 0, -1)));
-    //rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
-    //rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
+    rays.emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
+    rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
+    rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
 
     std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
@@ -121,7 +139,7 @@ int main() {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
-                                    if (scatteredRays[j].intensity_p->at(k) > 1e-6) flag = true;
+                                    if (scatteredRays[j].intensity_p->at(k) > 1e-10) flag = true;
                                 if (flag) rays.push_back(scatteredRays[j]);
                             }
                         }
@@ -173,7 +191,7 @@ int main() {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
-                                    if (scatteredRays[j].intensity_p->at(k) > 1e-6) flag = true;
+                                    if (scatteredRays[j].intensity_p->at(k) > 1e-10) flag = true;
                                 if (flag) rays.push_back(scatteredRays[j]);
                             }
                         }

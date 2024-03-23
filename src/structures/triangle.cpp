@@ -45,7 +45,7 @@ std::array<std::reference_wrapper<Point>, 3> Triangle::getVertices() noexcept {
     double gamma = 1 - alpha - beta;
 
     // Check if the point is inside the triangle
-    return (alpha >= -1e-6 && beta >= -1e-6 && gamma >= -1e-6);
+    return (alpha >= -1e-10 && beta >= -1e-10 && gamma >= -1e-10);
 }
 
 // calculate centroid

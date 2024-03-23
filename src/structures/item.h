@@ -41,6 +41,8 @@ public:
     // open mesh be like plane, ground, etc.
     // closed mesh be like ball, cube, cylinder
     bool isOpenMesh = false;
+    int forwardAxis = 6; // 1 2 3 for X Y Z, 4 5 6 for -X -Y -Z
+    int upAxis = 3;
     double Ns = 10.0;
     double Ni = 1.5;
     double d = 1.0;
