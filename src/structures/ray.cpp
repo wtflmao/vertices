@@ -8,16 +8,16 @@
 Ray::Ray(const Point& origin, const Vec& direction) noexcept
     : origin(origin), direction(direction) {
     scatteredLevel = 0;
-    intensity = {};
+    *intensity_p = {};
 }
 Ray::Ray(const Point& direction) noexcept
     : direction(Vec(direction)) {
     scatteredLevel = 0;
-    intensity = {};
+    *intensity_p = {};
 }
 
 Ray::Ray() noexcept {
-    intensity = {};
+    *intensity_p = {};
 }
 
 const Point& Ray::getOrigin() const noexcept {
@@ -86,6 +86,11 @@ Point Ray::mollerTrumboreIntersection(const Triangle& tri) const {
     // Check if the intersection point is behind the ray
     if (t < 0.0) {
         // The intersection lies behind the ray
+        return intersection;
+    }
+
+    // to check if the intersection is viable
+    if (t > Vec(origin, stopPoint).getLength()) {
         return intersection;
     }
 
@@ -167,7 +172,8 @@ Vec uniformHemisphereDirection(const Vec &normal) {
 
 Ray::Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
          int scatteredCount)
-    : origin(origin), direction(direction), intensity(intesity), scatteredLevel(scatteredCount) {
+    : origin(origin), direction(direction), scatteredLevel(scatteredCount) {
+    *intensity_p = intesity;
 }
 
 // reflectance correction, x is in nanometer
@@ -206,7 +212,7 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
     //reflectedDirection = reflectedDirection.getNormalized();
 
     // assign the intensity
-    std::array<double, spectralBands> reflectedIntensity = intensity;
+    std::array<double, spectralBands> reflectedIntensity = *intensity_p;
 
     // create reflected ray
     for (int i = 0; i < SCATTER_RAYS; i++) {
@@ -220,7 +226,7 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
                 // here we make use of randomness to construct "sky absorption" LOL
                 for (int j = 0; j < reflectedIntensity.size(); j++) {
                     reflectedIntensity[j] +=
-                            intensity[j] * reflectance * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+                            intensity_p->at(j) * reflectance * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
                 }
             }
             reflectionCnt++;
@@ -232,7 +238,7 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
 
     std::array<double, spectralBands> totalScatteredIntensity = {};
     for (int j = 0; j < reflectedIntensity.size(); j++) {
-        totalScatteredIntensity[j] = intensity[j] - reflectedIntensity[j];
+        totalScatteredIntensity[j] = intensity_p->at(j) - reflectedIntensity[j];
     }
 
     // create scattered rays
@@ -243,15 +249,19 @@ std::array<Ray, SCATTER_RAYS> Ray::scatter(const Triangle &tri, const Point &int
         }
         theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
         std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail << " "
-                  << theRays[i].intensity[0] << std::endl;
+                  << theRays[i].intensity_p->at(0) << std::endl;
     }
 
     if (reflectionRayIdx != -1) {
         std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
-                                                                                                                    theRays[reflectionRayIdx].intensity[0]
+                                                                                                                    theRays[reflectionRayIdx].intensity_p->at(0)
                                                                                                                     << std::endl;
     } else {
         std::cout << "...level " << scatteredLevel << "...has no reflectedDirection." << std::endl;
     }
     return theRays;
+}
+
+void Ray::setRayStopPoint(const Point& stopPoint_t) noexcept {
+    stopPoint = stopPoint_t;
 }

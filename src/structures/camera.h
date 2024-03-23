@@ -34,7 +34,7 @@ public:
     Vec platformDirection = Vec(Point(0.0, 0.0, -1.0));
 
     // sensor spectral response
-    std::array<std::array<Pixel, resolutionY>, resolutionX> spectralResp;
+    std::shared_ptr<std::array<std::array<Pixel, resolutionY>, resolutionX>> spectralResp_p;
 
 
     // PSF core function

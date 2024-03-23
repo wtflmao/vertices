@@ -31,7 +31,8 @@ public:
     Field(Point min, Point max) noexcept;
     void buildBVHTree();
     //void insertObject(Item &item);
-    bool insertObject(const std::string& objPath, const std::string& mtlPath, const std::array<double, 3> &scaleFactor, Point center);
+    bool insertObject(const std::string &objPath, const std::string &mtlPath, const std::array<double, 3> &scaleFactor, Point center, std::
+                      array<int, 3> correctFaceVertices, int tCFI, std::vector<Point> innerPoints, bool isOpenMesh);
 
     std::vector<Item> &getObjects();
 

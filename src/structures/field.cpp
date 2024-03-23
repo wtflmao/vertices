@@ -4,6 +4,8 @@
 
 #include "field.h"
 
+#include <utility>
+
 Field::Field() noexcept
     : bounds({BigO, BigO}), tree() {
 }
@@ -82,7 +84,7 @@ void Field::buildBVHTree() {
     std::cout << "Root node's height is " << (maxDepth = nodeCountArr[2]) << std::endl;
 }
 
-bool Field::insertObject(const std::string& objPath, const std::string& mtlPath, const std::array<double, 3>& scaleFactor, Point center) {
+bool Field::insertObject(const std::string& objPath, const std::string& mtlPath, const std::array<double, 3>& scaleFactor, Point center, std::array<int, 3> correctFaceVertices, int tCFI, std::vector<Point> innerPoints, bool isOpenMesh) {
     objects.emplace_back();
     Item& object = objects.back();
     object.setScaleFactor(scaleFactor);
@@ -95,6 +97,14 @@ bool Field::insertObject(const std::string& objPath, const std::string& mtlPath,
     if (!readNewItem(mtlPath.c_str(), object)) {
         std::cerr << "Error when doing readNewItem(#" << objects.size() << ") in Field::insertObject(" << mtlPath << ")" << std::endl;
         return false;
+    }
+
+    if (isOpenMesh) {
+        object.thatCorrectFaceVertices = correctFaceVertices;
+        object.thatCorrectFaceIndex = tCFI;
+        object.isOpenMesh = true;
+    } else {
+        object.innerPoints = std::move(innerPoints);
     }
 
     // check normal vec's directon is correct or not, if not, revise it

@@ -14,7 +14,11 @@ int main() {
         std::string(R"(C:\Users\root\3D Objects\mycube\mycube.obj)"),
         std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
         {1, 1, 1},
-        Point(0, 0, 0)
+        Point(0, 0, 0),
+        {},
+        0,
+        {Point(-1, -1, -1), Point(1, 1, 1)},
+        false
     );
     /*field.insertObject(
             std::string(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj.obj)"),
@@ -60,12 +64,13 @@ int main() {
                 auto & face = obj.getFaces()[faceIndex];
                 auto intersection = ray.mollerTrumboreIntersection(face);
                 if (intersection = ray.mollerTrumboreIntersection(face); NO_INTERSECT != intersection) {
+                    ray.setRayStopPoint(intersection);
                     std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
                     const auto scatteredRays = ray.scatter(face, intersection, 1);
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
-                        for (int k = 0; k < scatteredRays[j].intensity.size(); k++)
-                            if (scatteredRays[j].intensity[k] > 1e-6) flag = true;
+                        for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
+                            if (scatteredRays[j].intensity_p->at(k) > 1e-6) flag = true;
                         if (flag) rays.push_back(scatteredRays[j]);
                     }
                 } else {
@@ -83,8 +88,8 @@ int main() {
 
     rays.clear();
     rays.emplace_back(Point(2, 0, 2), Vec(Point(-1, 0, -1)));
-    rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
-    rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
+    //rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
+    //rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
 
     std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
@@ -108,14 +113,15 @@ int main() {
                 for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
                     auto &face = node->boxedFaces[faceIndex];
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
+                        ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
                         for (const auto scatteredRays = ray.scatter(*face, intersection, 1); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
-                                for (int k = 0; k < scatteredRays[j].intensity.size(); k++)
-                                    if (scatteredRays[j].intensity[k] > 1e-6) flag = true;
+                                for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
+                                    if (scatteredRays[j].intensity_p->at(k) > 1e-6) flag = true;
                                 if (flag) rays.push_back(scatteredRays[j]);
                             }
                         }
@@ -159,14 +165,15 @@ int main() {
                 for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
                     auto &face = node->boxedFaces[faceIndex];
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
+                        ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                   << intersection << std::endl;
                         for (const auto scatteredRays = ray.scatter(*face, intersection, 1); const auto &ray_sp:
                                 scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
-                                for (int k = 0; k < scatteredRays[j].intensity.size(); k++)
-                                    if (scatteredRays[j].intensity[k] > 1e-6) flag = true;
+                                for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
+                                    if (scatteredRays[j].intensity_p->at(k) > 1e-6) flag = true;
                                 if (flag) rays.push_back(scatteredRays[j]);
                             }
                         }

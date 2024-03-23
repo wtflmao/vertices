@@ -53,6 +53,9 @@ public:
     double Ke[3] = {0.588, 0.588, 0.588};
     std::string map_Ka = "F22.jpg";
     std::string map_Kd = "F22.jpg";
+    std::array<int, 3> thatCorrectFaceVertices = {1, 2, 4};
+    int thatCorrectFaceIndex = 0;
+    std::vector<Point> innerPoints;
 
     [[nodiscard]] const std::vector<Triangle> &getFaces() const noexcept;
     [[nodiscard]] const std::vector<Point> &getVertices() const noexcept;

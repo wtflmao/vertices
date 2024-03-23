@@ -78,7 +78,10 @@ void Item::normalVecInspector() noexcept {
 
         // create a vertices list to record which vertex is shared by which face
         // vector is generally faster than map when traversing and inserting one by one
-        std::vector<std::vector<int> > vertexAdjList(vertices.size());
+
+        std::cout<<"closedmesh normal here"<<std::endl;
+        std::vector<std::vector<int> > vertexAdjList;
+        vertexAdjList.reserve(vertices.size());
 
         const auto &fwvr = facesWithVertexRefs;
         // traverse the face list to update the adj list
@@ -88,10 +91,7 @@ void Item::normalVecInspector() noexcept {
             vertexAdjList[fwvr[i][2]].emplace_back(i);
         }
 
-        // todo: choose the real correct one, here's just a dummy one
-        // remember it start from 1, but vertexAdjList start from 0
-        const std::array<int, 3> thatCorrectFaceVertices = {1, 2, 4};
-        const int thatCorrectFaceIndex = 0;
+        // remember `thatCorrectedFaceVertices` and `that...Index` and `vertexAdjList` start from 0
 
         // the checked faces
         std::set<int> checkedFaces;
@@ -141,9 +141,7 @@ void Item::normalVecInspector() noexcept {
         // and then traverse every insider points, let them vote, use the vote result to determine
         // the farther insider point is, the less voting power it has at this face will be
 
-        // todo: change the innerPoints to real data, here's some dummy data
-        const std::vector<Point> innerPoints = {Point(0.1, 0.1, 0.1), Point(-0.2, -0.2, -0.2)};
-
+        std::cout<<"openmesh normal here"<<std::endl;
         for (auto &face: faces) {
             double sumCorrect = 0.0;
             double sumWrong = 0.0;
