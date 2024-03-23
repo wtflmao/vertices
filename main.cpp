@@ -29,10 +29,10 @@ int main() {
         std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
         {200, 400, 1},
         Point(-50, -50, 0),
-        // correctFaceVertices starts from 1, reason same as tCFI
-        {599, 1, 2},
-        // tCFI starts from 1, just use the index from OBJ directly
-        1,
+        // correctFaceVertices starts from 0, reason same as tCFI
+        {598, 0, 1},
+        // tCFI starts from 0, just use the index from OBJ directly
+        0,
         {},
         true, 6, 2
     );
@@ -60,7 +60,8 @@ int main() {
     field.buildBVHTree();
 
 
-    std::vector<Ray> rays;
+    auto rays_p = std::make_shared<std::vector<Ray>>();
+    auto & rays = *rays_p;
     rays.emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
     rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
     rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
@@ -81,10 +82,10 @@ int main() {
             for (int faceIndex=0; faceIndex < obj.getFaces().size(); faceIndex++) {
                 auto & face = obj.getFaces()[faceIndex];
                 auto intersection = ray.mollerTrumboreIntersection(face);
-                if (intersection = ray.mollerTrumboreIntersection(face); NO_INTERSECT != intersection) {
+                if (NO_INTERSECT != intersection) {
                     ray.setRayStopPoint(intersection);
                     std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
-                    const auto scatteredRays = ray.scatter(face, intersection, 1);
+                    const auto scatteredRays = ray.scatter(face, intersection, 0.5);
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
                         for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
@@ -134,7 +135,7 @@ int main() {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, 1); const auto &ray_sp:
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.5); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
@@ -186,7 +187,7 @@ int main() {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                   << intersection << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, 1); const auto &ray_sp:
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.5); const auto &ray_sp:
                                 scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;

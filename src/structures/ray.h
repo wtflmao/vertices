@@ -10,6 +10,7 @@
 #include "vec.h"
 #include "triangle.h"
 #include "box.h"
+#include <numbers>
 
 //constexpr int SCATTER_RAYS = 8;
 
@@ -43,7 +44,7 @@ public:
     Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
         int scatteredCount);
 
-    [[nodiscard]] std::array<Ray, SCATTER_RAYS> scatter(const Triangle &tri, const Point &intersection,
+    [[nodiscard]] std::array<Ray, SCATTER_RAYS+1> scatter(const Triangle &tri, const Point &intersection,
                                                         double reflectance) const;
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;

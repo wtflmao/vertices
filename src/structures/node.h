@@ -7,6 +7,7 @@
 
 #include "../common.h"
 #include "box.h"
+#include <numeric>
 
 
 /*constexpr std::size_t BVH_NODE_CHILDREN = 6;

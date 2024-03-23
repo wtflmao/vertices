@@ -80,17 +80,27 @@ void Item::normalVecInspector() noexcept {
         // vector is generally faster than map when traversing and inserting one by one
 
         std::cout << "openmesh normal here" << std::endl;
-        std::vector<std::vector<int> > vertexAdjList;
-        vertexAdjList.reserve(vertices.size() + 1);
+        auto vertexAdjList_p = std::make_shared<std::vector<std::vector<int>>>(vertices.size());
+        //vertexAdjList.reserve(vertices.size());
+        auto & vertexAdjList = *vertexAdjList_p;
+        for (int m = 0; m < vertices.size(); m++) {
+            vertexAdjList[m] = std::vector<int>({});
+        }
 
         //std::cout << "openmesh normal hererrrrrrrrr" << std::endl;
 
         const auto &fwvr = facesWithVertexRefs;
         // traverse the face list to update the adj list
         for (int i = 0; i < fwvr.size(); i++) {
-            vertexAdjList[fwvr[i][0]].emplace_back(i);
-            vertexAdjList[fwvr[i][1]].emplace_back(i);
-            vertexAdjList[fwvr[i][2]].emplace_back(i);
+            if(fwvr[i][0] >= vertexAdjList.size() ||
+               fwvr[i][1] >= vertexAdjList.size() ||
+               fwvr[i][2] >= vertexAdjList.size()) {
+                throw std::out_of_range("Index out of range in vertexAdjList");
+            } else {
+                vertexAdjList[fwvr[i][0]].push_back(i);
+                vertexAdjList[fwvr[i][1]].push_back(i);
+                vertexAdjList[fwvr[i][2]].push_back(i);
+            }
         }
         //std::cout << "openmesh normal herecccc" << std::endl;
 
@@ -103,9 +113,13 @@ void Item::normalVecInspector() noexcept {
 
         // vertices of unchecked faces
         std::queue<int> verticesOfUncheckedFaces;
+        std::set<int> verticesOfUncheckedFacesSet; // for non-duplicate pushing back
         verticesOfUncheckedFaces.push(thatCorrectFaceVertices[0]);
         verticesOfUncheckedFaces.push(thatCorrectFaceVertices[1]);
         verticesOfUncheckedFaces.push(thatCorrectFaceVertices[2]);
+        verticesOfUncheckedFacesSet.insert(thatCorrectFaceVertices[0]);
+        verticesOfUncheckedFacesSet.insert(thatCorrectFaceVertices[1]);
+        verticesOfUncheckedFacesSet.insert(thatCorrectFaceVertices[2]);
         //std::cout << "openmesh normal here ddd" << std::endl;
 
         // traverse adjacent list
@@ -126,8 +140,10 @@ void Item::normalVecInspector() noexcept {
                             checkedFaces.insert(j);
                             // find face j's all vertices
                             for (auto l: fwvr[j]) {
-                                if (l == i) continue;
-                                verticesOfUncheckedFaces.push(l);
+                                if (!verticesOfUncheckedFacesSet.contains(l)) {
+                                    verticesOfUncheckedFaces.push(l);
+                                    verticesOfUncheckedFacesSet.insert(l);
+                                }
                             }
                         } else {
                             // not found, what the duck???
@@ -138,7 +154,10 @@ void Item::normalVecInspector() noexcept {
                 }
             }
             verticesOfUncheckedFaces.pop();
+            // do not remove the element from the set, it is for non-duplicate pushing back
         }
+        // clean up memory
+        vertexAdjList_p.reset();
     } else {
         // closed mesh needs some pre-given points that INSIDE the object
         // and use Vec(insider point A, centroid of a face) cross face's normal vector to
