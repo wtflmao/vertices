@@ -4,6 +4,8 @@
 
 #include "ray.h"
 
+#include <utility>
+
 // Constructor
 Ray::Ray(const Point &origin, const Vec &direction) noexcept
     : origin(origin), direction(direction) {
@@ -19,6 +21,11 @@ Ray::Ray(const Point &direction) noexcept
 
 Ray::Ray() noexcept {
     *intensity_p = {};
+}
+
+Ray::Ray(const Point &origin, const Vec &direction, std::shared_ptr<std::array<double, spectralBands>> intensity_p) noexcept
+    : origin(origin), direction(direction), intensity_p(std::move(intensity_p)) {
+    scatteredLevel = 0;
 }
 
 const Point &Ray::getOrigin() const noexcept {
@@ -192,11 +199,11 @@ inline double reflectanceCorrection(const double x) {
 // scatter the ray with a give triangle(needs its normal vector) and intersection point
 // returns a Ray object
 // ior means index of refraction, for materials that non-transparent we set ior = 1.0
-std::array<Ray, SCATTER_RAYS+1> Ray::scatter(const Triangle &tri, const Point &intersection,
-                                           const double reflectance) const {
+std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point &intersection,
+                                               const double reflectance) const {
     if (scatteredLevel >= 2) {
         std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
-        return {std::array<Ray, SCATTER_RAYS+1>{}};
+        return {std::array<Ray, SCATTER_RAYS + 1>{}};
     }
 
     /* refletance is a value between 0 and 1
@@ -206,12 +213,12 @@ std::array<Ray, SCATTER_RAYS+1> Ray::scatter(const Triangle &tri, const Point &i
      */
     // todo: fetch the reflectance from the material
 
-    std::array<Ray, SCATTER_RAYS+1> theRays;
+    std::array<Ray, SCATTER_RAYS + 1> theRays;
     const Vec incidentDirection = direction.getNormalized();
     const Vec normal = tri.getNormal().getNormalized();
 
     // get the reflection direction
-    Vec reflectedDirection = (incidentDirection - (normal * normal.dot(incidentDirection)) * 2.0).getNormalized();
+    const Vec reflectedDirection = (incidentDirection - (normal * normal.dot(incidentDirection)) * 2.0).getNormalized();
     int reflectionRayIdx = -1;
     int reflectionCnt = 0;
     //reflectedDirection = reflectedDirection.getNormalized();
@@ -240,11 +247,11 @@ std::array<Ray, SCATTER_RAYS+1> Ray::scatter(const Triangle &tri, const Point &i
     }
 
     // build a temp array for scattered rays
-    auto scatteredIntensity_p = std::make_unique<std::array<double, spectralBands>>();
-    auto & scatteredIntensity = *scatteredIntensity_p;
+    auto scatteredIntensity_p = std::make_unique<std::array<double, spectralBands> >();
+    auto &scatteredIntensity = *scatteredIntensity_p;
 
-    auto totalScatteredIntensity_p = std::make_unique<std::array<double, spectralBands>>();
-    auto & totalScatteredIntensity = *totalScatteredIntensity_p;
+    auto totalScatteredIntensity_p = std::make_unique<std::array<double, spectralBands> >();
+    auto &totalScatteredIntensity = *totalScatteredIntensity_p;
 
     for (int j = 0; j < reflectedIntensity.size(); j++) {
         totalScatteredIntensity[j] = intensity_p->at(j) - reflectedIntensity[j];
@@ -258,8 +265,9 @@ std::array<Ray, SCATTER_RAYS+1> Ray::scatter(const Triangle &tri, const Point &i
         }
         if (i >= 1 && i < SCATTER_RAYS) {
             theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
-            std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail << " "
-                << theRays[i].intensity_p->at(0) << std::endl;
+            std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
+                    " "
+                    << theRays[i].intensity_p->at(0) << std::endl;
         }
 
     }

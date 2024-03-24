@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <map>
 
+constexpr double FACTOR = 1.0;
 
 class Camera {
 private:
@@ -40,7 +41,7 @@ public:
     // PSF core function
     void PSF();
 
-    std::vector<Ray> shootRaysOut(const Vec &rayDirection) const;
+    [[nodiscard]] std::unique_ptr<std::vector<Ray>> shootRaysOut(const Vec &rayDirection) const;
 
     Camera();
 

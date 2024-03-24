@@ -20,7 +20,7 @@ private:
     // direction is a vector(starts at wherever) and has nothing to do with origin
     Vec direction = Vec(Point(2,2,2));
     // stopPoint is for when the ray intersects with a surface or is out of the box and we should stop the ray from goin any further
-    size_t stopLength = 200 * 200;
+    size_t stopLength = 999;
 
 public:
     std::shared_ptr<std::array<double, spectralBands> > intensity_p = std::make_shared<std::array<double,
@@ -30,6 +30,7 @@ public:
 
     Ray(const Point &origin, const Vec &direction) noexcept;
     explicit Ray(const Point& direction) noexcept;
+    Ray(const Point &origin, const Vec &direction, std::shared_ptr<std::array<double, spectralBands>> intensity_p) noexcept;
 
     Ray() noexcept;
 
@@ -44,8 +45,8 @@ public:
     Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
         int scatteredCount);
 
-    [[nodiscard]] std::array<Ray, SCATTER_RAYS+1> scatter(const Triangle &tri, const Point &intersection,
-                                                        double reflectance) const;
+    [[nodiscard]] std::array<Ray, SCATTER_RAYS + 1> scatter(const Triangle &tri, const Point &intersection,
+                                                            double reflectance) const;
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;
 };

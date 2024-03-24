@@ -6,8 +6,8 @@
 #include "main.h"
 
 int main() {
-    std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
-            getNormal().tail << std::endl;
+    //std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
+    //        getNormal().tail << std::endl;
     Field field = Field(
             Point(-200, -200, 0),
             Point(200, 200, 30)
@@ -21,7 +21,7 @@ int main() {
         {},
         // tCFI starts from 0
         0,
-        {Point(-1, -1, -1), Point(1, 1, 1)},
+        {Point(-1, -1, -1), Point(1, 1, 1), Point{0, 0, 0}},
         false, 6, 2
     );
     field.insertObject(
@@ -60,8 +60,8 @@ int main() {
     field.buildBVHTree();
 
 
-    auto rays_p = std::make_shared<std::vector<Ray>>();
-    auto & rays = *rays_p;
+    auto rays_p = std::make_shared<std::vector<Ray> >();
+    auto &rays = *rays_p;
     rays.emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
     rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
     rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
@@ -165,8 +165,11 @@ int main() {
     // commonly the height from ground is 200m
     camera.spatialPosition = {Point(-0.008, -0.006, CAMERA_HEIGHT), Point(0.008, 0.006, CAMERA_HEIGHT)};
     rays.clear();
+    camera.buildSunlightSpectrum();
+
     // after this there should be resolution X*Y rays
-    rays = camera.shootRaysOut(field.sunlightDirectionToGround);
+    std::unique_ptr<std::vector<Ray>> rays_pu = camera.shootRaysOut(field.sunlightDirectionToGround);
+    rays = *rays_pu;
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
     // only for timing
@@ -188,7 +191,7 @@ int main() {
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                   << intersection << std::endl;
                         for (const auto scatteredRays = ray.scatter(*face, intersection, 0.5); const auto &ray_sp:
-                                scatteredRays) {
+                             scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)

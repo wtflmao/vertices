@@ -80,9 +80,9 @@ void Item::normalVecInspector() noexcept {
         // vector is generally faster than map when traversing and inserting one by one
 
         std::cout << "openmesh normal here" << std::endl;
-        auto vertexAdjList_p = std::make_shared<std::vector<std::vector<int>>>(vertices.size());
+        auto vertexAdjList_p = std::make_shared<std::vector<std::vector<int> > >(vertices.size());
         //vertexAdjList.reserve(vertices.size());
-        auto & vertexAdjList = *vertexAdjList_p;
+        auto &vertexAdjList = *vertexAdjList_p;
         for (int m = 0; m < vertices.size(); m++) {
             vertexAdjList[m] = std::vector<int>({});
         }
@@ -92,9 +92,9 @@ void Item::normalVecInspector() noexcept {
         const auto &fwvr = facesWithVertexRefs;
         // traverse the face list to update the adj list
         for (int i = 0; i < fwvr.size(); i++) {
-            if(fwvr[i][0] >= vertexAdjList.size() ||
-               fwvr[i][1] >= vertexAdjList.size() ||
-               fwvr[i][2] >= vertexAdjList.size()) {
+            if (fwvr[i][0] >= vertexAdjList.size() ||
+                fwvr[i][1] >= vertexAdjList.size() ||
+                fwvr[i][2] >= vertexAdjList.size()) {
                 throw std::out_of_range("Index out of range in vertexAdjList");
             } else {
                 vertexAdjList[fwvr[i][0]].push_back(i);

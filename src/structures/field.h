@@ -25,7 +25,7 @@ public:
     std::array<Point, 2> bounds;
     std::size_t nodeCount = 0;
     std::size_t maxDepth = 0;
-    const Vec sunlightDirectionToGround = Vec(Point(-std::sqrt(3), 0, -1));
+    const Vec sunlightDirectionToGround = Vec(Point(-1, 0, -std::sqrt(3)));
 
     Field() noexcept;
     Field(Point min, Point max) noexcept;
@@ -38,7 +38,7 @@ public:
 
     std::vector<Item> &getObjects();
 
-    std::vector<std::shared_ptr<Node> > generateNodeList() const;
+    [[nodiscard]] std::vector<std::shared_ptr<Node> > generateNodeList() const;
 
     void initPfaces(const std::vector<std::shared_ptr<Triangle> > &p_faces_t);
 
