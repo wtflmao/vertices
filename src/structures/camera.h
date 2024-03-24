@@ -41,7 +41,7 @@ public:
     // PSF core function
     void PSF();
 
-    [[nodiscard]] std::unique_ptr<std::vector<Ray>> shootRaysOut(const Vec &rayDirection) const;
+    [[nodiscard]] std::vector<Ray> *shootRaysOut(const Vec &rayDirection) const;
 
     Camera();
 

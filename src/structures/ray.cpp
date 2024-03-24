@@ -10,21 +10,22 @@
 Ray::Ray(const Point &origin, const Vec &direction) noexcept
     : origin(origin), direction(direction) {
     scatteredLevel = 0;
-    *intensity_p = {};
+    intensity_p = {};
 }
 
 Ray::Ray(const Point &direction) noexcept
     : direction(Vec(direction)) {
     scatteredLevel = 0;
-    *intensity_p = {};
+    intensity_p = {};
 }
 
 Ray::Ray() noexcept {
-    *intensity_p = {};
+    intensity_p = {};
 }
 
-Ray::Ray(const Point &origin, const Vec &direction, std::shared_ptr<std::array<double, spectralBands>> intensity_p) noexcept
-    : origin(origin), direction(direction), intensity_p(std::move(intensity_p)) {
+Ray::Ray(const Point &origin, const Vec &direction,
+         std::array<double, spectralBands> intensity_p) noexcept
+    : origin(origin), direction(direction), intensity_p(intensity_p) {
     scatteredLevel = 0;
 }
 
@@ -185,13 +186,14 @@ Vec uniformHemisphereDirection(const Vec &normal) {
 Ray::Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
          int scatteredCount)
     : origin(origin), direction(direction), scatteredLevel(scatteredCount) {
-    *intensity_p = intesity;
+    intensity_p = intesity;
 }
 
 // reflectance correction, x is in nanometer
 inline double reflectanceCorrection(const double x) {
+    return 1.0;
     constexpr double mu = UPPER_WAVELENGTH;
-    constexpr double sigma = 0.06;
+    constexpr double sigma = 0.03;
     const double a = (x - mu) / sigma;
     return (1 - sigma) + std::exp(-0.5 * a * a) / (sigma * std::sqrt(2.0 * std::numbers::pi));
 }
@@ -224,27 +226,17 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     //reflectedDirection = reflectedDirection.getNormalized();
 
     // assign the intensity
-    std::array<double, spectralBands> reflectedIntensity = *intensity_p;
+    std::array<double, spectralBands> reflectedIntensity = {};
 
     // create reflected ray
-    for (int i = 0; i < SCATTER_RAYS; i++) {
-        if (rand01() < reflectance) {
-            // generate a reflected ray
-            if (reflectionRayIdx == -1) {
-                theRays[0] = (Ray(intersection, reflectedDirection, reflectedIntensity, scatteredLevel + 1));
-                reflectionRayIdx = 0;
-            } else {
-                //theRays[reflectionRayIdx].intensity += reflectedIntensity / SCATTER_RAYS;
-                // here we make use of randomness to construct "sky absorption" LOL
-                for (int j = 0; j < reflectedIntensity.size(); j++) {
-                    reflectedIntensity[j] +=
-                            intensity_p->at(j) * reflectance * reflectanceCorrection(
-                                UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
-                }
-            }
-            reflectionCnt++;
+
+        for (int j = 0; j < reflectedIntensity.size(); j++) {
+            reflectedIntensity[j] = intensity_p[j] * reflectance * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
         }
-    }
+        theRays[0] = (Ray(intersection, reflectedDirection, reflectedIntensity, scatteredLevel + 1));
+        reflectionRayIdx = 0;
+        reflectionCnt++;
+
 
     // build a temp array for scattered rays
     auto scatteredIntensity_p = std::make_unique<std::array<double, spectralBands> >();
@@ -254,27 +246,27 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     auto &totalScatteredIntensity = *totalScatteredIntensity_p;
 
     for (int j = 0; j < reflectedIntensity.size(); j++) {
-        totalScatteredIntensity[j] = intensity_p->at(j) - reflectedIntensity[j];
+        totalScatteredIntensity[j] = intensity_p[j] - reflectedIntensity[j];
     }
 
     // create scattered rays
-    for (int i = 1; i <= SCATTER_RAYS - reflectionCnt; i++) {
+    for (int i = 1; i <= SCATTER_RAYS; i++) {
         Vec scatteredDirection = uniformHemisphereDirection(normal);
         for (int j = 0; j < totalScatteredIntensity.size(); j++) {
-            scatteredIntensity[j] = totalScatteredIntensity[j] / (SCATTER_RAYS - reflectionCnt);
+            scatteredIntensity[j] = totalScatteredIntensity[j] / (SCATTER_RAYS - reflectionCnt + 1);
         }
-        if (i >= 1 && i < SCATTER_RAYS) {
+        //if (i >= 1 && i < SCATTER_RAYS) {
             theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
             std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
                     " "
-                    << theRays[i].intensity_p->at(0) << std::endl;
-        }
+                    << theRays[i].intensity_p[0] << std::endl;
+        //}
 
     }
 
     if (reflectionRayIdx != -1) {
         std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
-                theRays[reflectionRayIdx].intensity_p->at(0)
+                theRays[reflectionRayIdx].intensity_p[0]
                 << std::endl;
     } else {
         std::cout << "...level " << scatteredLevel << "...has no reflectedDirection." << std::endl;
@@ -283,5 +275,5 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
 }
 
 void Ray::setRayStopPoint(const Point &stopPoint_t) noexcept {
-    stopLength = Vec(origin, stopPoint_t).getLength();
+    stopLength = Vec(origin, stopPoint_t).getLength() - 1e-8;
 }

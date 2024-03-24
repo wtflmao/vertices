@@ -11,10 +11,10 @@ inline void CrossProduct(const double v1[3], const double v2[3], double v3[3]) {
 }
 
 inline void Normalize(double v[3]) {
-    const double len = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    const double len = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     if (std::abs(len) < 1e-9) {
         // handle error
-        std::cout<<"Error: Normalizing zero vector.\a"<<std::endl;
+        std::cout << "Error: Normalizing zero vector.\a" << std::endl;
     }
     v[0] /= len;
     v[1] /= len;
@@ -28,7 +28,7 @@ inline void InverseMatrix(double matrix[3][3], double inverse[3][3]) {
 
     if (std::abs(det) < 1e-9) {
         // throw error message or handle as necessary
-        std::cout<<"Error: Matrix is not invertible.\a"<<std::endl;
+        std::cout << "Error: Matrix is not invertible.\a" << std::endl;
         exit(0);
     }
 
@@ -45,7 +45,7 @@ inline void InverseMatrix(double matrix[3][3], double inverse[3][3]) {
 
 // camera coord system, origin point is the camera rectangle's the most left and up point
 // its x' axis and y' axis are its two egdes, z' axis comes from cross product(right-handed)
-inline void groundToCamera(const Point & A, const Point & B, const Point & ori, Point & ret) {
+inline void groundToCamera(const Point &A, const Point &B, const Point &ori, Point &ret) {
     double dx = A.x, dy = A.y, dz = A.z;
 
     // construct the rotate matrix
@@ -84,7 +84,7 @@ inline void groundToCamera(const Point & A, const Point & B, const Point & ori, 
     ret.z = z_prime * FACTOR;
 }
 
-inline void cameraToGround(const Point & A, const Point & B, const Point & ori, Point & ret) {
+inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Point &ret) {
     double dx = A.x, dy = A.y, dz = A.z;
 
     // construct the rotate matrix
@@ -131,25 +131,24 @@ inline void cameraToGround(const Point & A, const Point & B, const Point & ori, 
 
 void Camera::PSF() {};
 
-std::unique_ptr<std::vector<Ray>> Camera::shootRaysOut(const Vec &rayDirection) const {
-    auto rays = std::make_unique<std::vector<Ray>>();
+std::vector<Ray> *Camera::shootRaysOut(const Vec &rayDirection) const {
+    auto rays = new std::vector<Ray>();
     rays->reserve(resolutionX * resolutionY);
 
     // generate a ray for every pixel
-    for (int i = 0; i < resolutionX; i++) {
-        for (int j = 0; j < resolutionY; j++) {
-            // cameraPixelPoint is a point in camera coordinate system
-            auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
+    for (int cnt = 0; cnt < resolutionX * resolutionY; cnt++) {
+        // cameraPixelPoint is a point in camera coordinate system
+        auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
 
-            pixelInCameraCoord.x = i * pixelSize * 1e-6;
-            pixelInCameraCoord.y = j * pixelSize * 1e-6;
-            pixelInCameraCoord.z = 0.0;
+        // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
+        pixelInCameraCoord.x = ((cnt - 1) / resolutionX) * (pixelSize * 1e-6);
+        pixelInCameraCoord.y = ((cnt - 1) % resolutionX) * (pixelSize * 1e-6);
+        pixelInCameraCoord.z = 0.0;
 
-            cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
+        cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
 
-            // generate the ray
-            rays->emplace_back(pixelInGroundCoord, rayDirection, sunlightSpectrum, 1);
-        }
+        // generate the ray
+        rays->emplace_back(pixelInGroundCoord, rayDirection, sunlightSpectrum, 1);
     }
     return rays;
 }
@@ -182,7 +181,7 @@ void Camera::buildSunlightSpectrum() {
     }
 
     int cnt = 0;
-    for (int i = UPPER_WAVELENGTH; i <= LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
+    for (int i = UPPER_WAVELENGTH; i < LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
         sunlightSpectrum[cnt++] = sunlightSpectrumMap_t[i] / maximumTotRad * 100.0;
     }
     std::cout << "Default sunlight spectrum has been built." << std::endl;

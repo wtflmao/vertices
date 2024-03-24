@@ -24,7 +24,7 @@ int main() {
         {Point(-1, -1, -1), Point(1, 1, 1), Point{0, 0, 0}},
         false, 6, 2
     );
-    field.insertObject(
+    /*field.insertObject(
         std::string(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)"),
         std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
         {200, 400, 1},
@@ -36,7 +36,7 @@ int main() {
         {},
         true, 6, 2
     );
-    /*field.insertObject(
+    field.insertObject(
         std::string(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)"),
         std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
         {200, 400, 2},
@@ -88,8 +88,8 @@ int main() {
                     const auto scatteredRays = ray.scatter(face, intersection, 0.5);
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
-                        for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
-                            if (scatteredRays[j].intensity_p->at(k) > 1e-10) flag = true;
+                        for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
+                            if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
                         if (flag) rays.push_back(scatteredRays[j]);
                     }
                 } else {
@@ -135,12 +135,12 @@ int main() {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.5); const auto &ray_sp:
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.2); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
-                                for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
-                                    if (scatteredRays[j].intensity_p->at(k) > 1e-10) flag = true;
+                                for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
+                                    if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
                                 if (flag) rays.push_back(scatteredRays[j]);
                             }
                         }
@@ -168,8 +168,12 @@ int main() {
     camera.buildSunlightSpectrum();
 
     // after this there should be resolution X*Y rays
-    std::unique_ptr<std::vector<Ray>> rays_pu = camera.shootRaysOut(field.sunlightDirectionToGround);
-    rays = *rays_pu;
+    auto rays_pp = camera.shootRaysOut(field.sunlightDirectionToGround);
+    if (rays_pp == nullptr) {
+        std::cout << "trying to deref a nullptr in main() from camera.shootRaysOut() call\a" << std::endl;
+        return 8;
+    }
+    rays = *rays_pp;
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
     // only for timing
@@ -189,13 +193,13 @@ int main() {
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
-                                  << intersection << std::endl;
+                                  << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
                         for (const auto scatteredRays = ray.scatter(*face, intersection, 0.5); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
-                                for (int k = 0; k < scatteredRays[j].intensity_p->size(); k++)
-                                    if (scatteredRays[j].intensity_p->at(k) > 1e-10) flag = true;
+                                for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
+                                    if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
                                 if (flag) rays.push_back(scatteredRays[j]);
                             }
                         }
@@ -212,6 +216,7 @@ int main() {
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
     std::cout << "Ray count: " << rays.size() << "." << std::endl;
+    delete rays_pp;
 
     return 0;
 }

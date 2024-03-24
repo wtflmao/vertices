@@ -16,7 +16,7 @@ inline double rand01() {
 
 
 // VERTICES_RAY_H
-constexpr int SCATTER_RAYS = 1;
+constexpr int SCATTER_RAYS = 5;
 
 
 // VERTICES_NODE_H
@@ -28,8 +28,8 @@ constexpr std::size_t SAMPLINGS = 64;
 
 // VERTICES_PIXEL_H
 // 1024 by 768 pixels
-constexpr int resolutionX = 800;
-constexpr int resolutionY = 600;
+constexpr int resolutionX = 8;
+constexpr int resolutionY = 6;
 constexpr int spectralBands = 100;
 // all in nanometer, please be in integer
 constexpr int UPPER_WAVELENGTH = 380;
@@ -39,7 +39,7 @@ constexpr int WAVELENGTH_STEP = (LOWER_WAVELENGTH - UPPER_WAVELENGTH) / spectral
 
 // VERTICES_CAMERA_H
 // this eight means the first pixel's height
-constexpr double CAMERA_HEIGHT = 300.0;
+constexpr double CAMERA_HEIGHT = 1.2;
 // pixel distance in micron 6969
 constexpr double pixelSize = 6.9;
 // GSD in meter

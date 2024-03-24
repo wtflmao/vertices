@@ -23,14 +23,15 @@ private:
     size_t stopLength = 999;
 
 public:
-    std::shared_ptr<std::array<double, spectralBands> > intensity_p = std::make_shared<std::array<double,
-        spectralBands> >();
+    std::array<double, spectralBands>intensity_p = {};
     int scatteredLevel = 0;
     //std::shared_ptr<std::array<double, spectralBands>> spectrum_p = std::make_shared<std::array<double, spectralBands>>();
 
     Ray(const Point &origin, const Vec &direction) noexcept;
     explicit Ray(const Point& direction) noexcept;
-    Ray(const Point &origin, const Vec &direction, std::shared_ptr<std::array<double, spectralBands>> intensity_p) noexcept;
+
+    Ray(const Point &origin, const Vec &direction,
+        std::array<double, spectralBands> intensity_p) noexcept;
 
     Ray() noexcept;
 
