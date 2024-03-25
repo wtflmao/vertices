@@ -131,8 +131,7 @@ inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Poi
 
 void Camera::PSF() {};
 
-std::vector<Ray> *Camera::shootRaysOut(const Vec &rayDirection) const {
-    auto rays = new std::vector<Ray>();
+void Camera::shootRaysOut(const Vec &rayDirection, std::vector<Ray> *rays) {
     rays->reserve(resolutionX * resolutionY);
 
     // generate a ray for every pixel
@@ -141,8 +140,8 @@ std::vector<Ray> *Camera::shootRaysOut(const Vec &rayDirection) const {
         auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
 
         // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
-        pixelInCameraCoord.x = ((cnt - 1) / resolutionX) * (pixelSize * 1e-6);
-        pixelInCameraCoord.y = ((cnt - 1) % resolutionX) * (pixelSize * 1e-6);
+        pixelInCameraCoord.x = (cnt / resolutionX) * (pixelSize * 1e-6);
+        pixelInCameraCoord.y = (cnt % resolutionX) * (pixelSize * 1e-6);
         pixelInCameraCoord.z = 0.0;
 
         cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
@@ -150,7 +149,31 @@ std::vector<Ray> *Camera::shootRaysOut(const Vec &rayDirection) const {
         // generate the ray
         rays->emplace_back(pixelInGroundCoord, rayDirection, sunlightSpectrum, 1);
     }
-    return rays;
+}
+
+// x and y should starts at 0 and not bigger than resolutionX-1 and resolutionY-1
+Point getCoord(const int x, const int y) {
+    return {x * pixelSize * 1e-6, y * pixelSize * 1e-6, 0.0};
+}
+
+Ray Camera::shootRay(const Vec &rayDirection, const int cnt) {
+    if (cnt < 0 && cnt >= resolutionX * resolutionY) {
+        return {};
+    }
+
+    // generate a ray for the current pixel( given by cnt )
+    // cameraPixelPoint is a point in camera coordinate system
+    auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
+
+    // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
+    pixelInCameraCoord.x = (cnt / resolutionX) * (pixelSize * 1e-6);
+    pixelInCameraCoord.y = (cnt % resolutionX) * (pixelSize * 1e-6);
+    pixelInCameraCoord.z = 0.0;
+
+    cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
+
+    // generate the ray
+    return {pixelInGroundCoord, rayDirection, sunlightSpectrum, CAMERA_RAY_STARTER_SCATTER_LEVEL};
 }
 
 Camera::Camera() = default;
@@ -182,8 +205,32 @@ void Camera::buildSunlightSpectrum() {
 
     int cnt = 0;
     for (int i = UPPER_WAVELENGTH; i < LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
-        sunlightSpectrum[cnt++] = sunlightSpectrumMap_t[i] / maximumTotRad * 100.0;
+        sunlightSpectrum[cnt++] = sunlightSpectrumMap_t[i] / maximumTotRad;
     }
     std::cout << "Default sunlight spectrum has been built." << std::endl;
+}
+
+double overlappingFactor(const Point &source, int x, int y) noexcept {
+    // todo
+    return 1.0;
+}
+
+// todo
+void Camera::addRaySpectrumResp(Ray &ray) noexcept {
+    auto cameraArr = *spectralResp_p;
+    //Point thisPixelPoint_camera = BigO;
+    //Point thisPixelPoint_ground = ray.getOrigin();
+    //groundToCamera(spatialPosition[0], spatialPosition[1], thisPixelPoint_ground, thisPixelPoint_camera);
+    //thisPixelPoint_camera.x = std::round(thisPixelPoint_camera.x * 1e6) / 1e6;
+    // travese every pixel, this (i,j) pixel is the pixel taht where we store the response
+    for (int i = 0; i < resolutionX; i++) {
+        for (int j = 0; j < resolutionY; j++) {
+            auto &thatPixel = cameraArr[i][j];
+            double factor = overlappingFactor(ray.getOrigin(), i, j);
+            for (int k = UPPER_WAVELENGTH; k < LOWER_WAVELENGTH; k += WAVELENGTH_STEP) {
+                thatPixel.pixelSpectralResp[k] += (ray.intensity_p[k] * factor);
+            }
+        }
+    }
 }
 

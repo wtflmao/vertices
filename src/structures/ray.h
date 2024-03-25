@@ -16,14 +16,18 @@
 
 class Ray {
 private:
+    // origin indicates where is this ray starts
     Point origin = BigO;
     // direction is a vector(starts at wherever) and has nothing to do with origin
     Vec direction = Vec(Point(2,2,2));
     // stopPoint is for when the ray intersects with a surface or is out of the box and we should stop the ray from goin any further
-    size_t stopLength = 999;
+    double stopLength = STOP_LENGTH;
 
 public:
-    std::array<double, spectralBands>intensity_p = {};
+    // ancestor indicates where is this ray's ancestor(the one has the lowest scatter level) starts
+    Point ancestor = BigO;
+
+    std::array<double, spectralBands> intensity_p = {};
     int scatteredLevel = 0;
     //std::shared_ptr<std::array<double, spectralBands>> spectrum_p = std::make_shared<std::array<double, spectralBands>>();
 
@@ -35,13 +39,15 @@ public:
 
     Ray() noexcept;
 
-    [[nodiscard]] Vec crossVec(const Vec& vec) const noexcept;
-    [[nodiscard]] double dotVec(const Vec& vec) const noexcept;
+    [[nodiscard]] Vec crossVec(const Vec &other) const noexcept;
+
+    [[nodiscard]] double dotVec(const Vec &other) const noexcept;
+
     [[nodiscard]] const Point& getOrigin() const noexcept;
     [[nodiscard]] const Vec& getDirection() const noexcept;
     [[nodiscard]] Point mollerTrumboreIntersection(const Triangle &tri) const;
 
-    bool intersectsWithBox(const Box &box);
+    bool intersectsWithBox(const Box &box) const;
 
     Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
         int scatteredCount);

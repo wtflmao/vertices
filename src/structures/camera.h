@@ -41,11 +41,15 @@ public:
     // PSF core function
     void PSF();
 
-    [[nodiscard]] std::vector<Ray> *shootRaysOut(const Vec &rayDirection) const;
+    void shootRaysOut(const Vec &rayDirection, std::vector<Ray> *rays);
+
+    Ray shootRay(const Vec &rayDirection, int cnt);
 
     Camera();
 
     void buildSunlightSpectrum();
+
+    void addRaySpectrumResp(Ray &ray) noexcept;
 };
 
 

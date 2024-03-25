@@ -10,12 +10,14 @@
 Ray::Ray(const Point &origin, const Vec &direction) noexcept
     : origin(origin), direction(direction) {
     scatteredLevel = 0;
+    ancestor = origin;
     intensity_p = {};
 }
 
 Ray::Ray(const Point &direction) noexcept
     : direction(Vec(direction)) {
     scatteredLevel = 0;
+    ancestor = origin;
     intensity_p = {};
 }
 
@@ -27,6 +29,7 @@ Ray::Ray(const Point &origin, const Vec &direction,
          std::array<double, spectralBands> intensity_p) noexcept
     : origin(origin), direction(direction), intensity_p(intensity_p) {
     scatteredLevel = 0;
+    ancestor = origin;
 }
 
 const Point &Ray::getOrigin() const noexcept {
@@ -38,7 +41,7 @@ const Vec &Ray::getDirection() const noexcept {
 }
 
 // Cross product: self x other
-[[maybe_unused]] [[maybe_unused]] Vec Ray::crossVec(const Vec &other) const noexcept {
+Vec Ray::crossVec(const Vec &other) const noexcept {
     const double v[3] = {
         this->direction.tail.y * other.tail.z - this->direction.tail.z * other.tail.y,
         this->direction.tail.z * other.tail.x - this->direction.tail.x * other.tail.z,
@@ -112,7 +115,7 @@ Point Ray::mollerTrumboreIntersection(const Triangle &tri) const {
     return intersection;
 }
 
-bool Ray::intersectsWithBox(const Box &box) {
+bool Ray::intersectsWithBox(const Box &box) const {
     double tMin = -std::numeric_limits<double>::infinity();
     double tMax = std::numeric_limits<double>::infinity();
 
@@ -190,8 +193,9 @@ Ray::Ray(const Point &origin, const Vec &direction, const std::array<double, spe
 }
 
 // reflectance correction, x is in nanometer
+// todo: make it works
 inline double reflectanceCorrection(const double x) {
-    return 1.0;
+    return 1 - rand01() * rand01() * rand01() * rand01();
     constexpr double mu = UPPER_WAVELENGTH;
     constexpr double sigma = 0.03;
     const double a = (x - mu) / sigma;
@@ -230,12 +234,13 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
 
     // create reflected ray
 
-        for (int j = 0; j < reflectedIntensity.size(); j++) {
-            reflectedIntensity[j] = intensity_p[j] * reflectance * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
-        }
-        theRays[0] = (Ray(intersection, reflectedDirection, reflectedIntensity, scatteredLevel + 1));
-        reflectionRayIdx = 0;
-        reflectionCnt++;
+    for (int j = 0; j < reflectedIntensity.size(); j++) {
+        reflectedIntensity[j] = intensity_p[j] * reflectance * reflectanceCorrection(
+                                    UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+    }
+    theRays[0] = (Ray(intersection, reflectedDirection, reflectedIntensity, scatteredLevel + 1));
+    reflectionRayIdx = 0;
+    reflectionCnt++;
 
 
     // build a temp array for scattered rays
@@ -256,12 +261,12 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             scatteredIntensity[j] = totalScatteredIntensity[j] / (SCATTER_RAYS - reflectionCnt + 1);
         }
         //if (i >= 1 && i < SCATTER_RAYS) {
-            theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
-            std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
-                    " "
-                    << theRays[i].intensity_p[0] << std::endl;
+        theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
+        theRays[i].ancestor = ancestor;
+        std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
+                " "
+                << theRays[i].intensity_p[0] << std::endl;
         //}
-
     }
 
     if (reflectionRayIdx != -1) {

@@ -60,11 +60,10 @@ int main() {
     field.buildBVHTree();
 
 
-    auto rays_p = std::make_shared<std::vector<Ray> >();
-    auto &rays = *rays_p;
-    rays.emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
-    rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
-    rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
+    auto rays = new std::vector<Ray>();
+    rays->emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
+    rays->emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
+    rays->emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
     std::cout << "-------Now----traversing----every----face--------" << std::endl;
 
@@ -73,8 +72,8 @@ int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     // Iterate over all rays
-    for (int rayIndex=0; rayIndex < rays.size(); rayIndex++) {
-        auto & ray = rays[rayIndex];
+    for (int rayIndex = 0; rayIndex < rays->size(); rayIndex++) {
+        auto &ray = rays->at(rayIndex);
         // Iterate over all objects
         for (int objIndex = 0; objIndex < field.getObjects().size(); objIndex++) {
             auto &obj = field.getObjects()[objIndex];
@@ -90,7 +89,7 @@ int main() {
                         bool flag = false;
                         for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
                             if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
-                        if (flag) rays.push_back(scatteredRays[j]);
+                        if (flag) rays->push_back(scatteredRays[j]);
                     }
                 } else {
                     //std::cout << "The ray " << rayIndex+1 << " does not intersect the face " << faceIndex+1 << " of object " << objIndex+1 << "." << std::endl;
@@ -102,13 +101,13 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
-    std::cout << "Ray count: " << rays.size() << "." << std::endl;
+    std::cout << "Ray count: " << rays->size() << "." << std::endl;
 
 
-    rays.clear();
-    rays.emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
-    rays.emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
-    rays.emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
+    rays->clear();
+    rays->emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
+    rays->emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
+    rays->emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
 
     std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
@@ -121,8 +120,8 @@ int main() {
     start = std::chrono::high_resolution_clock::now();
 
     // use BVH to accelerate the determination of whether the ray intersecting
-    for (int rayIndex = 0; rayIndex < rays.size(); rayIndex++) {
-        auto &ray = rays[rayIndex];
+    for (int rayIndex = 0; rayIndex < rays->size(); rayIndex++) {
+        auto &ray = rays->at(rayIndex);
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
             auto &node = node_ptrs[nodeIndex];
@@ -141,7 +140,7 @@ int main() {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
                                     if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
-                                if (flag) rays.push_back(scatteredRays[j]);
+                                if (flag) rays->push_back(scatteredRays[j]);
                             }
                         }
                     }
@@ -156,7 +155,7 @@ int main() {
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
-    std::cout << "Ray count: " << rays.size() << "." << std::endl;
+    std::cout << "Ray count: " << rays->size() << "." << std::endl;
 
 
     // set up an camera
@@ -164,24 +163,35 @@ int main() {
     auto camera = Camera();
     // commonly the height from ground is 200m
     camera.spatialPosition = {Point(-0.008, -0.006, CAMERA_HEIGHT), Point(0.008, 0.006, CAMERA_HEIGHT)};
-    rays.clear();
+    rays->clear();
     camera.buildSunlightSpectrum();
 
     // after this there should be resolution X*Y rays
-    auto rays_pp = camera.shootRaysOut(field.sunlightDirectionToGround);
-    if (rays_pp == nullptr) {
+    camera.shootRaysOut(field.sunlightDirectionToGround, rays);
+    if (rays->empty()) {
         std::cout << "trying to deref a nullptr in main() from camera.shootRaysOut() call\a" << std::endl;
         return 8;
     }
-    rays = *rays_pp;
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
     // only for timing
     start = std::chrono::high_resolution_clock::now();
 
+    int cnt = 0;
+    bool flag = true;
     // use BVH to accelerate the determination of whether the ray intersecting
-    for (int rayIndex = 0; rayIndex < rays.size(); rayIndex++) {
-        auto &ray = rays[rayIndex];
+    for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
+        // get one ray at a time to avoid memory overhead
+        auto ray = Ray();
+        if (cnt < resolutionX * resolutionY) {
+            ray = camera.shootRay(field.sunlightDirectionToGround, cnt++);
+            ray.ancestor = ray.getOrigin();
+            rayIndex--;
+        } else {
+            // now every raw ray from camera has been investigated, traverse the rays vector
+            flag = false;
+            ray = rays->at(rayIndex);
+        }
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
             auto &node = node_ptrs[nodeIndex];
@@ -193,14 +203,14 @@ int main() {
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
-                                  << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.5); const auto &ray_sp:
+                                << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.9); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
                                     if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
-                                if (flag) rays.push_back(scatteredRays[j]);
+                                if (flag) rays->push_back(scatteredRays[j]);
                             }
                         }
                     }
@@ -210,13 +220,15 @@ int main() {
                 nodeIndex += node->boxedFaces.size();
             }
         }
+        // calc the ray's spectrum response
+        camera.addRaySpectrumResp(ray);
     }
+    std::cout << rays->size() << " " << rays->capacity() << std::endl;
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
-    std::cout << "Ray count: " << rays.size() << "." << std::endl;
-    delete rays_pp;
+    std::cout << "Ray count: " << rays->size() << "." << std::endl;
 
     return 0;
 }

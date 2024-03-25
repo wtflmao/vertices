@@ -16,8 +16,8 @@ inline double rand01() {
 
 
 // VERTICES_RAY_H
-constexpr int SCATTER_RAYS = 5;
-
+constexpr int SCATTER_RAYS = 1;
+constexpr double STOP_LENGTH = 9999;
 
 // VERTICES_NODE_H
 constexpr std::size_t BVH_NODE_CHILDREN = 6;
@@ -46,6 +46,7 @@ constexpr double pixelSize = 6.9;
 constexpr double gsd = 0.12;
 // focalLength in millimeter
 constexpr double focalLength = 20;
+constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 1;
 
 
 #endif //SRC_COMMON_H
