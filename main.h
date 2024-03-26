@@ -9,6 +9,7 @@
 #include "src/structures/triangle.h"
 #include "src/structures/field.h"
 #include "src/structures/camera.h"
+#include "src/basic/coordTransform.h"
 
 #include <iostream>
 #include <array>

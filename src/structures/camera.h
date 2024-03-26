@@ -12,6 +12,7 @@
 #include <array>
 #include <cstdio>
 #include <map>
+#include "../basic/coordTransform.h"
 
 constexpr double FACTOR = 1.0;
 
@@ -36,6 +37,8 @@ public:
 
     // sensor spectral response
     std::shared_ptr<std::array<std::array<Pixel, resolutionY>, resolutionX> > spectralResp_p;
+
+    // coord transform from ground to camera
 
 
     // PSF core function

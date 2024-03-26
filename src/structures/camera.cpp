@@ -210,7 +210,7 @@ void Camera::buildSunlightSpectrum() {
     std::cout << "Default sunlight spectrum has been built." << std::endl;
 }
 
-double overlappingFactor(const Point &source, int x, int y) noexcept {
+inline double overlappingFactor(const Point &source, int x, int y) noexcept {
     // todo
     return 1.0;
 }
@@ -222,6 +222,7 @@ void Camera::addRaySpectrumResp(Ray &ray) noexcept {
     //Point thisPixelPoint_ground = ray.getOrigin();
     //groundToCamera(spatialPosition[0], spatialPosition[1], thisPixelPoint_ground, thisPixelPoint_camera);
     //thisPixelPoint_camera.x = std::round(thisPixelPoint_camera.x * 1e6) / 1e6;
+
     // travese every pixel, this (i,j) pixel is the pixel taht where we store the response
     for (int i = 0; i < resolutionX; i++) {
         for (int j = 0; j < resolutionY; j++) {
