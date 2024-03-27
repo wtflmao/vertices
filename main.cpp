@@ -166,12 +166,15 @@ int main() {
     rays->clear();
     camera.buildSunlightSpectrum();
 
+    std::cout << ">>>>>>>>>>the fovs are " << FOVx << " " << FOVy << std::endl;
     // after this there should be resolution X*Y rays
-    //camera.shootRaysOut(field.sunlightDirectionToGround, rays);
-    //if (rays->empty()) {
-    //    std::cout << "trying to deref a nullptr in main() from camera.shootRaysOut() call\a" << std::endl;
-    //    return 8;
-    //}
+    auto *rays_r = camera.shootRaysRandom(1);
+    rays->insert(rays->end(), rays_r->begin(), rays_r->end());
+    delete rays_r;
+    if (rays->empty()) {
+        std::cout << "trying to deref a nullptr in main() from camera.shootRaysRandom() call\a" << std::endl;
+        return 8;
+    }
     auto goodRays = new std::vector<Ray>();
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
@@ -182,33 +185,33 @@ int main() {
     bool flag = true;
     int goodCnt = 0, totCnt = 0;
     // use BVH to accelerate the determination of whether the ray intersecting
-    //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
+    for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
         // get one ray at a time to avoid memory overhead
         auto ray = Ray();
-    /*if (cnt < resolutionX * resolutionY) {
-        ray = camera.shootRayRandom(field.sunlightDirectionToGround, cnt++);
-        ray.ancestor = ray.getOrigin();
-        rayIndex--;
-    } else {
+        //if (cnt < resolutionX * resolutionY) {
+        //ray = camera.shootRayRandom(cnt++);
+        //ray.ancestor = ray.getOrigin();
+        //rayIndex--;
+        //} else {
         // now every raw ray from camera has been investigated, traverse the rays vector
         flag = false;
         ray = rays->at(rayIndex);
-    }*/
-    int rayIndex = 0;
-    // Iterate over all nodes(boxes) and using BVH algorithm
-    for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
-        auto &node = node_ptrs[nodeIndex];
-        // Check if the ray intersects with the node (box)
-        if (ray.intersectsWithBox(node->bbox)) {
-            // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
+        //}
+        // Iterate over all nodes(boxes) and using BVH algorithm
+        for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
+            auto &node = node_ptrs[nodeIndex];
+            // Check if the ray intersects with the node (box)
+            if (ray.intersectsWithBox(node->bbox)) {
+                // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                 for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
                     auto &face = node->boxedFaces[faceIndex];
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
                         ray.setRayStopPoint(intersection);
-                        std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
-                                << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
+                        //std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
+                        //        << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
                         // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the REAL sunlight's direction
                         Ray ray_t = Ray(intersection, field.sunlightDirectionToGround * -1);
+                        ray_t.ancestor = ray.ancestor;
                         bool validity = true;
                         Point intersection_t = BigO;
                         for (int nodeIndex_t = 0; nodeIndex_t < field.nodeCount && validity; nodeIndex_t++) {
@@ -231,15 +234,15 @@ int main() {
                                 nodeIndex_t += node_t->boxedFaces.size();
                             }
                         }
-                        std::cout << "(";
+                        //std::cout << "(";
                         if (validity) {
                             goodRays->push_back(ray);
-                            std::cout << goodCnt++;
+                            //std::cout << goodCnt++;
                         } else {
-                            std::cout << "  ";
+                            //std::cout << "  ";
                         }
-                        std::cout << "," << totCnt++ << ")";
-                        std::cout << std::endl;
+                        //std::cout << "," << totCnt++ << ")";
+                        //std::cout << std::endl;
 
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
@@ -254,6 +257,7 @@ int main() {
                                     // for 2+ scattered rays, the source of them is not THE SUN but the original ray
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
                                     Ray ray_tt = scatteredRays[j];
+                                    ray_tt.ancestor = ray_t.ancestor;
                                     bool validity_tt = true;
                                     for (int nodeIndex_tt = 0;
                                          nodeIndex_tt < field.nodeCount && validity_tt; nodeIndex_tt++) {
@@ -279,15 +283,15 @@ int main() {
                                             nodeIndex_tt += node_tt->boxedFaces.size();
                                         }
                                     }
-                                    std::cout << "(";
+                                    //std::cout << "(";
                                     if (validity_tt) {
-                                        goodRays->push_back(scatteredRays[j]);
-                                        std::cout << goodCnt++;
+                                        goodRays->push_back(ray_tt);
+                                        //std::cout << goodCnt++;
                                     } else {
-                                        std::cout << "  ";
+                                        //std::cout << "  ";
                                     }
-                                    std::cout << "," << totCnt++ << ")";
-                                    std::cout << std::endl;
+                                    //std::cout << "," << totCnt++ << ")";
+                                    //std::cout << std::endl;
                                 }
                             }
                         }
@@ -298,7 +302,7 @@ int main() {
                 nodeIndex += node->boxedFaces.size();
             }
         }
-    //}
+    }
     std::cout << "Rays " << rays->size() << " " << rays->capacity() << std::endl;
 
     for (auto &ray: *goodRays) {
@@ -312,6 +316,7 @@ int main() {
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
     std::cout << "Ray count: " << rays->size() << "." << std::endl;
+
 
     return 0;
 }

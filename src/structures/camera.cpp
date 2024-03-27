@@ -177,7 +177,7 @@ Ray Camera::shootRay(const Vec &rayDirection, const int cnt) {
 }
 
 // this function is for a fixed origin point with random direction, yes u heard that
-Ray Camera::shootRayRandom(const Vec &rayDirection, const int cnt) {
+Ray Camera::shootRayRandom(const int cnt) {
     // we need the origin point not out of the camera
     if (cnt < 0 || cnt >= resolutionX * resolutionY) {
         return {};
@@ -196,6 +196,21 @@ Ray Camera::shootRayRandom(const Vec &rayDirection, const int cnt) {
 
     // generate the ray
     return {pixelInGroundCoord, uniformHemisphereDirection(Vec(Point(0, 0, -1))), sunlightSpectrum, 1};
+}
+
+// num is for "rays per pixel"
+std::vector<Ray> *Camera::shootRaysRandom(const int num) {
+    auto *rays = new std::vector<Ray>();
+    for (int i = 0; i < resolutionX; i++) {
+        for (int j = 0; j < resolutionY; j++) {
+            for (int k = 0; k < num; k++) {
+                rays->push_back(shootRayRandom(i * resolutionX + j));
+                rays->end()->ancestor = rays->end()->getOrigin();
+            }
+        }
+    }
+
+    return rays;
 }
 
 Camera::Camera() = default;

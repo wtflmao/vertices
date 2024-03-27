@@ -47,6 +47,11 @@ constexpr double gsd = 0.12;
 // focalLength in millimeter
 constexpr double focalLength = 20;
 constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 1;
+// FOVx
+const double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+// FOVy
+const double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+
 
 
 #endif //SRC_COMMON_H

@@ -161,16 +161,20 @@ void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent) {
 }
 
 // 在上半球空间里随机生成一个向量
+// FOVs are in degrees
 Vec uniformHemisphereDirection(const Vec &normal) {
     // generate two random numbers stored as u and v
     double u = rand01();
     double v = rand01();
 
     // this is a random angle theta, from 0 to pi/2.
-    double theta = std::acos(std::sqrt(1.0 - v));
+    //double theta = std::acos(std::sqrt(1.0 - v));
+    double fovRatio_x = FOVx / 90.0;
+    double theta = std::acos(std::sqrt(1.0 - v * fovRatio_x));
 
     // this is a random angle phi, ranges from 0 to 2*pi
-    double phi = 2.0 * std::numbers::pi * u;
+    //double phi = 2.0 * std::numbers::pi * u;
+    double phi = FOVy * u * std::numbers::pi / 180.0;
 
     // get random xyz
     double x = std::cos(phi) * std::sin(theta);
@@ -208,7 +212,7 @@ inline double reflectanceCorrection(const double x) {
 std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point &intersection,
                                                const double reflectance) const {
     if (scatteredLevel >= 2) {
-        std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
+        //std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
         return {std::array<Ray, SCATTER_RAYS + 1>{}};
     }
 
@@ -263,16 +267,16 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         //if (i >= 1 && i < SCATTER_RAYS) {
         theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
         theRays[i].ancestor = ancestor;
-        std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
-                " "
-                << theRays[i].intensity_p[0] << std::endl;
+        //std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
+        //        " "
+        //        << theRays[i].intensity_p[0] << std::endl;
         //}
     }
 
     if (reflectionRayIdx != -1) {
-        std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
-                theRays[reflectionRayIdx].intensity_p[0]
-                << std::endl;
+        //std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
+        //        theRays[reflectionRayIdx].intensity_p[0]
+        //        << std::endl;
     } else {
         std::cout << "...level " << scatteredLevel << "...has no reflectedDirection." << std::endl;
     }

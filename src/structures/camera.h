@@ -21,11 +21,6 @@ private:
 
 public:
 
-    // FOVx
-    double FOVx = 2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength));
-    // FOVy
-    double FOVy = 2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength));
-
     std::array<double, spectralBands> sunlightSpectrum = {};
 
     // camera position
@@ -54,7 +49,9 @@ public:
 
     void addRaySpectrumResp(Ray &ray) noexcept;
 
-    Ray shootRayRandom(const Vec &rayDirection, const int cnt);
+    Ray shootRayRandom(int cnt);
+
+    std::vector<Ray> *shootRaysRandom(int num);
 };
 
 
