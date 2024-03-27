@@ -47,7 +47,7 @@ public:
     [[nodiscard]] const Vec& getDirection() const noexcept;
     [[nodiscard]] Point mollerTrumboreIntersection(const Triangle &tri) const;
 
-    bool intersectsWithBox(const Box &box) const;
+    [[nodiscard]] bool intersectsWithBox(const Box &box) const;
 
     Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
         int scatteredCount);
@@ -56,7 +56,11 @@ public:
                                                             double reflectance) const;
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;
+
 };
 
+void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent);
+
+Vec uniformHemisphereDirection(const Vec &normal);
 
 #endif //VERTICES_RAY_H

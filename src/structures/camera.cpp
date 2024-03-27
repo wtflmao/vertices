@@ -157,7 +157,7 @@ Point getCoord(const int x, const int y) {
 }
 
 Ray Camera::shootRay(const Vec &rayDirection, const int cnt) {
-    if (cnt < 0 && cnt >= resolutionX * resolutionY) {
+    if (cnt < 0 || cnt >= resolutionX * resolutionY) {
         return {};
     }
 
@@ -174,6 +174,28 @@ Ray Camera::shootRay(const Vec &rayDirection, const int cnt) {
 
     // generate the ray
     return {pixelInGroundCoord, rayDirection, sunlightSpectrum, CAMERA_RAY_STARTER_SCATTER_LEVEL};
+}
+
+// this function is for a fixed origin point with random direction, yes u heard that
+Ray Camera::shootRayRandom(const Vec &rayDirection, const int cnt) {
+    // we need the origin point not out of the camera
+    if (cnt < 0 || cnt >= resolutionX * resolutionY) {
+        return {};
+    }
+
+    // generate a ray for the current pixel( given by cnt )
+    // cameraPixelPoint is a point in camera coordinate system
+    auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
+
+    // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
+    pixelInCameraCoord.x = (cnt / resolutionX) * (pixelSize * 1e-6);
+    pixelInCameraCoord.y = (cnt % resolutionX) * (pixelSize * 1e-6);
+    pixelInCameraCoord.z = 0.0;
+
+    cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
+
+    // generate the ray
+    return {pixelInGroundCoord, uniformHemisphereDirection(Vec(Point(0, 0, -1))), sunlightSpectrum, 1};
 }
 
 Camera::Camera() = default;

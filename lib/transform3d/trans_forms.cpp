@@ -12,14 +12,14 @@
  * @param {double} angle 角度值
  * @return 返回对应弧度值,一般在-3.14~3.14之间
  */
-double TransForms::Degrees(double angle) { return angle / 180 * M_PI; }
+double TransForms::Degrees(double angle) { return angle / 180 * std::numbers::pi; }
 
 /**
  * @brief: 弧度转为角度
  * @param {double} degrees 弧度值
  * @return 返回对应的角度值，一般在-180~180之间
  */
-double TransForms::Angle(double degrees) { return degrees / M_PI * 180; }
+double TransForms::Angle(double degrees) { return degrees / std::numbers::pi * 180; }
 
 /*---------------------------------------欧拉角部分---------------------------*/
 /**
@@ -116,7 +116,7 @@ Eigen::Matrix3d TransForms::EulerAngle2Mat(Eigen::Vector3d eular)
 Eigen::Vector3d TransForms::Mat2EulerAngle(Eigen::Matrix3d mat)
 {
   Eigen::Vector3d rot = mat.eulerAngles(2, 1, 0);
-  rot = rot / M_PI * 180;
+    rot = rot / std::numbers::pi * 180;
   return rot;
 }
 

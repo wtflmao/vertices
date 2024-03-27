@@ -53,6 +53,8 @@ public:
     void buildSunlightSpectrum();
 
     void addRaySpectrumResp(Ray &ray) noexcept;
+
+    Ray shootRayRandom(const Vec &rayDirection, const int cnt);
 };
 
 
