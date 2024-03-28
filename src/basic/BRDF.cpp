@@ -24,7 +24,6 @@
 // HEREUNDER IS ON AN "AS IS" BASIS, AND MERL HAS NO OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT,
 // UPDATES, ENHANCEMENTS OR MODIFICATIONS.
 
-
 // cross product of two vectors
 void cross_product(const double *v1, const double *v2, double *out) {
     out[0] = v1[1] * v2[2] - v1[2] * v2[1];
@@ -223,8 +222,7 @@ bool read_brdf(const char *filename, double *&brdf) {
     return true;
 }
 
-
-BRDF::BRDF(const char *pathToDataset) {
+void BRDF::closedMeshBRDF(const char *pathToDataset) {
     const char *filename = pathToDataset;
     double *brdf;
 
@@ -262,6 +260,45 @@ BRDF::BRDF(const char *pathToDataset) {
         }
     }
     free(brdf);
+}
+
+void BRDF::openMeshBRDF(const char *pathToDataset) {
+    val = new std::vector<std::vector<short>>();
+    FILE *fp = fopen(pathToDataset, "rt");
+    if (fp == nullptr) {
+        fprintf(stderr, "Cannot open %s\a\n", pathToDataset);
+        exit(4);
+    }
+
+    char line[BUFFER_SIZE_FOR_OPEN_MESH];
+    // i for latitude(+ for N, - for S), j for longitude(+ for E, - for W)
+    int i = 0, j = std::numeric_limits<int>::max();
+    while (fgets(line, BUFFER_SIZE_FOR_OPEN_MESH, fp) != nullptr) {
+        auto &temp = val->at(i);
+        short t;
+        int j_t = 0;
+        while (sscanf(line, "%hd", &t) != EOF) {
+            temp.push_back(t);
+            j_t++;
+        }
+        if (j_t < j) j = j_t;
+        i++;
+        val->emplace_back();
+    }
+    val->pop_back();
+    MODIS_HDF_DATA_DIM_X = i;
+    MODIS_HDF_DATA_DIM_Y = j;
+    fclose(fp);
+}
+
+BRDF::BRDF(const char *pathToDataset, const int type_t) {
+    if (type_t == 2) {
+        type = type_t;
+        this->closedMeshBRDF(pathToDataset);
+    } else if (type_t == 1) {
+        type = type_t;
+        this->openMeshBRDF(pathToDataset);
+    }
 }
 
 // all four angles in radians, both in_angles are in [0, 0.5*pi], both out_angles are in [0, 2*pi]

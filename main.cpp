@@ -8,13 +8,39 @@
 int main() {
     //std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
     //        getNormal().tail << std::endl;
+#ifdef _WIN32
+    std::cout << "win32" << std::endl;
+
+    std::vector<std::string> objPaths;
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)");
+
+    std::vector<std::string> mtlPaths;
+    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
+#elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
+    std::cout << "unix-like" << std::endl;
+
+    std::vector<std::string> objPaths;
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/snow_apls_low_poly_obj/source/Mesher_-z_y.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/F22_blender/F22.obj)");
+
+    std::vector<std::string> mtlPaths;
+    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.mtl)");
+#else
+    std::cout << "other system, quitting" << std::endl;
+    exit(0);
+#endif
     Field field = Field(
             Point(-200, -200, 0),
             Point(200, 200, 30)
             );
     field.insertObject(
-        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.obj)"),
-        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+            objPaths[0],
+            mtlPaths[0],
         {1, 1, 1},
         Point(0, 0, 0),
         // correctFaceVertices starts from 0
@@ -25,8 +51,8 @@ int main() {
         false, 6, 2
     );
     field.insertObject(
-        std::string(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)"),
-        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+            objPaths[1],
+            mtlPaths[0],
         {200, 400, 1},
         Point(-50, -50, 0),
         // correctFaceVertices starts from 0, reason same as tCFI
@@ -37,8 +63,8 @@ int main() {
         true, 6, 2
     );
     /*field.insertObject(
-        std::string(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)"),
-        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+        objPaths[2],
+        mtlPaths[0],
         {200, 400, 2},
         Point(25, 25, -0.1),
         {},
@@ -47,8 +73,8 @@ int main() {
         true, 6, 2
     );
     field.insertObject(
-        std::string(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)"),
-        std::string(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)"),
+        objPaths[3],
+        mtlPaths[0],
         {9.5, 9.5, 3},
         Point(-15, 2, 0.5),
         {},
