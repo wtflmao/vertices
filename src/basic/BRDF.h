@@ -12,6 +12,7 @@
 #include <tuple>
 #include <map>
 #include <vector>
+#include <array>
 
 #define BRDF_SAMPLING_RES_THETA_H       90
 #define BRDF_SAMPLING_RES_THETA_D       90
@@ -35,16 +36,17 @@ public:
     // for open mesh
     int MODIS_HDF_DATA_DIM_X = 2048;
     int MODIS_HDF_DATA_DIM_Y = 2048;
-    std::vector<std::vector<short>> *val;
+    std::map<std::array<int, 2>, std::vector<std::vector<short>> *> *valMap;
+    //std::vector<std::vector<short>> *val;
 
-    BRDF(const char *pathToDataset, int type);
+    BRDF(const char *pathToDataset, int type, std::array<int, 2> band);
 
     [[nodiscard]] std::tuple<float, float, float>
     getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const;
 
     void closedMeshBRDF(const char *pathToDataset);
 
-    void openMeshBRDF(const char *pathToDataset);
+    void openMeshBRDF(const char *pathToDataset, std::array<int, 2> band);
 };
 
 

@@ -10,6 +10,7 @@
 #include "src/structures/field.h"
 #include "src/structures/camera.h"
 #include "src/basic/coordTransform.h"
+#include "src/basic/BRDF.h"
 
 #include <iostream>
 #include <array>

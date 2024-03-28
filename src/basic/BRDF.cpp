@@ -262,8 +262,11 @@ void BRDF::closedMeshBRDF(const char *pathToDataset) {
     free(brdf);
 }
 
-void BRDF::openMeshBRDF(const char *pathToDataset) {
-    val = new std::vector<std::vector<short>>();
+void BRDF::openMeshBRDF(const char *pathToDataset, std::array<int, 2> band) {
+    //val = new std::vector<std::vector<short>>();
+    valMap = new std::map<std::array<int, 2>, std::vector<std::vector<short>> *>();
+    valMap->insert({band, new std::vector<std::vector<short>>()});
+    auto val = valMap->at(band);
     FILE *fp = fopen(pathToDataset, "rt");
     if (fp == nullptr) {
         fprintf(stderr, "Cannot open %s\a\n", pathToDataset);
@@ -291,13 +294,13 @@ void BRDF::openMeshBRDF(const char *pathToDataset) {
     fclose(fp);
 }
 
-BRDF::BRDF(const char *pathToDataset, const int type_t) {
+BRDF::BRDF(const char *pathToDataset, const int type_t, std::array<int, 2> band = {0, 0}) {
     if (type_t == 2) {
         type = type_t;
         this->closedMeshBRDF(pathToDataset);
     } else if (type_t == 1) {
         type = type_t;
-        this->openMeshBRDF(pathToDataset);
+        this->openMeshBRDF(pathToDataset, band);
     }
 }
 

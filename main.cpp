@@ -19,6 +19,11 @@ int main() {
 
     std::vector<std::string> mtlPaths;
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
+
+    std::vector<std::pair<std::array<int, 2>, std::string>> BRDFPaths;
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{545, 565},
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band4.txt)");
 #elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
     std::cout << "unix-like" << std::endl;
 
@@ -34,6 +39,7 @@ int main() {
     std::cout << "other system, quitting" << std::endl;
     exit(0);
 #endif
+
     Field field = Field(
             Point(-200, -200, 0),
             Point(200, 200, 30)
@@ -85,6 +91,7 @@ int main() {
 
     field.buildBVHTree();
 
+    // todo: import brdf
 
     auto rays = new std::vector<Ray>();
     rays->emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));
