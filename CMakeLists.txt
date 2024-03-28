@@ -43,4 +43,6 @@ add_executable(vertices main.cpp
         lib/transform3d/transforms3d.h
         lib/transform3d/trans_forms.cpp
         lib/transform3d/trans_forms_group.cpp
+        src/basic/BRDF.cpp
+        src/basic/BRDF.h
 )
