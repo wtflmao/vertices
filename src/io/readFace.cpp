@@ -2,6 +2,12 @@
 // Created by root on 2024/3/15.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #include "readFace.h"
 
 void processFace(const char* line, Item& p) {
@@ -32,11 +38,11 @@ void processFace(const char* line, Item& p) {
     }
 
     if (count == 6) {
-        sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+        sscanf_s(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i[0], &v_i[1], &v_i[2]);
     } else if (count == 3) {
-        sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+        sscanf_s(line, "f %d/%*d %d/%*d %d/%*d", &v_i[0], &v_i[1], &v_i[2]);
     } else {
-        sscanf(line, "f %d %d %d", &v_i[0], &v_i[1], &v_i[2]);
+        sscanf_s(line, "f %d %d %d", &v_i[0], &v_i[1], &v_i[2]);
     }
     v_i[0]--;
     v_i[1]--;
