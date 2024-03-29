@@ -14,7 +14,9 @@
 
 #include "point.h"
 #include "vec.h"
+#include "../basic/BRDF.h"
 #include <array>
+#include <memory>
 
 class Triangle {
 private:
@@ -23,6 +25,7 @@ private:
 public:
     Point v0 = BigO, v1 = BigO, v2 = BigO;
     std::array<double, 3> centroid;
+    std::weak_ptr<BRDF *> faceBRDF;
 
     [[nodiscard]] const Vec & getNormal() const noexcept;
 

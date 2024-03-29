@@ -30,7 +30,6 @@ private:
     std::array<double, 3> scaleFactor = {1.0, 1.0, 1.0};
     // This center should be the center AFTER applied the zoom factor
     Point center = BigO;
-    std::vector<BRDF> BRDFs = {};
 
 public:
     /*
@@ -50,6 +49,7 @@ public:
     // open mesh be like plane, ground, etc.
     // closed mesh be like ball, cube, cylinder
     bool isOpenMesh = false;
+    BRDF *brdf;
     int forwardAxis = 6; // 1 2 3 for X Y Z, 4 5 6 for -X -Y -Z
     int upAxis = 3;
     double Ns = 10.0;
@@ -93,8 +93,6 @@ public:
 
     [[maybe_unused]] [[nodiscard]] double
     getBRDFClosed(int waveLength, double theta_i, double phi_i, double theta_r, double phi_r) const noexcept;
-
-    std::vector<BRDF> &getMutBRDFs() noexcept;
 };
 
 #endif //VERTICES_ITEM_H

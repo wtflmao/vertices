@@ -11,17 +11,18 @@
 #ifndef VERTICES_MAIN_H
 #define VERTICES_MAIN_H
 
-#include "src/structures/ray.h"
-#include "src/structures/triangle.h"
-#include "src/structures/field.h"
-#include "src/structures/camera.h"
-#include "src/basic/coordTransform.h"
-#include "src/basic/BRDF.h"
+#include "structures/ray.h"
+#include "structures/triangle.h"
+#include "structures/field.h"
+#include "structures/camera.h"
+#include "basic/coordTransform.h"
+#include "basic/BRDF.h"
 
 #include <iostream>
 #include <array>
 #include <vector>
 #include <chrono>
+#include <memory>
 
 
 const Point NO_INTERSECT = Point(DBL_MAX, DBL_MAX, DBL_MAX);

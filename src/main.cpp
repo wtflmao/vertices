@@ -110,24 +110,30 @@ int main() {
             return 6;
         }
         if (fieldItem.isOpenMesh) {
+            fieldItem.brdf = new OpenBRDF();
+            std::cout << "Handling a set of open BRDF" << std::endl;
             if (brdf_cnt_t + 3 <= size) {
-                // todo: here it always crashes and returns 3, why???????
-                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[0].second.c_str(), 1, BRDFPaths[0].first);
-                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[1].second.c_str(), 1, BRDFPaths[1].first);
-                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[2].second.c_str(), 1, BRDFPaths[2].first);
-                brdf_cnt_t += 3;
+                dynamic_cast<OpenBRDF *>(fieldItem.brdf)->OpenBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str(),
+                                                                         BRDFPaths[0].first);
+                dynamic_cast<OpenBRDF *>(fieldItem.brdf)->OpenBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str(),
+                                                                         BRDFPaths[1].first);
+                dynamic_cast<OpenBRDF *>(fieldItem.brdf)->OpenBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str(),
+                                                                         BRDFPaths[2].first);
             } else {
                 fprintf(stderr, "Error when initializing BRDFs. Reason: not enough open BRDFs in the list.\a\n");
                 return 66;
             }
+            std::cout << "Handling a set of open BRDF done" << std::endl;
         } else {
+            fieldItem.brdf = new ClosedBRDF();
+            std::cout << "Handling a set of closed BRDF" << std::endl;
             if (brdf_cnt_t + 1 <= size) {
-                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[0].second.c_str(), 2, BRDFPaths[0].first);
-                brdf_cnt_t += 1;
+                dynamic_cast<ClosedBRDF *>(fieldItem.brdf)->ClosedBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str());
             } else {
                 fprintf(stderr, "Error when initializing BRDFs. Reason: not enough closed BRDFs in the list.\a\n");
                 return 67;
             }
+            std::cout << "Handling a set of closed BRDF done" << std::endl;
         }
     }
 
@@ -155,7 +161,7 @@ int main() {
                 if (NO_INTERSECT != intersection) {
                     ray.setRayStopPoint(intersection);
                     std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
-                    const auto scatteredRays = ray.scatter(face, intersection, 0.5);
+                    const auto scatteredRays = ray.scatter(face, intersection, std::make_shared<BRDF *>(obj.brdf));
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
                         for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
@@ -180,6 +186,15 @@ int main() {
     rays->emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
     rays->emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
+    // since brdf has been initialized, now asign every face with a pointer to a brdf that the owner item has
+    // it's such a stupid design pattern i know, but there's no way back
+    std::cout << "face's brdf initializing..." << std::endl;
+    for (auto &obj: field.getObjects()) {
+        for (auto &face: obj.getMutFaces()) {
+            //std::weak_ptr<BRDF*> weak_p = ;
+            face.faceBRDF = std::make_shared<BRDF *>(obj.brdf);
+        }
+    }
 
     std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
     // generate an vector of all nodes' const shared pointers
@@ -205,7 +220,8 @@ int main() {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0.2); const auto &ray_sp:
+                        for (const auto scatteredRays = ray.scatter(*face, intersection,
+                                                                    face->faceBRDF.lock()); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;

@@ -216,7 +216,7 @@ inline double reflectanceCorrection(const double x) {
 // returns a Ray object
 // ior means index of refraction, for materials that non-transparent we set ior = 1.0
 std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point &intersection,
-                                               const double reflectance) const {
+                                               const std::shared_ptr<BRDF *> &itemBRDF) const {
     if (scatteredLevel >= 2) {
         //std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
         return {std::array<Ray, SCATTER_RAYS + 1>{}};
@@ -227,7 +227,6 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
      * 0.0: total scatter, direction is random
      * 0.0-1.0: include both
      */
-    // todo: fetch the reflectance from the material
 
     std::array<Ray, SCATTER_RAYS + 1> theRays;
     const Vec incidentDirection = direction.getNormalized();
@@ -245,8 +244,42 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     // create reflected ray
 
     for (int j = 0; j < reflectedIntensity.size(); j++) {
-        reflectedIntensity[j] = intensity_p[j] * reflectance * reflectanceCorrection(
-                                    UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+        if ((*itemBRDF)->type == 1) {
+            // here's open mesh's BRDF
+            auto w = UPPER_WAVELENGTH + j * WAVELENGTH_STEP;
+            if (w <= UPPER_WAVELENGTH || w >= LOWER_WAVELENGTH) {
+                reflectedIntensity[j] = intensity_p[j] * 0.0;
+            } else if (w >= BLUE_UPPER && w < BLUE_LOWER) {
+                // todo: BRDF这里出问题了，open的三个只有前俩，open和closed每个vector<vector<short>>只有第一行存在，且只有一个元素0，
+                reflectedIntensity[j] = intensity_p[j] *
+                                        dynamic_cast<OpenBRDF *>(*itemBRDF)->valMap->at({BLUE_LOWER, BLUE_UPPER}).at(
+                                                static_cast<std::size_t>(std::round(rand01() *
+                                                                                    dynamic_cast<OpenBRDF *>(*itemBRDF)->MODIS_HDF_DATA_DIM_X))).at(
+                                                static_cast<std::size_t>(std::round(rand01() *
+                                                                                    dynamic_cast<OpenBRDF *>(*itemBRDF)->MODIS_HDF_DATA_DIM_Y)));
+            } else if (w >= GREEN_UPPER && w < GREEN_LOWER) {
+                reflectedIntensity[j] = intensity_p[j] *
+                                        dynamic_cast<OpenBRDF *>(*itemBRDF)->valMap->at({GREEN_LOWER, GREEN_UPPER}).at(
+                                                static_cast<std::size_t>(std::round(rand01() *
+                                                                                    dynamic_cast<OpenBRDF *>(*itemBRDF)->MODIS_HDF_DATA_DIM_X))).at(
+                                                static_cast<std::size_t>(std::round(rand01() *
+                                                                                    dynamic_cast<OpenBRDF *>(*itemBRDF)->MODIS_HDF_DATA_DIM_Y)));
+            } else if (w >= RED_UPPER && w <= RED_LOWER) {
+                reflectedIntensity[j] = intensity_p[j] *
+                                        dynamic_cast<OpenBRDF *>(*itemBRDF)->valMap->at({RED_LOWER, RED_UPPER}).at(
+                                                static_cast<std::size_t>(std::round(rand01() *
+                                                                                    dynamic_cast<OpenBRDF *>(*itemBRDF)->MODIS_HDF_DATA_DIM_X))).at(
+                                                static_cast<std::size_t>(std::round(rand01() *
+                                                                                    dynamic_cast<OpenBRDF *>(*itemBRDF)->MODIS_HDF_DATA_DIM_Y)));
+            } else {
+                reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+            }
+        } else {
+            // here's closed mesh's BRDF
+            // todo: rotate the coordinate system to compute 4 angles
+            // here's a dummy intensity
+            reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+        }
     }
     theRays[0] = (Ray(intersection, reflectedDirection, reflectedIntensity, scatteredLevel + 1));
     reflectionRayIdx = 0;

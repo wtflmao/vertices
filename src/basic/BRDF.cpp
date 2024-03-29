@@ -4,6 +4,105 @@
 
 #include "BRDF.h"
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
+OpenBRDF::OpenBRDF() noexcept: BRDF(true) {
+
+}
+
+ClosedBRDF::ClosedBRDF() noexcept: BRDF(false) {
+
+}
+
+auto getFileSize(const std::shared_ptr<FILE *> &fp_s) {
+    auto *fp = *fp_s;
+    fseek(fp, 0, SEEK_END);
+    size_t size = 0;
+    // get the size of the file
+#ifdef _WIN32
+    _fseeki64(fp, 0, SEEK_END);
+    size = _ftelli64(fp);
+#elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
+    fseeko(fp, 0, SEEK_END);
+                size = ftello(fp);
+#else
+                fseeko64(fp, 0, SEEK_END);
+                size = ftello64(fp);
+#endif
+
+    fseek(fp, 0, SEEK_SET);
+    return size;
+}
+
+void OpenBRDF::OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band) {
+    //valMap = new std::map<std::array<int, 2>, std::vector<std::vector<short>>>();
+    // always remember to init your variable
+    valMap->insert({band, {{static_cast<short>(0)}}});
+    auto &val = valMap->at(band);
+    val.reserve(MODIS_HDF_DATA_DIM_X);
+    FILE *fp = nullptr;
+    errno_t err = fopen_s(&fp, pathToDataset, "rt");
+    if (err != 0) {
+        fprintf(stderr, "Cannot open %s\a\n", pathToDataset);
+        exit(4);
+    }
+
+    fprintf(stdout, "BRDF file size: %zu bytes\n", getFileSize(std::make_shared<FILE *>(fp)));
+    fseek(fp, 0, SEEK_SET);
+
+    char line[BUFFER_SIZE_FOR_OPEN_MESH];
+    // i for latitude(+ for N, - for S), j for longitude(+ for E, - for W)
+    int i = 0, j = std::numeric_limits<int>::max();
+    while (fgets(line, BUFFER_SIZE_FOR_OPEN_MESH, fp) != nullptr) {
+        auto &temp = val.at(i);
+        short t;
+        int j_t = 0;
+        temp.reserve(MODIS_HDF_DATA_DIM_Y);
+        while (sscanf_s(line, "%hd", &t) != 1) {
+            temp.push_back(t);
+            j_t++;
+        }
+        if (j_t < j) j = j_t;
+        i++;
+        val.emplace_back();
+    }
+    val.pop_back();
+    MODIS_HDF_DATA_DIM_X = i;
+    MODIS_HDF_DATA_DIM_Y = j;
+    fclose(fp);
+}
+
+BRDF::BRDF(bool isOpen) noexcept {
+    if (isOpen) {
+        type = 1;
+    } else {
+        type = 2;
+    }
+}
+
+OpenBRDF::OpenBRDF(const char *pathToDataset, std::array<int, 2> band) noexcept: BRDF(true) {
+    OpenBRDFInsert(pathToDataset, band);
+}
+
+ClosedBRDF::ClosedBRDF(const char *pathToDataset) noexcept: BRDF(false) {
+    ClosedBRDFInsert(pathToDataset);
+}
+
+// all four angles in radians, both in_angles are in [0, 0.5*pi], both out_angles are in [0, 2*pi]
+std::tuple<float, float, float>
+ClosedBRDF::getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const {
+    return RGBVal->at(std::make_tuple(
+            static_cast<short>(std::round(theta_in * 10000)),
+            static_cast<short>(std::round(phi_in * 10000)),
+            static_cast<short>(std::round(theta_out * 10000)),
+            static_cast<short>(std::round(phi_out * 10000))
+    ));
+}
+
 // Copyright 2005 Mitsubishi Electric Research Laboratories All Rights Reserved.
 
 // Permission to use, copy and modify this software and its documentation without
@@ -203,6 +302,9 @@ bool read_brdf(const char *filename, double *&brdf) {
     if (!f)
         return false;
 
+    fprintf(stdout, "BRDF file size: %zu bytes\n", getFileSize(std::make_shared<FILE *>(f)));
+    fseek(f, 0, SEEK_SET);
+
     int dims[3];
     fread(dims, sizeof(int), 3, f);
     int n = dims[0] * dims[1] * dims[2];
@@ -222,7 +324,7 @@ bool read_brdf(const char *filename, double *&brdf) {
     return true;
 }
 
-void BRDF::closedMeshBRDF(const char *pathToDataset) {
+void ClosedBRDF::ClosedBRDFInsert(const char *pathToDataset) {
     const char *filename = pathToDataset;
     double *brdf;
 
@@ -262,58 +364,4 @@ void BRDF::closedMeshBRDF(const char *pathToDataset) {
     free(brdf);
 }
 // Copyright 2005 MERL ends here
-
-// Copyright 2024 wtflmao starts here
-
-void BRDF::openMeshBRDF(const char *pathToDataset, std::array<int, 2> band) {
-    //val = new std::vector<std::vector<short>>();
-    valMap = new std::map<std::array<int, 2>, std::vector<std::vector<short>> *>();
-    valMap->insert({band, new std::vector<std::vector<short>>()});
-    auto val = valMap->at(band);
-    FILE *fp = fopen(pathToDataset, "rt");
-    if (fp == nullptr) {
-        fprintf(stderr, "Cannot open %s\a\n", pathToDataset);
-        exit(4);
-    }
-
-    char line[BUFFER_SIZE_FOR_OPEN_MESH];
-    // i for latitude(+ for N, - for S), j for longitude(+ for E, - for W)
-    int i = 0, j = std::numeric_limits<int>::max();
-    while (fgets(line, BUFFER_SIZE_FOR_OPEN_MESH, fp) != nullptr) {
-        auto &temp = val->at(i);
-        short t;
-        int j_t = 0;
-        while (sscanf(line, "%hd", &t) != EOF) {
-            temp.push_back(t);
-            j_t++;
-        }
-        if (j_t < j) j = j_t;
-        i++;
-        val->emplace_back();
-    }
-    val->pop_back();
-    MODIS_HDF_DATA_DIM_X = i;
-    MODIS_HDF_DATA_DIM_Y = j;
-    fclose(fp);
-}
-
-BRDF::BRDF(const char *pathToDataset, const int type_t, std::array<int, 2> band = {0, 0}) {
-    if (type_t == 2) {
-        type = type_t;
-        this->closedMeshBRDF(pathToDataset);
-    } else if (type_t == 1) {
-        type = type_t;
-        this->openMeshBRDF(pathToDataset, band);
-    }
-}
-
-// all four angles in radians, both in_angles are in [0, 0.5*pi], both out_angles are in [0, 2*pi]
-std::tuple<float, float, float> BRDF::getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const {
-    return RGBVal->at(std::make_tuple(
-            static_cast<short>(std::round(theta_in * 10000)),
-            static_cast<short>(std::round(phi_in * 10000)),
-            static_cast<short>(std::round(theta_out * 10000)),
-            static_cast<short>(std::round(phi_out * 10000))
-    ));
-}
 

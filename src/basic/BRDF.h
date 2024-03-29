@@ -20,6 +20,7 @@
 #include <map>
 #include <vector>
 #include <array>
+#include <memory>
 
 #define BRDF_SAMPLING_RES_THETA_H       90
 #define BRDF_SAMPLING_RES_THETA_D       90
@@ -44,24 +45,41 @@ public:
     // 0: undefined  1: ground(like grassland, desert, plateau)  2: objects (like ball, chair, car, rock)
     int type = 0;
 
-    // for closed mesh
-    std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>> *RGBVal;
+    explicit BRDF(bool isOpen) noexcept;
 
-    // for open mesh
-    int MODIS_HDF_DATA_DIM_X = 2048;
-    int MODIS_HDF_DATA_DIM_Y = 2048;
-    std::map<std::array<int, 2>, std::vector<std::vector<short>> *> *valMap;
-    //std::vector<std::vector<short>> *val;
+    virtual ~BRDF() = default;
 
-    BRDF(const char *pathToDataset, int type, std::array<int, 2> band);
+};
+
+class OpenBRDF : public BRDF {
+public:
+
+// for open mesh, brdf data holder
+    std::map<std::array<int, 2>, std::vector<std::vector<short>>> *valMap = new std::map<std::array<int, 2>, std::vector<std::vector<short>>>();
+
+    int MODIS_HDF_DATA_DIM_X = 2400;
+    int MODIS_HDF_DATA_DIM_Y = 2400;
+
+    void OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band);
+
+    OpenBRDF(const char *pathToDataset, std::array<int, 2> band) noexcept;
+
+    OpenBRDF() noexcept;
+};
+
+class ClosedBRDF : public BRDF {
+public:
+// for closed mesh, brdf data holder
+    std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>> *RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();
 
     [[nodiscard]] std::tuple<float, float, float>
     getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const;
 
-    void closedMeshBRDF(const char *pathToDataset);
+    void ClosedBRDFInsert(const char *pathToDataset);
 
-    void openMeshBRDF(const char *pathToDataset, std::array<int, 2> band);
+    explicit ClosedBRDF(const char *pathToDataset) noexcept;
+
+    ClosedBRDF() noexcept;
+
 };
-
-
 #endif //VERTICES_BRDF_H

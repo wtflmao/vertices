@@ -16,6 +16,7 @@
 #include "vec.h"
 #include "triangle.h"
 #include "box.h"
+#include "../basic/BRDF.h"
 #include <numbers>
 
 //constexpr int SCATTER_RAYS = 8;
@@ -59,7 +60,7 @@ public:
         int scatteredCount);
 
     [[nodiscard]] std::array<Ray, SCATTER_RAYS + 1> scatter(const Triangle &tri, const Point &intersection,
-                                                            double reflectance) const;
+                                                            const std::shared_ptr<BRDF *> &itemBRDF) const;
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;
 

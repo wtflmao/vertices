@@ -3,7 +3,7 @@ project(vertices)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(vertices main.cpp
+add_executable(vertices src/main.cpp
         src/structures/ray.cpp
         src/structures/ray.h
         src/structures/triangle.cpp
@@ -27,7 +27,7 @@ add_executable(vertices main.cpp
         src/io/readMtl.cpp
         src/io/readMtl.h
         src/io/readNewItem.cpp
-        main.h
+        src/main.h
         src/structures/box.cpp
         src/structures/box.h
         src/structures/field.cpp
@@ -38,11 +38,11 @@ add_executable(vertices main.cpp
         src/structures/camera.h
         src/structures/pixel.cpp
         src/structures/pixel.h
-        src/basic/coordTransform.cpp
-        src/basic/coordTransform.h
-        lib/transform3d/transforms3d.h
-        lib/transform3d/trans_forms.cpp
-        lib/transform3d/trans_forms_group.cpp
+        #src/basic/coordTransform.cpp
+        #src/basic/coordTransform.h
+        #lib/transform3d/transforms3d.h
+        #lib/transform3d/trans_forms.cpp
+        #lib/transform3d/trans_forms_group.cpp
         src/basic/BRDF.cpp
         src/basic/BRDF.h
 )
