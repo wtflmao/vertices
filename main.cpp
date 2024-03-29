@@ -20,10 +20,16 @@ int main() {
     std::vector<std::string> mtlPaths;
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
 
+    // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
+    // and blue should always be the first, then green, then red, then shortwave infrared if possible
     std::vector<std::pair<std::array<int, 2>, std::string>> BRDFPaths;
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
-    BRDFPaths.emplace_back(std::array<int, 2>{545, 565},
-                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band4.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band3.459.479.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band4.545.565.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{RED_UPPER, RED_LOWER},
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band1.620.670.txt)");
 #elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
     std::cout << "unix-like" << std::endl;
 
@@ -91,7 +97,33 @@ int main() {
 
     field.buildBVHTree();
 
-    // todo: import brdf
+    int brdf_cnt_t = 0, size = static_cast<int>(BRDFPaths.size());
+    for (auto &fieldItem: field.getObjects()) {
+        if (size == 0) {
+            fprintf(stderr, "Error when initializing BRDFs. Reason: not enough BRDFs in the list.\a\n");
+            return 6;
+        }
+        if (fieldItem.isOpenMesh) {
+            if (brdf_cnt_t + 3 <= size) {
+                // todo: here it always crashes and returns 3, why???????
+                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[0].second.c_str(), 1, BRDFPaths[0].first);
+                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[1].second.c_str(), 1, BRDFPaths[1].first);
+                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[2].second.c_str(), 1, BRDFPaths[2].first);
+                brdf_cnt_t += 3;
+            } else {
+                fprintf(stderr, "Error when initializing BRDFs. Reason: not enough open BRDFs in the list.\a\n");
+                return 66;
+            }
+        } else {
+            if (brdf_cnt_t + 1 <= size) {
+                fieldItem.getMutBRDFs().emplace_back(BRDFPaths[0].second.c_str(), 2, BRDFPaths[0].first);
+                brdf_cnt_t += 1;
+            } else {
+                fprintf(stderr, "Error when initializing BRDFs. Reason: not enough closed BRDFs in the list.\a\n");
+                return 67;
+            }
+        }
+    }
 
     auto rays = new std::vector<Ray>();
     rays->emplace_back(Point(0, 1, 2), Vec(Point(0, -1, -1)));

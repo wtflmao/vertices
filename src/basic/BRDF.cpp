@@ -261,6 +261,9 @@ void BRDF::closedMeshBRDF(const char *pathToDataset) {
     }
     free(brdf);
 }
+// Copyright 2005 MERL ends here
+
+// Copyright 2024 wtflmao starts here
 
 void BRDF::openMeshBRDF(const char *pathToDataset, std::array<int, 2> band) {
     //val = new std::vector<std::vector<short>>();

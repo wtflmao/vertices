@@ -6,6 +6,7 @@
 #define VERTICES_ITEM_H
 
 #include "triangle.h"
+#include "../basic/BRDF.h"
 #include <vector>
 #include <string>
 #include <array>
@@ -13,6 +14,7 @@
 #include <iostream> // for debug
 #include <set>
 #include <queue>
+#include <tuple>
 
 class Item {
 private:
@@ -22,6 +24,7 @@ private:
     std::array<double, 3> scaleFactor = {1.0, 1.0, 1.0};
     // This center should be the center AFTER applied the zoom factor
     Point center = BigO;
+    std::vector<BRDF> BRDFs = {};
 
 public:
     /*
@@ -79,6 +82,13 @@ public:
     [[nodiscard]] const std::vector<std::array<int, 3> > &getFWVR() const noexcept;
 
     void normalVecInspector() noexcept;
+
+    [[maybe_unused]] [[nodiscard]] float getBRDFOpen(int waveLength, double i, double j) const noexcept;
+
+    [[maybe_unused]] [[nodiscard]] double
+    getBRDFClosed(int waveLength, double theta_i, double phi_i, double theta_r, double phi_r) const noexcept;
+
+    std::vector<BRDF> &getMutBRDFs() noexcept;
 };
 
 #endif //VERTICES_ITEM_H

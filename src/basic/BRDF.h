@@ -5,6 +5,7 @@
 #ifndef VERTICES_BRDF_H
 #define VERTICES_BRDF_H
 
+#include "../common.h"
 #include <cstdio>
 #include <cstdlib>
 #include <valarray>
@@ -23,6 +24,13 @@
 #define BLUE_SCALE (1.66/1500.0)
 
 constexpr int BUFFER_SIZE_FOR_OPEN_MESH = 20480;
+constexpr int BLUE_UPPER = UPPER_WAVELENGTH;
+constexpr int BLUE_LOWER = 512;
+constexpr int GREEN_UPPER = 512;
+constexpr int GREEN_LOWER = 605;
+constexpr int RED_UPPER = 605;
+// actually the RED_LOWER should be 752 but im lazy to add shortwave infrared BRDF
+constexpr int RED_LOWER = LOWER_WAVELENGTH;
 
 class BRDF {
 public:
