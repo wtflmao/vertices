@@ -59,28 +59,28 @@ Item::Item() = default;
 // I've decided that one item only have one set of BRDF data
 // if you want to add more, please divide the item into two different parts along with the boundary of different BRDF faces
 // waveLength in namometer. i and j are normalized to 2000, belong to [0, 1]
-float Item::getBRDFOpen(int waveLength, double i, double j) const noexcept {
-    auto *b = dynamic_cast<OpenBRDF *>(brdf);
+float Item::getBRDFOpen(int waveLength, double i, double j, BRDF &b_ori) const noexcept {
+    auto &b = dynamic_cast<OpenBRDF &>(b_ori);
     if (waveLength < UPPER_WAVELENGTH || waveLength > LOWER_WAVELENGTH) {
         return 0.0;
     } else if (waveLength >= BLUE_UPPER && waveLength < BLUE_LOWER) {
-        return b->valMap->at({BLUE_UPPER, BLUE_LOWER}).at(static_cast<std::size_t>(std::round(i * 2000))).at(
+        return b.valMap->at({BLUE_UPPER, BLUE_LOWER}).at(static_cast<std::size_t>(std::round(i * 2000))).at(
                 static_cast<short>(std::round(j * 2000)));
     } else if (waveLength >= GREEN_UPPER && waveLength < GREEN_LOWER) {
-        return b->valMap->at({GREEN_UPPER, GREEN_LOWER}).at(static_cast<std::size_t>(std::round(i * 2000))).at(
+        return b.valMap->at({GREEN_UPPER, GREEN_LOWER}).at(static_cast<std::size_t>(std::round(i * 2000))).at(
                 static_cast<short>(std::round(j * 2000)));
     } else if (waveLength >= RED_UPPER && waveLength <= RED_LOWER) {
-        return b->valMap->at({RED_UPPER, RED_LOWER}).at(static_cast<std::size_t>(std::round(i * 2000))).at(
+        return b.valMap->at({RED_UPPER, RED_LOWER}).at(static_cast<std::size_t>(std::round(i * 2000))).at(
                 static_cast<short>(std::round(j * 2000)));
     }
     // actually if u don't mess up with my settings in src/basic/BRDF.h, this condition should never be reached
     return 1.0;
 }
 
-double Item::getBRDFClosed(int waveLength, double theta_i = 0.0, double phi_i = 0.0, double theta_r = 0.0,
+double Item::getBRDFClosed(int waveLength, BRDF &b_ori, double theta_i = 0.0, double phi_i = 0.0, double theta_r = 0.0,
                            double phi_r = 0.0) const noexcept {
-    auto *b = dynamic_cast<ClosedBRDF *>(brdf);
-    auto tup = b->getBRDF(theta_i, phi_i, theta_r, phi_r);
+    auto &b = dynamic_cast<ClosedBRDF &>(b_ori);
+    auto tup = b.getBRDF(theta_i, phi_i, theta_r, phi_r);
     double R = std::get<0>(tup);
     double G = std::get<1>(tup);
     double B = std::get<2>(tup);

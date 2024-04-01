@@ -54,33 +54,41 @@ void OpenBRDF::OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band
     fprintf(stdout, "BRDF file size: %zu bytes\n", getFileSize(std::make_shared<FILE *>(fp)));
     fseek(fp, 0, SEEK_SET);
 
-    char line[BUFFER_SIZE_FOR_OPEN_MESH];
-    // i for latitude(+ for N, - for S), j for longitude(+ for E, - for W)
-    int i = 0, j = std::numeric_limits<int>::max();
+    char line[BUFFER_SIZE_FOR_OPEN_MESH], *line_p = nullptr;
+    // i for latitude(+ for N, - for S), j_min for longitude(+ for E, - for W)
+    int i = 0, i_max = std::numeric_limits<int>::min(), j_min = std::numeric_limits<int>::max();
     while (fgets(line, BUFFER_SIZE_FOR_OPEN_MESH, fp) != nullptr) {
         auto &temp = val.at(i);
         short t;
-        int j_t = 0;
+        int j_t = 0, n = 1;
         temp.reserve(MODIS_HDF_DATA_DIM_Y);
-        while (sscanf_s(line, "%hd", &t) != 1) {
+        line_p = line;
+        while (sscanf_s(line_p, "%hd%n", &t, &n) == 1) {
+            if (n == 0) {
+                break;
+            }
             temp.push_back(t);
+            // move the line pointer to after the first found digit
+            line_p += n;
             j_t++;
         }
-        if (j_t < j) j = j_t;
+        if (j_t < j_min) j_min = j_t;
         i++;
+        if (i > i_max) i_max = i;
         val.emplace_back();
     }
     val.pop_back();
     MODIS_HDF_DATA_DIM_X = i;
-    MODIS_HDF_DATA_DIM_Y = j;
+    MODIS_HDF_DATA_DIM_Y = j_min;
+    printf("DIMX: %d   DIMY: %d\n", MODIS_HDF_DATA_DIM_X, MODIS_HDF_DATA_DIM_Y);
     fclose(fp);
 }
 
 BRDF::BRDF(bool isOpen) noexcept {
     if (isOpen) {
-        type = 1;
+        type = BRDFType::Open;
     } else {
-        type = 2;
+        type = BRDFType::Closed;
     }
 }
 
@@ -346,7 +354,7 @@ void ClosedBRDF::ClosedBRDFInsert(const char *pathToDataset) {
                     double phi_out = l * 2.0 * std::numbers::pi / (4 * n);
                     double red, green, blue;
                     lookup_brdf_val(brdf, theta_in, phi_in, theta_out, phi_out, red, green, blue);
-                    RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();
+                    //RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();
                     RGBVal->insert({
                                            std::make_tuple(
                                                    static_cast<short>(std::round(theta_in * 10000)),

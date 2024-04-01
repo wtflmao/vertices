@@ -2,6 +2,12 @@
 // Created by root on 2024/3/16.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #ifndef VERTICES_FIELD_H
 #define VERTICES_FIELD_H
 
@@ -26,6 +32,7 @@ public:
     std::size_t nodeCount = 0;
     std::size_t maxDepth = 0;
     const Vec sunlightDirectionToGround = Vec(Point(-1, 0, -std::sqrt(3)));
+    std::vector<BRDF *> brdfList = {};
 
     Field() noexcept;
     Field(Point min, Point max) noexcept;

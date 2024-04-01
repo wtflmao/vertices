@@ -49,7 +49,7 @@ public:
     // open mesh be like plane, ground, etc.
     // closed mesh be like ball, cube, cylinder
     bool isOpenMesh = false;
-    BRDF *brdf;
+    short brdfIdx = -1;
     int forwardAxis = 6; // 1 2 3 for X Y Z, 4 5 6 for -X -Y -Z
     int upAxis = 3;
     double Ns = 10.0;
@@ -89,10 +89,11 @@ public:
 
     void normalVecInspector() noexcept;
 
-    [[maybe_unused]] [[nodiscard]] float getBRDFOpen(int waveLength, double i, double j) const noexcept;
+    [[maybe_unused]] [[nodiscard]] float getBRDFOpen(int waveLength, double i, double j, BRDF &b_ori) const noexcept;
 
     [[maybe_unused]] [[nodiscard]] double
-    getBRDFClosed(int waveLength, double theta_i, double phi_i, double theta_r, double phi_r) const noexcept;
+    getBRDFClosed(int waveLength, BRDF &b_ori, double theta_i, double phi_i, double theta_r,
+                  double phi_r) const noexcept;
 };
 
 #endif //VERTICES_ITEM_H

@@ -31,11 +31,18 @@ int main() {
     std::vector<std::pair<std::array<int, 2>, std::string>> BRDFPaths;
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
+                           R"(C:\Users\root\Downloads\debug.mini.459.479.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
+                           R"(C:\Users\root\Downloads\debug.mini.545.565.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{RED_UPPER, RED_LOWER},
+                           R"(C:\Users\root\Downloads\debug.mini.620.670.txt)");
+    /*BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band3.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
                            R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band4.545.565.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{RED_UPPER, RED_LOWER},
                            R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band1.620.670.txt)");
+                           */
 #elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
     std::cout << "unix-like" << std::endl;
 
@@ -101,39 +108,77 @@ int main() {
         false, 6, 2
     );*/
 
-    field.buildBVHTree();
-
-    int brdf_cnt_t = 0, size = static_cast<int>(BRDFPaths.size());
+    int brdf_cnt_t = 0, b_cnt = 0, size = static_cast<int>(BRDFPaths.size());
     for (auto &fieldItem: field.getObjects()) {
         if (size == 0) {
             fprintf(stderr, "Error when initializing BRDFs. Reason: not enough BRDFs in the list.\a\n");
             return 6;
         }
         if (fieldItem.isOpenMesh) {
-            fieldItem.brdf = new OpenBRDF();
+            field.brdfList.push_back(new OpenBRDF());
+            auto &brdfRef = *field.brdfList.at(brdf_cnt_t);
+            fieldItem.brdfIdx = b_cnt++;
             std::cout << "Handling a set of open BRDF" << std::endl;
             if (brdf_cnt_t + 3 <= size) {
-                dynamic_cast<OpenBRDF *>(fieldItem.brdf)->OpenBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str(),
-                                                                         BRDFPaths[0].first);
-                dynamic_cast<OpenBRDF *>(fieldItem.brdf)->OpenBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str(),
-                                                                         BRDFPaths[1].first);
-                dynamic_cast<OpenBRDF *>(fieldItem.brdf)->OpenBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str(),
-                                                                         BRDFPaths[2].first);
+                dynamic_cast<OpenBRDF &>(brdfRef).OpenBRDFInsert(BRDFPaths.at(brdf_cnt_t).second.c_str(),
+                                                                 BRDFPaths.at(brdf_cnt_t).first);
+                brdf_cnt_t++;
+                dynamic_cast<OpenBRDF &>(brdfRef).OpenBRDFInsert(BRDFPaths.at(brdf_cnt_t).second.c_str(),
+                                                                 BRDFPaths.at(brdf_cnt_t).first);
+                brdf_cnt_t++;
+                dynamic_cast<OpenBRDF &>(brdfRef).OpenBRDFInsert(BRDFPaths.at(brdf_cnt_t).second.c_str(),
+                                                                 BRDFPaths.at(brdf_cnt_t).first);
+                brdf_cnt_t++;
             } else {
                 fprintf(stderr, "Error when initializing BRDFs. Reason: not enough open BRDFs in the list.\a\n");
                 return 66;
             }
             std::cout << "Handling a set of open BRDF done" << std::endl;
         } else {
-            fieldItem.brdf = new ClosedBRDF();
-            std::cout << "Handling a set of closed BRDF" << std::endl;
-            if (brdf_cnt_t + 1 <= size) {
-                dynamic_cast<ClosedBRDF *>(fieldItem.brdf)->ClosedBRDFInsert(BRDFPaths[brdf_cnt_t++].second.c_str());
-            } else {
-                fprintf(stderr, "Error when initializing BRDFs. Reason: not enough closed BRDFs in the list.\a\n");
-                return 67;
+            try {
+                //fieldItem.brdf = new ClosedBRDF();
+                field.brdfList.push_back(new ClosedBRDF());
+                auto &brdfRef = *field.brdfList.at(brdf_cnt_t);
+                fieldItem.brdfIdx = b_cnt++;
+                std::cout << "Handling a set of closed BRDF" << std::endl;
+                if (brdf_cnt_t + 1 <= size) {
+                    dynamic_cast<ClosedBRDF &>(brdfRef).ClosedBRDFInsert(BRDFPaths.at(brdf_cnt_t).second.c_str());
+
+                } else {
+                    fprintf(stderr, "Error when initializing BRDFs. Reason: not enough closed BRDFs in the list.\a\n");
+                    return 67;
+                }
+                brdf_cnt_t++;
+                std::cout << "Handling a set of closed BRDF done" << std::endl;
+            } catch (const std::exception &e) {
+                std::cerr << "\a[Debug] Caught exception in main(): " << e.what() << std::endl;
+            } catch (...) {
+                std::cerr << "[Debug] Caught unknown exception in main()\a\n";
             }
-            std::cout << "Handling a set of closed BRDF done" << std::endl;
+        }
+    }
+
+    // since brdf has been initialized, now asign every face with a pointer to a brdf that the owner item has
+    // it's such a stupid design pattern i know, but there's no way back
+    std::cout << "face's brdf initializing only for BVH..." << std::endl;
+    for (auto &obj: field.getObjects()) {
+        for (auto &faceMut: obj.getMutFaces()) {
+            faceMut.faceBRDF = obj.brdfIdx;
+        }
+    }
+
+    field.buildBVHTree();
+
+    {
+        const std::vector<std::shared_ptr<Node> > node_ptrs = field.generateNodeList();
+        for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
+            auto &node = node_ptrs.at(nodeIndex);
+            for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
+                auto &face = node->boxedFaces.at(faceIndex);
+                if (face->faceBRDF == -1)
+                    std::cerr << "[Error] face #" << faceIndex << " of node #" << nodeIndex
+                              << " has no brdfIdx in main()" << std::endl;
+            }
         }
     }
 
@@ -153,20 +198,20 @@ int main() {
         auto &ray = rays->at(rayIndex);
         // Iterate over all objects
         for (int objIndex = 0; objIndex < field.getObjects().size(); objIndex++) {
-            auto &obj = field.getObjects()[objIndex];
+            auto &obj = field.getObjects().at(objIndex);
             // Iterate over all faces of each object
             for (int faceIndex=0; faceIndex < obj.getFaces().size(); faceIndex++) {
-                auto & face = obj.getFaces()[faceIndex];
+                auto &face = obj.getFaces().at(faceIndex);
                 auto intersection = ray.mollerTrumboreIntersection(face);
                 if (NO_INTERSECT != intersection) {
                     ray.setRayStopPoint(intersection);
                     std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
-                    const auto scatteredRays = ray.scatter(face, intersection, std::make_shared<BRDF *>(obj.brdf));
+                    const auto scatteredRays = ray.scatter(face, intersection, field.brdfList.at(obj.brdfIdx));
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
-                        for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
-                            if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
-                        if (flag) rays->push_back(scatteredRays[j]);
+                        for (int k = 0; k < scatteredRays.at(j).intensity_p.size(); k++)
+                            if (scatteredRays.at(j).intensity_p.at(k) > 1e-10) flag = true;
+                        if (flag) rays->push_back(scatteredRays.at(j));
                     }
                 } else {
                     //std::cout << "The ray " << rayIndex+1 << " does not intersect the face " << faceIndex+1 << " of object " << objIndex+1 << "." << std::endl;
@@ -186,18 +231,8 @@ int main() {
     rays->emplace_back(Point(0, 0.5, 2), Vec(Point(0, 0, -1)));
     rays->emplace_back(Point(-0.5, -0.5, -0.5), Vec(Point(1, 1.1, 1.2)));
 
-    // since brdf has been initialized, now asign every face with a pointer to a brdf that the owner item has
-    // it's such a stupid design pattern i know, but there's no way back
-    std::cout << "face's brdf initializing..." << std::endl;
-    for (auto &obj: field.getObjects()) {
-        for (auto &face: obj.getMutFaces()) {
-            //std::weak_ptr<BRDF*> weak_p = ;
-            face.faceBRDF = std::make_shared<BRDF *>(obj.brdf);
-        }
-    }
-
     std::cout << "-------Now----using----BVH----method----to-----accelerate--------" << std::endl;
-    // generate an vector of all nodes' const shared pointers
+    // generate a vector of all nodes' const shared pointers
     // so that I can conveiently traverse all nodes many times without visiting the multi-arch tree again and again
     // thanks to modern C++, RVO or NRVO is possible
     const std::vector<std::shared_ptr<Node> > node_ptrs = field.generateNodeList();
@@ -210,24 +245,26 @@ int main() {
         auto &ray = rays->at(rayIndex);
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
-            auto &node = node_ptrs[nodeIndex];
+            auto &node = node_ptrs.at(nodeIndex);
             // Check if the ray intersects with the node (box)
             if (ray.intersectsWithBox(node->bbox)) {
                 // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                 for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
-                    auto &face = node->boxedFaces[faceIndex];
+                    auto &face = node->boxedFaces.at(faceIndex);
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face, intersection,
-                                                                    face->faceBRDF.lock()); const auto &ray_sp:
+                        for (const auto scatteredRays = ray.scatter(*face,
+                                                                    intersection,
+                                                                    field.brdfList.at(face->faceBRDF));
+                                const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
-                                for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
-                                    if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag = true;
-                                if (flag) rays->push_back(scatteredRays[j]);
+                                for (int k = 0; k < scatteredRays.at(j).intensity_p.size(); k++)
+                                    if (scatteredRays.at(j).intensity_p.at(k) > 1e-10) flag = true;
+                                if (flag) rays->push_back(scatteredRays.at(j));
                             }
                         }
                     }
@@ -302,13 +339,13 @@ int main() {
                         bool validity = true;
                         Point intersection_t = BigO;
                         for (int nodeIndex_t = 0; nodeIndex_t < field.nodeCount && validity; nodeIndex_t++) {
-                            auto &node_t = node_ptrs[nodeIndex_t];
+                            auto &node_t = node_ptrs.at(nodeIndex_t);
                             // Check if the ray intersects with the node (box)
                             if (ray_t.intersectsWithBox(node_t->bbox)) {
                                 // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                                 for (int faceIndex_t = 0;
                                      faceIndex_t < node_t->boxedFaces.size() && validity; faceIndex_t++) {
-                                    auto &face_t = node_t->boxedFaces[faceIndex_t];
+                                    auto &face_t = node_t->boxedFaces.at(faceIndex_t);
                                     if (intersection_t = ray_t.mollerTrumboreIntersection(*face_t); (
                                             NO_INTERSECT != intersection_t && intersection_t != intersection)) {
                                         // bad, has intersection, the original ray is not valid
@@ -334,28 +371,29 @@ int main() {
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
                         // todo: use BRDF
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, 0); const auto &ray_sp:
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
+                                face->faceBRDF)); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
-                                for (int k = 0; k < scatteredRays[j].intensity_p.size(); k++)
-                                    if (scatteredRays[j].intensity_p.at(k) > 1e-10) flag_tt = true;
+                                for (int k = 0; k < scatteredRays.at(j).intensity_p.size(); k++)
+                                    if (scatteredRays.at(j).intensity_p.at(k) > 1e-10) flag_tt = true;
                                 if (flag_tt) {//rays->push_back(scatteredRays[j]);
                                     // for 2+ scattered rays, the source of them is not THE SUN but the original ray
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
-                                    Ray ray_tt = scatteredRays[j];
+                                    Ray ray_tt = scatteredRays.at(j);
                                     ray_tt.ancestor = ray_t.ancestor;
                                     bool validity_tt = true;
                                     for (int nodeIndex_tt = 0;
                                          nodeIndex_tt < field.nodeCount && validity_tt; nodeIndex_tt++) {
-                                        auto &node_tt = node_ptrs[nodeIndex_tt];
+                                        auto &node_tt = node_ptrs.at(nodeIndex_tt);
                                         // Check if the ray intersects with the node (box)
                                         if (ray_tt.intersectsWithBox(node_tt->bbox)) {
                                             // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                                             for (int faceIndex_tt = 0;
                                                  faceIndex_tt < node_tt->boxedFaces.size() &&
                                                  validity_tt; faceIndex_tt++) {
-                                                auto &face_tt = node_tt->boxedFaces[faceIndex_tt];
+                                                auto &face_tt = node_tt->boxedFaces.at(faceIndex_tt);
                                                 if (auto intersection_tt = ray_tt.mollerTrumboreIntersection(
                                                             *face_tt); (
                                                         NO_INTERSECT != intersection_tt &&

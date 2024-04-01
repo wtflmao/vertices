@@ -21,6 +21,7 @@
 #include <vector>
 #include <array>
 #include <memory>
+#include <cctype>
 
 #define BRDF_SAMPLING_RES_THETA_H       90
 #define BRDF_SAMPLING_RES_THETA_D       90
@@ -39,11 +40,16 @@ constexpr int RED_UPPER = 605;
 // actually the RED_LOWER should be 752 but im lazy to add shortwave infrared BRDF
 constexpr int RED_LOWER = LOWER_WAVELENGTH;
 
+enum class BRDFType {
+    Default, Open, Closed
+};
+
 class BRDF {
 public:
+
     // type suggests what this brdf type is
     // 0: undefined  1: ground(like grassland, desert, plateau)  2: objects (like ball, chair, car, rock)
-    int type = 0;
+    BRDFType type = BRDFType::Default;
 
     explicit BRDF(bool isOpen) noexcept;
 
@@ -57,8 +63,8 @@ public:
 // for open mesh, brdf data holder
     std::map<std::array<int, 2>, std::vector<std::vector<short>>> *valMap = new std::map<std::array<int, 2>, std::vector<std::vector<short>>>();
 
-    int MODIS_HDF_DATA_DIM_X = 2400;
-    int MODIS_HDF_DATA_DIM_Y = 2400;
+    int MODIS_HDF_DATA_DIM_X = 3000;
+    int MODIS_HDF_DATA_DIM_Y = 3000;
 
     void OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band);
 

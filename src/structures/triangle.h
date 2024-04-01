@@ -25,7 +25,8 @@ private:
 public:
     Point v0 = BigO, v1 = BigO, v2 = BigO;
     std::array<double, 3> centroid;
-    std::weak_ptr<BRDF *> faceBRDF;
+    // this is an index
+    short faceBRDF = -1;
 
     [[nodiscard]] const Vec & getNormal() const noexcept;
 
