@@ -2,57 +2,66 @@
 // Created by root on 24-3-26.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #ifndef VERTEX_COORDTRANSFORM_H
 #define VERTEX_COORDTRANSFORM_H
 
 #define EIGEN_MPL2_ONLY
 
-#include <iostream>
 #include "../../lib/eigen3/Eigen/Dense"
 #include "../structures/point.h"
 #include "../../lib/transform3d/transforms3d.h"
+#include "../common.h"
 #include <valarray>
+#include <iostream>
 
-//using namespace std;
-//using namespace Eigen;
-//using Eigen::MatrixXd;
+constexpr const char *IMAGE = "image";
+constexpr const char *CAMERA = "camera";
+constexpr const char *GROUND = "ground";
 
 class CoordTransform {
-public:
-    CoordTransform();
-
 private:
+    // ground@camera
     // pitch, yaw, roll are for x, y, and z axis rotation angle respectively
     // units are in degrees, not radians
-    double pitch = 180;
+    // delta_xyz are in meters
+    double pitch = 0;
     double yaw = 0;
     double roll = 180;
+    double delta_x = 0;
+    double delta_y = 0;
+    double delta_z = CAMERA_HEIGHT;
 
-    Eigen::Matrix3d rotMat;
+    // ground@camera
+    const Eigen::Matrix4d tbg = TransForms::ComposeEuler(delta_x, delta_y, delta_z, pitch, yaw, roll);
 
-    // pan matrix, applied after rotation, applied on the BigO, direction is original axis's direction
-    Eigen::Matrix3d panMatrix;
-
-    // zoom vector, refers to what scale should be applied to every new axis
-    Eigen::Matrix3d scaleMatrix;
-
-    // why dont I use vector above? IDK, but it is easier to remember
-
-    // three origin points, every element contains x,y,z double
-    Eigen::Vector3d pointsInOriginal_std[3];
-    Eigen::Vector3d pointsInNew_std[3];
+    // camera @ image platform
+    const Eigen::Matrix4d tcg = TransForms::ComposeEuler(0, 0, CAM_IMG_DISTANCE, 0, 0, 0);
 
 public:
-    //设置标定点原始点1 2 3
-    void setOriPoint(const Point &origin, int whichOne);
+    // transform group
+    TransFormsGroup tfg;
 
-    //设置标定点当前点1 2 3
-    void setNewPoint(const Point &newPoint, int whichOne);
+    CoordTransform() noexcept;
 
-    //计算
-    void calcTheRotMat();
+    void coordTransformTest() noexcept;
 
-private:
+    void gndToCam(const Point &gnd, Point &cam) noexcept;
+
+    void camToGnd(const Point &cam, Point &gnd) noexcept;
+
+    [[deprecated]] void imgToCam(const Point &img, Point &cam) noexcept;
+
+    [[deprecated]] void camToImg(const Point &cam, Point &img) noexcept;
+
+    [[deprecated]] void imgToGnd(const Point &img, Point &gnd) noexcept;
+
+    [[deprecated]] void gndToImg(const Point &gnd, Point &img) noexcept;
 };
 
 

@@ -2,6 +2,12 @@
 // Created by root on 2024/3/15.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #ifndef SRC_COMMON_H
 #define SRC_COMMON_H
 
@@ -28,8 +34,8 @@ constexpr std::size_t SAMPLINGS = 64;
 
 // VERTICES_PIXEL_H
 // 1024 by 768 pixels
-constexpr int resolutionX = 8;
-constexpr int resolutionY = 6;
+constexpr int resolutionX = 4;
+constexpr int resolutionY = 3;
 constexpr int spectralBands = 100;
 // all in nanometer, please be in integer
 constexpr int UPPER_WAVELENGTH = 380;
@@ -48,10 +54,16 @@ constexpr double gsd = 0.12;
 constexpr double focalLength = 20;
 constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 1;
 // FOVx
-const double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
-const double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 
 
+// VERTICES_COORDTRANSFORM_H
+// camera @ image
+// distance in meters
+constexpr double CAM_IMG_DISTANCE = CAMERA_HEIGHT / 60.0;
+const double picElemX = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVx * std::numbers::pi / 180.0) / 2.0);
+const double picElemY = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVy * std::numbers::pi / 180.0) / 2.0);
 
 #endif //SRC_COMMON_H

@@ -12,6 +12,31 @@
 #include "main.h"
 
 int main() {
+
+    auto a = CoordTransform();
+    Point x = {0.8, 0.6, 0};
+    Point y = BigO;
+    a.camToGnd(x, y);
+    std::cout << y << std::endl;
+    x = y;
+    a.gndToCam(x, y);
+    std::cout << y << std::endl;
+
+    x = {10.0, 5.0, 0.3};
+    a.gndToCam(x, y);
+    std::cout << y << std::endl;
+    x = y;
+    a.camToGnd(x, y);
+    std::cout << y << std::endl << std::endl;
+
+    x = {0, 0, 0};
+    a.camToImg(x, y);
+    std::cout << y << std::endl;
+    x = {0.2, 0.3, 0.1};
+    a.camToImg(x, y);
+    std::cout << y << std::endl;
+    exit(0);
+
     //std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
     //        getNormal().tail << std::endl;
 #ifdef _WIN32
@@ -299,7 +324,7 @@ int main() {
         std::cout << "trying to deref a nullptr in main() from camera.shootRaysRandom() call\a" << std::endl;
         return 8;
     }
-    auto goodRays = new std::vector<Ray>();
+    auto goodRays_t = new std::vector<Ray>();
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
     // only for timing
@@ -360,7 +385,7 @@ int main() {
                         }
                         //std::cout << "(";
                         if (validity) {
-                            goodRays->push_back(ray);
+                            goodRays_t->push_back(ray);
                             //std::cout << goodCnt++;
                         } else {
                             //std::cout << "  ";
@@ -410,7 +435,8 @@ int main() {
                                     }
                                     //std::cout << "(";
                                     if (validity_tt) {
-                                        goodRays->push_back(ray_tt);
+                                        goodRays_t->push_back(ray_tt);
+                                        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.intensity_p.at(0), ray_tt.intensity_p.at(std::round(0.2*spectralBands)), ray_tt.intensity_p.at(0.75*spectralBands), ray_tt.scatteredLevel);
                                         //std::cout << goodCnt++;
                                     } else {
                                         //std::cout << "  ";
@@ -430,17 +456,40 @@ int main() {
     }
     std::cout << "Rays " << rays->size() << " " << rays->capacity() << std::endl;
 
-    for (auto &ray: *goodRays) {
+    for (auto &ray: *goodRays_t) {
         // calc the ray's spectrum response
         camera.addRaySpectrumResp(ray);
     }
-
-    std::cout << "Good rays " << goodRays->size() << " " << goodRays->capacity() << std::endl;
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
     std::cout << "Ray count: " << rays->size() << "." << std::endl;
+
+    // clean up rays that have no spectrum response
+    auto goodRays = new std::vector<Ray>();
+    for (auto &ray: *goodRays_t) {
+        bool flaga = false;
+        for (auto &spectrumResp: ray.intensity_p) {
+            if (spectrumResp > 1e-10) {
+                flaga = true;
+            }
+        }
+        if (flaga) {
+            goodRays->push_back(ray);
+        }
+    }
+    delete goodRays_t;
+
+    for (int i = 0; auto &ray: *goodRays) {
+        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray.intensity_p.at(0), ray.intensity_p.at(std::round(0.2*spectralBands)), ray.intensity_p.at(std::round(0.75*spectralBands)), ray.scatteredLevel);
+    }
+
+    // a "good ray" is a ray that successfully intersects with a face that
+    // without any other face obstructing its path to the source point
+    std::cout << "Good rays " << goodRays->size() << std::endl;
+    delete rays;
+
 
 
     return 0;

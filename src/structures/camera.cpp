@@ -272,3 +272,39 @@ void Camera::addRaySpectrumResp(Ray &ray) noexcept {
     }
 }
 
+// the cam should belongs to camera coord, not ground coord!
+// img is the center of 像元, belongs to image coord, not ground coord, nor camera coord
+void Camera::camToImg(const Point &cam, Point &img) noexcept {
+    img.z = cam.z - CAM_IMG_DISTANCE;
+    img.x = cam.x;
+    img.y = cam.y;
+}
+
+void Camera::imgToCam(const Point &img, Point &cam) noexcept {
+    cam.z = img.z + CAM_IMG_DISTANCE;
+    cam.x = img.x;
+    cam.y = img.y;
+}
+
+// p1 and p2 should on iamge coord
+double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
+    std::array<double, 6> p1_picElemBoundary = {0};
+    std::array<double, 6> p2_picElemBoundary = {0};
+    p1_picElemBoundary.at(0) = p1.x - picElemX;
+    p1_picElemBoundary.at(1) = p1.x + picElemX;
+    p1_picElemBoundary.at(2) = p1.y - picElemY;
+    p1_picElemBoundary.at(3) = p1.y + picElemY;
+    p1_picElemBoundary.at(4) = p1.z;
+    p1_picElemBoundary.at(5) = p1.z;
+
+    p2_picElemBoundary.at(0) = p2.x - picElemX;
+    p2_picElemBoundary.at(1) = p2.x + picElemX;
+    p2_picElemBoundary.at(2) = p2.y - picElemY;
+    p2_picElemBoundary.at(3) = p2.y + picElemY;
+    p2_picElemBoundary.at(4) = p2.z;
+    p2_picElemBoundary.at(5) = p2.z;
+
+    if (p1_picElemBoundary.at(1) >) {
+
+    }
+}

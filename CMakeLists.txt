@@ -38,11 +38,12 @@ add_executable(vertices src/main.cpp
         src/structures/camera.h
         src/structures/pixel.cpp
         src/structures/pixel.h
-        #src/basic/coordTransform.cpp
-        #src/basic/coordTransform.h
-        #lib/transform3d/transforms3d.h
-        #lib/transform3d/trans_forms.cpp
-        #lib/transform3d/trans_forms_group.cpp
+        src/basic/coordTransform.cpp
+        src/basic/coordTransform.h
+        lib/transform3d/transforms3d.h
+        lib/transform3d/trans_forms.cpp
+        lib/transform3d/trans_forms_group.cpp
+        lib/eigen3/Eigen
         src/basic/BRDF.cpp
         src/basic/BRDF.h
 )

@@ -250,7 +250,7 @@ public:
   * @return {Matrix4d} 返回4✖4的齐次变换矩阵
   */
  Eigen::Matrix4d pushTransForm(const std::string &parent, const std::string &child,
-                               double &x, double &y, double &z, double &rx,
+                               const double *x, double &y, double &z, double &rx,
                                double &ry, double &rz);
 
  /**
@@ -269,6 +269,10 @@ public:
  Eigen::Matrix4d pushTransForm(const std::string &parent, const std::string &child,
                                double &x, double &y, double &z, double &rx,
                                double &ry, double &rz, double &rw);
+
+    Eigen::Matrix4d
+    pushTransForm(const std::string &parent, const std::string &child, double &x, double &y, double &z, double &rx,
+                  double &ry, double &rz);
 };
 
 #endif

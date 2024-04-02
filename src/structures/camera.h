@@ -52,6 +52,12 @@ public:
     Ray shootRayRandom(int cnt);
 
     std::vector<Ray> *shootRaysRandom(int num);
+
+    void camToImg(const Point &cam, Point &img) noexcept;
+
+    void imgToCam(const Point &img, Point &cam) noexcept;
+
+    double realOverlappingRatio(const Point &p1, const Point &p2);
 };
 
 
