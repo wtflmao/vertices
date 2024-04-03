@@ -22,7 +22,7 @@
 #include <queue>
 #include <tuple>
 
-class Item {
+class Item final {
 private:
     std::vector<Triangle> faces;
     std::vector<Point> vertices;

@@ -12,6 +12,9 @@
 #define SRC_COMMON_H
 
 #include <random>
+#include <numbers>
+#include <array>
+
 inline std::random_device rd;
 inline std::mt19937 generator(rd());
 inline std::uniform_real_distribution<double> distribution(0.0, 1.0);
@@ -57,7 +60,6 @@ constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 1;
 constexpr double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
 constexpr double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
-#include <array>
 
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
 

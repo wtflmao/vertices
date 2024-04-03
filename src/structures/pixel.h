@@ -17,6 +17,7 @@
 
 class Pixel {
 public:
+class Pixel final {
     // this pos indicates the location of this pixel in camera coord
     Point posInCam = BigO;
 

@@ -21,7 +21,7 @@
 
 bool readNewItem(const char *filename, Item& item);
 
-class Field {
+class Field final {
 private:
     std::shared_ptr<Node> tree;
     std::vector<std::shared_ptr<Triangle> > allFaces;

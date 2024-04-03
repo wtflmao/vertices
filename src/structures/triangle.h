@@ -18,7 +18,7 @@
 #include <array>
 #include <memory>
 
-class Triangle {
+class Triangle final {
 private:
     Vec normal = Vec(BigO, BigO);
 

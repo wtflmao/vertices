@@ -21,7 +21,7 @@
 
 //constexpr int SCATTER_RAYS = 8;
 
-class Ray {
+class Ray final {
 private:
     // origin indicates where is this ray starts
     Point origin = BigO;

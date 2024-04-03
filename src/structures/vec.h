@@ -2,13 +2,19 @@
 // Created by root on 2024/3/13.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #ifndef VERTICES_VEC_H
 #define VERTICES_VEC_H
 
 
 #include "point.h"
 
-class Vec {
+class Vec final {
 private:
     double length = 0.0l;
     void updateLength() noexcept;

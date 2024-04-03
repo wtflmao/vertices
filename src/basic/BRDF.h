@@ -57,7 +57,7 @@ public:
 
 };
 
-class OpenBRDF : public BRDF {
+class OpenBRDF final : public BRDF {
 public:
 
 // for open mesh, brdf data holder
@@ -73,7 +73,7 @@ public:
     OpenBRDF() noexcept;
 };
 
-class ClosedBRDF : public BRDF {
+class ClosedBRDF final : public BRDF {
 public:
 // for closed mesh, brdf data holder
     std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>> *RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();

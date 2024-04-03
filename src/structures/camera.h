@@ -24,7 +24,7 @@
 
 constexpr double FACTOR = 1.0;
 
-class Camera {
+class Camera final {
 private:
 
 public:

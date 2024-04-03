@@ -24,7 +24,7 @@ constexpr const char *IMAGE = "image";
 constexpr const char *CAMERA = "camera";
 constexpr const char *GROUND = "ground";
 
-class CoordTransform {
+class CoordTransform final {
 private:
     // ground@camera
     // pitch, yaw, roll are for x, y, and z axis rotation angle respectively
