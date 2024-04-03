@@ -17,25 +17,34 @@
 class Vec final {
 private:
     double length = 0.0l;
-    void updateLength() noexcept;
-    void setLength(double len) noexcept;
 
-protected:
-    [[maybe_unused]] Vec(const Point &, double) noexcept;
+    Vec &updateLength() noexcept;
 
-public:
+    Vec &setLength(double len) noexcept;
     Point head = Point(0.0l, 0.0l, 0.0l);
     Point tail = BigO;
 
+public:
+    [[maybe_unused]] Vec(const Point &, double) noexcept;
     Vec(const Point &origin, const Point &direction) noexcept;
 
     explicit Vec(const Point &) noexcept;
 
     //explicit Vec(Ray &ray);
     [[nodiscard]] double getLength() const noexcept;
-    [[maybe_unused]] [[nodiscard]] Vec cross(const Vec& other) const noexcept;
+
+    [[nodiscard]] Vec cross(const Vec &other) const noexcept;
     [[nodiscard]] double dot(const Vec& other) const noexcept;
-    [[maybe_unused]] [[nodiscard]] Vec getNormalized() const noexcept;
+
+    [[nodiscard]] Vec getNormalized() const noexcept;
+
+    Vec &setHead(const Point &newHead) noexcept;
+
+    Vec &setTail(const Point &newTail) noexcept;
+
+    [[nodiscard]] const Point &getHead() const noexcept;
+
+    [[nodiscard]] const Point &getTail() const noexcept;
 
     Vec operator*(const double multiplier) const noexcept {
         Point t_direction = this->tail;
@@ -46,9 +55,9 @@ public:
     }
     Point operator+(const Point& point) const noexcept {
         Point result = this->tail;
-        result.x += point.x;
-        result.y += point.y;
-        result.z += point.z;
+        result.setX(result.getX() + point.getX())
+                .setY(result.getY() + point.getY())
+                .setZ(result.getZ() + point.getZ());
         return result;
     }
 

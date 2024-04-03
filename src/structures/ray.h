@@ -29,13 +29,13 @@ private:
     Vec direction = Vec(Point(2,2,2));
     // stopPoint is for when the ray intersects with a surface or is out of the box and we should stop the ray from goin any further
     double stopLength = STOP_LENGTH;
-
-public:
     // ancestor indicates where is this ray's ancestor(the one has the lowest scatter level) starts
     Point ancestor = BigO;
-
-    std::array<double, spectralBands> intensity_p = {};
     int scatteredLevel = 0;
+    std::array<double, spectralBands> intensity_p = {};
+
+public:
+
     //std::shared_ptr<std::array<double, spectralBands>> spectrum_p = std::make_shared<std::array<double, spectralBands>>();
 
     Ray(const Point &origin, const Vec &direction) noexcept;
@@ -50,8 +50,6 @@ public:
 
     [[nodiscard]] double dotVec(const Vec &other) const noexcept;
 
-    [[nodiscard]] const Point& getOrigin() const noexcept;
-    [[nodiscard]] const Vec& getDirection() const noexcept;
     [[nodiscard]] Point mollerTrumboreIntersection(const Triangle &tri) const;
 
     [[nodiscard]] bool intersectsWithBox(const Box &box) const;
@@ -64,6 +62,25 @@ public:
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;
 
+    [[nodiscard]] const Point &getOrigin() const noexcept;
+
+    [[nodiscard]] const Point &getAncestor() const noexcept;
+
+    [[nodiscard]] double getScatteredLevel() const noexcept;
+
+    [[nodiscard]] const Vec &getDirection() const noexcept;
+
+    [[nodiscard]] const std::array<double, spectralBands> &getIntensity_p() const noexcept;
+
+    Ray &setAncestor(const Point &ancestor_t) noexcept;
+
+    Ray &setOrigin(const Point &origin_t) noexcept;
+
+    Ray &setScatteredLevel(const double t) noexcept;
+
+    Ray &setDirection(const Vec &d_t) noexcept;
+
+    Ray &setIntensity_p(std::array<double, spectralBands> &t) noexcept;
 };
 
 void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent);

@@ -38,17 +38,17 @@ void Node::updateBox() {
         return;
     }
 
-    Point min = faces[0]->v0;
-    Point max = faces[0]->v0;
+    Point min = faces[0]->getV0();
+    Point max = faces[0]->getV0();
 
     for (const auto &face: faces) {
         for (const auto point: face->getVertices()) {
-            min.x = std::min(min.x, point.get().x);
-            min.y = std::min(min.y, point.get().y);
-            min.z = std::min(min.z, point.get().z);
-            max.x = std::max(max.x, point.get().x);
-            max.y = std::max(max.y, point.get().y);
-            max.z = std::max(max.z, point.get().z);
+            min.setX(std::min(min.getX(), point.get().getX()));
+            min.setY(std::min(min.getY(), point.get().getY()));
+            min.setZ(std::min(min.getZ(), point.get().getZ()));
+            max.setX(std::max(max.getX(), point.get().getX()));
+            max.setY(std::max(max.getY(), point.get().getY()));
+            max.setZ(std::max(max.getZ(), point.get().getZ()));
         }
     }
     bbox.setBounds(min, max);
@@ -75,17 +75,17 @@ static std::shared_ptr<Box> computeBox(const std::vector<std::shared_ptr<Triangl
     // put the bbox on the heap
     auto box = std::make_shared<Box>();
 
-    Point min = faces[0]->v0;
-    Point max = faces[0]->v0;
+    Point min = faces[0]->getV0();
+    Point max = faces[0]->getV0();
 
     for (const auto &face: faces) {
         for (const auto point: face->getVertices()) {
-            min.x = std::min(min.x, point.get().x);
-            min.y = std::min(min.y, point.get().y);
-            min.z = std::min(min.z, point.get().z);
-            max.x = std::max(max.x, point.get().x);
-            max.y = std::max(max.y, point.get().y);
-            max.z = std::max(max.z, point.get().z);
+            min.setX(std::min(min.getX(), point.get().getX()));
+            min.setY(std::min(min.getY(), point.get().getY()));
+            min.setZ(std::min(min.getZ(), point.get().getZ()));
+            max.setX(std::max(max.getX(), point.get().getX()));
+            max.setY(std::max(max.getY(), point.get().getY()));
+            max.setZ(std::max(max.getZ(), point.get().getZ()));
         }
     }
     box->setBounds(min, max);

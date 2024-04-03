@@ -21,18 +21,18 @@
 class Triangle final {
 private:
     Vec normal = Vec(BigO, BigO);
+    Point v0 = BigO, v1 = BigO, v2 = BigO;
 
 public:
-    Point v0 = BigO, v1 = BigO, v2 = BigO;
     std::array<double, 3> centroid;
     // this is an index
     short faceBRDF = -1;
 
     [[nodiscard]] const Vec & getNormal() const noexcept;
 
-    void setNormalVec(const Vec &n) noexcept;
+    Triangle &setNormalVec(const Vec &n) noexcept;
 
-    void updateNormalVec() noexcept;
+    Triangle &updateNormalVec() noexcept;
     Triangle(const Point &v0, const Point &v1, const Point &v2) noexcept;
 
     Triangle(const Point &v0, const Point &v1, const Point &v2, const Vec &n) noexcept;
@@ -45,6 +45,24 @@ public:
     void computeCentroid() noexcept;
 
     [[nodiscard]] Point getCentroid() const noexcept;
+
+    [[nodiscard]] const Point &getV0() const noexcept;
+
+    [[nodiscard]] const Point &getV1() const noexcept;
+
+    [[nodiscard]] const Point &getV2() const noexcept;
+
+    [[nodiscard]] Point &getMutV0() noexcept;
+
+    [[nodiscard]] Point &getMutV1() noexcept;
+
+    [[nodiscard]] Point &getMutV2() noexcept;
+
+    Triangle &setV0(const Point &newV0) noexcept;
+
+    Triangle &setV1(const Point &newV1) noexcept;
+
+    Triangle &setV2(const Point &newV2) noexcept;
 };
 
 

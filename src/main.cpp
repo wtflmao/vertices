@@ -240,8 +240,8 @@ int main() {
                     const auto scatteredRays = ray.scatter(face, intersection, field.brdfList.at(obj.brdfIdx));
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
-                        for (int k = 0; k < scatteredRays.at(j).intensity_p.size(); k++)
-                            if (scatteredRays.at(j).intensity_p.at(k) > 1e-10) flag = true;
+                        for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
+                            if (scatteredRays.at(j).getIntensity_p().at(k) > 1e-10) flag = true;
                         if (flag) rays->push_back(scatteredRays.at(j));
                     }
                 } else {
@@ -293,8 +293,8 @@ int main() {
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
-                                for (int k = 0; k < scatteredRays.at(j).intensity_p.size(); k++)
-                                    if (scatteredRays.at(j).intensity_p.at(k) > 1e-10) flag = true;
+                                for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
+                                    if (scatteredRays.at(j).getIntensity_p().at(k) > 1e-10) flag = true;
                                 if (flag) rays->push_back(scatteredRays.at(j));
                             }
                         }
@@ -323,9 +323,9 @@ int main() {
 
     std::cout << ">>>>>>>>>>the fovs are " << FOVx << " " << FOVy << std::endl;
     // after this there should be resolution X*Y rays
-    auto *rays_r = camera.shootRaysRandom(1);
-    rays->insert(rays->end(), rays_r->begin(), rays_r->end());
-    delete rays_r;
+    auto rays_r = camera.shootRaysRandom(1);
+    rays->insert(rays->end(), rays_r.begin(), rays_r.end());
+    //delete rays_r;
     if (rays->empty()) {
         std::cout << "trying to deref a nullptr in main() from camera.shootRaysRandom() call\a" << std::endl;
         return 8;
@@ -366,7 +366,7 @@ int main() {
                         //        << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
                         // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the REAL sunlight's direction
                         Ray ray_t = Ray(intersection, field.sunlightDirectionToGround * -1);
-                        ray_t.ancestor = ray.ancestor;
+                        ray_t.setAncestor(ray.getAncestor());
                         bool validity = true;
                         Point intersection_t = BigO;
                         for (int nodeIndex_t = 0; nodeIndex_t < field.nodeCount && validity; nodeIndex_t++) {
@@ -407,13 +407,13 @@ int main() {
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
-                                for (int k = 0; k < scatteredRays.at(j).intensity_p.size(); k++)
-                                    if (scatteredRays.at(j).intensity_p.at(k) > 1e-10) flag_tt = true;
+                                for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
+                                    if (scatteredRays.at(j).getIntensity_p().at(k) > 1e-10) flag_tt = true;
                                 if (flag_tt) {//rays->push_back(scatteredRays[j]);
                                     // for 2+ scattered rays, the source of them is not THE SUN but the original ray
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
                                     Ray ray_tt = scatteredRays.at(j);
-                                    ray_tt.ancestor = ray_t.ancestor;
+                                    ray_tt.setAncestor(ray_t.getAncestor());
                                     bool validity_tt = true;
                                     for (int nodeIndex_tt = 0;
                                          nodeIndex_tt < field.nodeCount && validity_tt; nodeIndex_tt++) {
@@ -476,7 +476,7 @@ int main() {
     auto goodRays = new std::vector<Ray>();
     for (auto &ray: *goodRays_t) {
         bool flaga = false;
-        for (auto &spectrumResp: ray.intensity_p) {
+        for (auto &spectrumResp: ray.getIntensity_p()) {
             if (spectrumResp > 1e-10) {
                 flaga = true;
             }

@@ -43,11 +43,24 @@ std::array<double, spectralBands> &Pixel::getPixelSpectralResp() noexcept {
     return pixelSpectralResp;
 }
 
-void Pixel::setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept {
+Pixel &Pixel::setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept {
     pixelSpectralResp = arr;
+    return *this;
 }
 
-Pixel::Pixel(const Point &posInCam) noexcept: posInCam(posInCam) {
-
+Pixel &Pixel::setPosInCam(const Point &posInCam_t) noexcept {
+    posInCam = posInCam_t;
+    return *this;
 }
 
+const Point &Pixel::getPosInCam() const noexcept {
+    return posInCam;
+}
+
+Pixel::Pixel(const Point &posInCam_t) noexcept {
+    setPosInCam(posInCam_t);
+}
+
+Pixel::Pixel() noexcept {
+
+}

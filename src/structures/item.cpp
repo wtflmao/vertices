@@ -220,13 +220,13 @@ void Item::normalVecInspector() noexcept {
             // traverse every inner point
             for (auto &point: innerPoints) {
                 if (face.getNormal().dot(Vec(point, face.getCentroid())) < 0) {
-                    sumWrong += votingPower(std::abs(point.x - face.getCentroid().x),
-                                            std::abs(point.y - face.getCentroid().y),
-                                            std::abs(point.z - face.getCentroid().z));
+                    sumWrong += votingPower(std::abs(point.getX() - face.getCentroid().getX()),
+                                            std::abs(point.getY() - face.getCentroid().getY()),
+                                            std::abs(point.getZ() - face.getCentroid().getZ()));
                 } else {
-                    sumCorrect += votingPower(std::abs(point.x - face.getCentroid().x),
-                                              std::abs(point.y - face.getCentroid().y),
-                                              std::abs(point.z - face.getCentroid().z));
+                    sumCorrect += votingPower(std::abs(point.getX() - face.getCentroid().getX()),
+                                              std::abs(point.getY() - face.getCentroid().getY()),
+                                              std::abs(point.getZ() - face.getCentroid().getZ()));
                 }
             }
 

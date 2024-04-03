@@ -21,12 +21,14 @@ Triangle::Triangle() noexcept {
     computeCentroid();
 };
 
-void Triangle::setNormalVec(const Vec &n) noexcept {
+Triangle &Triangle::setNormalVec(const Vec &n) noexcept {
     normal = n;
+    return *this;
 }
 
-void Triangle::updateNormalVec() noexcept {
+Triangle &Triangle::updateNormalVec() noexcept {
     normal = Vec(v0, v1).cross(Vec(v0, v2));
+    return *this;
 }
 
 const Vec & Triangle::getNormal() const noexcept {
@@ -52,13 +54,52 @@ std::array<std::reference_wrapper<Point>, 3> Triangle::getVertices() noexcept {
 void Triangle::computeCentroid() noexcept {
     double sumX = 0, sumY = 0, sumZ = 0;
     for (const auto &v: getVertices()) {
-        sumX += v.get().x;
-        sumY += v.get().y;
-        sumZ += v.get().z;
+        sumX += v.get().getX();
+        sumY += v.get().getY();
+        sumZ += v.get().getZ();
     }
     centroid = {sumX / getVertices().size(), sumY / getVertices().size(), sumZ / getVertices().size()};
 }
 
 Point Triangle::getCentroid() const noexcept {
     return {centroid[0], centroid[1], centroid[2]};
+}
+
+const Point &Triangle::getV0() const noexcept {
+    return v0;
+}
+
+const Point &Triangle::getV1() const noexcept {
+    return v1;
+}
+
+const Point &Triangle::getV2() const noexcept {
+    return v2;
+}
+
+Point &Triangle::getMutV0() noexcept {
+    return v0;
+}
+
+Point &Triangle::getMutV1() noexcept {
+    return v1;
+}
+
+Point &Triangle::getMutV2() noexcept {
+    return v2;
+}
+
+Triangle &Triangle::setV0(const Point &newV0) noexcept {
+    v0 = newV0;
+    return *this;
+}
+
+Triangle &Triangle::setV1(const Point &newV1) noexcept {
+    v1 = newV1;
+    return *this;
+}
+
+Triangle &Triangle::setV2(const Point &newV2) noexcept {
+    v2 = newV2;
+    return *this;
 }

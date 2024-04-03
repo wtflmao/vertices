@@ -34,7 +34,7 @@ public:
     // todo: deprecate spatialPosition and use CAMERA center
     // camera position
     // this should defines the pixel[0, 0]'s position, also be a flat platform
-    [[deprecated]] std::array<Point, 2> spatialPosition = {Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)};
+    std::array<Point, 2> spatialPosition = {Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)};
     // camera direction
     // should be align with the normal of the platform
     Vec platformDirection = Vec(Point(0.0, 0.0, -1.0));
@@ -60,7 +60,7 @@ public:
 
     Ray shootRayRandom(int cnt);
 
-    std::vector<Ray> *shootRaysRandom(int num);
+    std::vector<Ray> shootRaysRandom(int num);
 
     double realOverlappingRatio(const Point &p1, const Point &p2);
 

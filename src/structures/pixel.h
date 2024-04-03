@@ -15,23 +15,29 @@
 #include "point.h"
 #include <array>
 
-class Pixel {
-public:
 class Pixel final {
+private:
     // this pos indicates the location of this pixel in camera coord
     Point posInCam = BigO;
 
+public:
     // spectral response for a single pixel
     // let's say it's ranges from 380 - 780 nm, and we have 100 bands
     std::array<double, spectralBands> pixelSpectralResp;
 
     std::array<double, spectralBands> &getPixelSpectralResp() noexcept;
 
-    void setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept;
+    Pixel &setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept;
 
     double overlapRatio(int delta_i, int delta_j);
 
-    Pixel(const Point &) noexcept;
+    explicit Pixel(const Point &) noexcept;
+
+    Pixel() noexcept;
+
+    Pixel &setPosInCam(const Point &posInCam_t) noexcept;
+
+    [[nodiscard]] const Point &getPosInCam() const noexcept;
 };
 
 

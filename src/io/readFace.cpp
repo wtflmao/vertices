@@ -28,7 +28,7 @@ void processFace(const char* line, Item& p) {
     std::vector<Triangle>& p_f = p.getMutFaces();
     p_f.emplace_back();
     Triangle& p_t = p_f.back();
-    int v_i[3] = {0};
+    auto v_i = std::array<int, 3>({0});
 
     int count = 0;
     for (int i = 0; line[i] != '\0'; i++) {
@@ -38,20 +38,23 @@ void processFace(const char* line, Item& p) {
     }
 
     if (count == 6) {
-        sscanf_s(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+        sscanf_s(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     } else if (count == 3) {
-        sscanf_s(line, "f %d/%*d %d/%*d %d/%*d", &v_i[0], &v_i[1], &v_i[2]);
+        sscanf_s(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     } else {
-        sscanf_s(line, "f %d %d %d", &v_i[0], &v_i[1], &v_i[2]);
+        sscanf_s(line, "f %d %d %d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     }
-    v_i[0]--;
-    v_i[1]--;
-    v_i[2]--;
-    p_t.v0.updatePoint(p_v[v_i[0]].x, p_v[v_i[0]].y, p_v[v_i[0]].z);
-    p_t.v1.updatePoint(p_v[v_i[1]].x, p_v[v_i[1]].y, p_v[v_i[1]].z);
-    p_t.v2.updatePoint(p_v[v_i[2]].x, p_v[v_i[2]].y, p_v[v_i[2]].z);
+    v_i.at(0)--;
+    v_i.at(1)--;
+    v_i.at(2)--;
+    const auto &newV0 = p_v.at(v_i.at(0));
+    const auto &newV1 = p_v.at(v_i.at(1));
+    const auto &newV2 = p_v.at(v_i.at(2));
+    p_t.getMutV0().setX(newV0.getX()).setY(newV0.getY()).setZ(newV0.getZ());
+    p_t.getMutV1().setX(newV1.getX()).setY(newV1.getY()).setZ(newV1.getZ());
+    p_t.getMutV2().setX(newV2.getX()).setY(newV2.getY()).setZ(newV2.getZ());
     p_t.updateNormalVec();
 
     // for Item::normalVecInspector()
-    p.getMutFWVR().push_back({v_i[0], v_i[1], v_i[2]});
+    p.getMutFWVR().push_back({v_i.at(0), v_i.at(1), v_i.at(2)});
 }

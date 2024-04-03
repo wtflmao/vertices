@@ -52,10 +52,12 @@
 // camera coord system, origin point is the camera rectangle's the most left and up point
 // its x' axis and y' axis are its two egdes, z' axis comes from cross product(right-handed)
 [[deprecated]] inline void groundToCamera(const Point &A, const Point &B, const Point &ori, Point &ret) {
-    double dx = A.x, dy = A.y, dz = A.z;
+    double dx = A.getX(), dy = A.getY(), dz = A.getZ();
 
     // construct the rotate matrix
-    double x_axis[3] = {B.x - A.x, B.y - A.y, B.z - A.z}, z_axis[3] = {0, 0, 1}, y_axis[3] = {0};
+    double x_axis[3] = {B.getX() - A.getX(), B.getY() - A.getY(), B.getZ() - A.getZ()}, z_axis[3] = {0, 0,
+                                                                                                     1}, y_axis[3] = {
+            0};
 
     // y' axis equals to x' cross z
     CrossProduct(x_axis, z_axis, y_axis);
@@ -73,7 +75,7 @@
     };
 
     // here's a coord in the camera platform coord system
-    double x = ori.x, y = ori.y, z = ori.z;
+    double x = ori.getX(), y = ori.getY(), z = ori.getZ();
 
     // pan the point
     x -= dx;
@@ -85,16 +87,18 @@
     double y_prime = x * rotation[1][0] + y * rotation[1][1] + z * rotation[1][2];
     double z_prime = x * rotation[2][0] + y * rotation[2][1] + z * rotation[2][2];
 
-    ret.x = x_prime * FACTOR;
-    ret.y = y_prime * FACTOR;
-    ret.z = z_prime * FACTOR;
+    ret.setX(x_prime * FACTOR)
+            .setY(y_prime * FACTOR)
+            .setZ(z_prime * FACTOR);
 }
 
-[[deprecated]] inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Point &ret) {
-    double dx = A.x, dy = A.y, dz = A.z;
+inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Point &ret) {
+    double dx = A.getX(), dy = A.getY(), dz = A.getZ();
 
     // construct the rotate matrix
-    double x_axis[3] = {B.x - A.x, B.y - A.y, B.z - A.z}, z_axis[3] = {0, 0, 1}, y_axis[3] = {0};
+    double x_axis[3] = {B.getX() - A.getX(), B.getY() - A.getY(), B.getZ() - A.getZ()}, z_axis[3] = {0, 0,
+                                                                                                     1}, y_axis[3] = {
+            0};
 
     // y' axis equals to x' cross z
     CrossProduct(x_axis, z_axis, y_axis);
@@ -116,7 +120,7 @@
     InverseMatrix(rotation, inverse);
 
     // here's a coord in the camera platform coord system
-    double x_prime = ori.x / FACTOR, y_prime = ori.y / FACTOR, z_prime = ori.z / FACTOR;
+    double x_prime = ori.getX() / FACTOR, y_prime = ori.getY() / FACTOR, z_prime = ori.getZ() / FACTOR;
 
     // rotate to the camera surface coordinate system
     double x = x_prime * inverse[0][0] + y_prime * inverse[0][1] + z_prime * inverse[0][2];
@@ -129,9 +133,7 @@
     y += dy;
     z += dz;
 
-    ret.x = x;
-    ret.y = y;
-    ret.z = z;
+    ret.setX(x).setY(y).setZ(z);
 }
 
 
@@ -146,9 +148,9 @@ void Camera::PSF() {};
         auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
 
         // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
-        pixelInCameraCoord.x = (cnt / resolutionX) * (pixelSize * 1e-6);
-        pixelInCameraCoord.y = (cnt % resolutionX) * (pixelSize * 1e-6);
-        pixelInCameraCoord.z = 0.0;
+        pixelInCameraCoord.setX((cnt / resolutionX) * (pixelSize * 1e-6))
+                .setY((cnt % resolutionX) * (pixelSize * 1e-6))
+                .setZ(0.0);
 
         cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
 
@@ -172,9 +174,9 @@ void Camera::PSF() {};
     auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
 
     // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
-    pixelInCameraCoord.x = (cnt / resolutionX) * (pixelSize * 1e-6);
-    pixelInCameraCoord.y = (cnt % resolutionX) * (pixelSize * 1e-6);
-    pixelInCameraCoord.z = 0.0;
+    pixelInCameraCoord.setX((cnt / resolutionX) * (pixelSize * 1e-6))
+            .setY((cnt % resolutionX) * (pixelSize * 1e-6))
+            .setZ(0.0);
 
     cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
 
@@ -194,9 +196,10 @@ Ray Camera::shootRayRandom(const int cnt) {
     auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
 
     // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
-    pixelInCameraCoord.x = (cnt / resolutionX) * (pixelSize * 1e-6);
-    pixelInCameraCoord.y = (cnt % resolutionX) * (pixelSize * 1e-6);
-    pixelInCameraCoord.z = 0.0;
+
+    pixelInCameraCoord.setX((cnt / resolutionX) * (pixelSize * 1e-6))
+            .setY((cnt % resolutionX) * (pixelSize * 1e-6))
+            .setZ(0.0);
 
     cameraToGround(spatialPosition[0], spatialPosition[1], pixelInCameraCoord, pixelInGroundCoord);
 
@@ -205,26 +208,28 @@ Ray Camera::shootRayRandom(const int cnt) {
 }
 
 // num is for "rays per pixel"
-std::vector<Ray> *Camera::shootRaysRandom(const int num) {
-    auto *rays = new std::vector<Ray>();
+std::vector<Ray> Camera::shootRaysRandom(const int num) {
+    auto rays = std::vector<Ray>();
     for (int i = 0; i < resolutionX; i++) {
         for (int j = 0; j < resolutionY; j++) {
             for (int k = 0; k < num; k++) {
-                rays->push_back(shootRayRandom(i * resolutionX + j));
-                rays->end()->ancestor = rays->end()->getOrigin();
+                rays.push_back(shootRayRandom(i * resolutionX + j));
+                rays.back().setAncestor(rays.back().getOrigin());
             }
         }
     }
-
+    // compiler will perform RVO here, so don't worry about returning a BIG vector
     return rays;
 }
 
 Camera::Camera() {
+    spectralResp_p = std::make_shared<std::array<std::array<Pixel, resolutionY>, resolutionX>>();
     // init for every pixel's pos in camera coord contained by camera
     for (int row = 0; row < resolutionX; row++) {
         for (int col = 0; col < resolutionY; col++) {
             auto &pixel = spectralResp_p->at(row).at(col);
-            pixel = Pixel({static_cast<double>(row), static_cast<double>(col), 0});
+            pixel = Pixel();
+            pixel.setPosInCam(Point(static_cast<double>(row), static_cast<double>(col), 0));
         }
     }
 }
@@ -276,10 +281,10 @@ Point Camera::findTheClosestPixel(const Point &source) {
     // check every pixel, and update the closest pixel and min_distance as necessary
     for (const auto &pixel_row: (*spectralResp_p)) {
         for (const auto &pixel: pixel_row) {
-            double curr_distance = source.distance(pixel.posInCam);
+            double curr_distance = source.distance((pixel.getPosInCam()));
             if (curr_distance < min_distance) {
                 min_distance = curr_distance;
-                closest = pixel.posInCam;
+                closest = (pixel.getPosInCam());
             }
         }
     }
@@ -298,9 +303,11 @@ void Camera::addRaySpectrumResp(Ray &ray) noexcept {
         for (int j = 0; j < resolutionY; j++) {
             auto &thatPixel = spectralResp_p->at(i).at(j);
             // factor belong st [0.0, 1.0]
-            double factor = realOverlappingRatio(findTheClosestPixel(ray.getOrigin()), thatPixel.posInCam);
-            for (int k = UPPER_WAVELENGTH; k < LOWER_WAVELENGTH; k += WAVELENGTH_STEP) {
-                thatPixel.pixelSpectralResp[k] += (ray.intensity_p[k] * factor);
+            double factor =
+                    realOverlappingRatio(findTheClosestPixel(ray.getAncestor()), (thatPixel.getPosInCam())) * 0.98;
+            for (int k = 0; UPPER_WAVELENGTH + k * WAVELENGTH_STEP < LOWER_WAVELENGTH; k++) {
+                // no matter what, it always multiplies at least 0.02 as "base noise".
+                thatPixel.pixelSpectralResp.at(k) += (ray.getIntensity_p().at(k) * (factor + 0.02));
             }
         }
     }
@@ -322,19 +329,19 @@ inline double line_segment_intersect(double startA, double lenA, double startB, 
 double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
     std::array<double, 6> p1_picElemBoundary = {0};
     std::array<double, 6> p2_picElemBoundary = {0};
-    p1_picElemBoundary.at(0) = p1.x - picElemX;
-    p1_picElemBoundary.at(1) = p1.x + picElemX;
-    p1_picElemBoundary.at(2) = p1.y - picElemY;
-    p1_picElemBoundary.at(3) = p1.y + picElemY;
-    p1_picElemBoundary.at(4) = p1.z;
-    p1_picElemBoundary.at(5) = p1.z;
+    p1_picElemBoundary.at(0) = p1.getX() - picElemX;
+    p1_picElemBoundary.at(1) = p1.getX() + picElemX;
+    p1_picElemBoundary.at(2) = p1.getY() - picElemY;
+    p1_picElemBoundary.at(3) = p1.getY() + picElemY;
+    p1_picElemBoundary.at(4) = p1.getZ();
+    p1_picElemBoundary.at(5) = p1.getZ();
 
-    p2_picElemBoundary.at(0) = p2.x - picElemX;
-    p2_picElemBoundary.at(1) = p2.x + picElemX;
-    p2_picElemBoundary.at(2) = p2.y - picElemY;
-    p2_picElemBoundary.at(3) = p2.y + picElemY;
-    p2_picElemBoundary.at(4) = p2.z;
-    p2_picElemBoundary.at(5) = p2.z;
+    p2_picElemBoundary.at(0) = p2.getX() - picElemX;
+    p2_picElemBoundary.at(1) = p2.getX() + picElemX;
+    p2_picElemBoundary.at(2) = p2.getY() - picElemY;
+    p2_picElemBoundary.at(3) = p2.getY() + picElemY;
+    p2_picElemBoundary.at(4) = p2.getZ();
+    p2_picElemBoundary.at(5) = p2.getZ();
 
     const auto &p1pEB = p1_picElemBoundary;
     const auto &p2pEB = p2_picElemBoundary;

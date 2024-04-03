@@ -37,27 +37,69 @@ Ray::Ray(const Point &origin, const Vec &direction,
 }
 
 const Point &Ray::getOrigin() const noexcept {
-    return this->origin;
+    return origin;
+}
+
+Ray &Ray::setOrigin(const Point &origin_t) noexcept {
+    origin = origin_t;
+    return *this;
+}
+
+const Point &Ray::getAncestor() const noexcept {
+    return ancestor;
+}
+
+Ray &Ray::setAncestor(const Point &ancestor_t) noexcept {
+    ancestor = ancestor_t;
+    return *this;
 }
 
 const Vec &Ray::getDirection() const noexcept {
-    return this->direction;
+    return direction;
 }
+
+Ray &Ray::setDirection(const Vec &d_t) noexcept {
+    direction = d_t;
+    return *this;
+}
+
+double Ray::getScatteredLevel() const noexcept {
+    return scatteredLevel;
+}
+
+Ray &Ray::setScatteredLevel(const double t) noexcept {
+    scatteredLevel = t;
+    return *this;
+}
+
+const std::array<double, spectralBands> &Ray::getIntensity_p() const noexcept {
+    return intensity_p;
+}
+
+Ray &Ray::setIntensity_p(std::array<double, spectralBands> &t) noexcept {
+    intensity_p = t;
+    return *this;
+}
+
 
 // Cross product: self x other
 Vec Ray::crossVec(const Vec &other) const noexcept {
     const double v[3] = {
-        this->direction.tail.y * other.tail.z - this->direction.tail.z * other.tail.y,
-        this->direction.tail.z * other.tail.x - this->direction.tail.x * other.tail.z,
-        this->direction.tail.x * other.tail.y - this->direction.tail.y * other.tail.x
+            this->direction.getTail().getY() * other.getTail().getZ() -
+            this->direction.getTail().getZ() * other.getTail().getY(),
+            this->direction.getTail().getZ() * other.getTail().getX() -
+            this->direction.getTail().getX() * other.getTail().getZ(),
+            this->direction.getTail().getX() * other.getTail().getY() -
+            this->direction.getTail().getY() * other.getTail().getX()
     };
     return Vec(Point(v[0], v[1], v[2]));
 }
 
 // Dot product: self . other
 double Ray::dotVec(const Vec &other) const noexcept {
-    return this->direction.tail.x * other.tail.x + this->direction.tail.y * other.tail.y + this->direction.tail.z *
-           other.tail.z;
+    return this->direction.getTail().getX() * other.getTail().getX() +
+           this->direction.getTail().getY() * other.getTail().getY() + this->direction.getTail().getZ() *
+                                                                       other.getTail().getZ();
 }
 
 // Member function
@@ -67,10 +109,10 @@ Point Ray::mollerTrumboreIntersection(const Triangle &tri) const {
 
 
     //dge1 = tri.v1 - tri.v0;
-    Vec edge1 = Vec(tri.v0, tri.v1);
+    Vec edge1 = Vec(tri.getV0(), tri.getV1());
     //edge2 = tri.v2 - tri.v0;
-    Vec edge2 = Vec(tri.v0, tri.v2);
-    Vec pvec = this->crossVec(edge2);
+    Vec edge2 = Vec(tri.getV0(), tri.getV2());
+    Vec pvec = crossVec(edge2);
     det = edge1.dot(pvec);
 
     // Check if ray is parallel to triangle
@@ -81,22 +123,22 @@ Point Ray::mollerTrumboreIntersection(const Triangle &tri) const {
 
     // Calculate distance from v0 to ray origin
     inv_det = 1.0 / det;
-    Vec tvec = Vec(tri.v0, this->origin);
+    Vec tvec = Vec(tri.getV0(), this->origin);
     u = tvec.dot(pvec) * inv_det;
 
     // Check if intersection point is outside the first edge
     if (u < 0.0 || u > 1.0) {
-        // The intersection lies outside of the first edge
+        // The intersection lies outside the first edge
         return intersection;
     }
 
     // Prepare to test the second edge
     auto qvec = tvec.cross(edge1);
-    v = this->dotVec(qvec) * inv_det;
+    v = dotVec(qvec) * inv_det;
 
     // Check if intersection point is outside the second edge
     if (v < 0 || u + v > 1.0) {
-        // The intersection lies outside of the triangle 2nd egde
+        // The intersection lies outside the triangle 2nd egde
         return intersection;
     }
 
@@ -123,7 +165,7 @@ bool Ray::intersectsWithBox(const Box &box) const {
     double tMin = -std::numeric_limits<double>::infinity();
     double tMax = std::numeric_limits<double>::infinity();
 
-    const auto directionXYZ = direction.tail.getXYZ();
+    const auto directionXYZ = direction.getTail().getXYZ();
     const auto originXYZ = origin.getXYZ();
     const auto minBoundXYZ = box.getBounds()[0].getXYZ();
     const auto maxBoundXYZ = box.getBounds()[1].getXYZ();
@@ -157,9 +199,9 @@ bool Ray::intersectsWithBox(const Box &box) const {
 
 // compute two Vecs that zhengjiao to teh normal vector
 void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent) {
-    tangent = std::fabs(normal.tail.x) > std::fabs(normal.tail.z)
-                  ? Vec(Point(-normal.tail.y, normal.tail.x, 0.0))
-                  : Vec(Point(0.0, -normal.tail.z, normal.tail.y));
+    tangent = std::fabs(normal.getTail().getX()) > std::fabs(normal.getTail().getZ())
+              ? Vec(Point(-normal.getTail().getY(), normal.getTail().getX(), 0.0))
+              : Vec(Point(0.0, -normal.getTail().getZ(), normal.getTail().getY()));
     tangent = tangent.getNormalized();
     bitangent = normal.cross(tangent);
 }
@@ -191,7 +233,7 @@ Vec uniformHemisphereDirection(const Vec &normal) {
     // rotate the normal vector to the upper hemisphere
     auto tangent = Vec(BigO), bitangent = Vec(BigO);
     computeCoordinateSystem(normal, tangent, bitangent);
-    return tangent * dir.tail.x + bitangent * dir.tail.y + normal * dir.tail.z;
+    return tangent * dir.getTail().getX() + bitangent * dir.getTail().getY() + normal * dir.getTail().getZ();
 }
 
 Ray::Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
@@ -310,19 +352,11 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         }
         //if (i >= 1 && i < SCATTER_RAYS) {
         theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
-        theRays[i].ancestor = ancestor;
+        theRays[i].setAncestor(getAncestor());
         //std::cout << "...level " << scatteredLevel << ", so, scatteredDirection is " << scatteredDirection.tail <<
         //        " "
         //        << theRays[i].intensity_p[0] << std::endl;
         //}
-    }
-
-    if (reflectionRayIdx != -1) {
-        //std::cout << "...level " << scatteredLevel << "...reflectedDirection is " << reflectedDirection.tail << " " <<
-        //        theRays[reflectionRayIdx].intensity_p[0]
-        //        << std::endl;
-    } else {
-        std::cout << "...level " << scatteredLevel << "...has no reflectedDirection." << std::endl;
     }
     return theRays;
 }
