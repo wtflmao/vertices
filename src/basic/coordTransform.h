@@ -55,9 +55,9 @@ public:
 
     void camToGnd(const Point &cam, Point &gnd) noexcept;
 
-    [[deprecated]] void imgToCam(const Point &img, Point &cam) noexcept;
+    void imgToCam(const Point &img, Point &cam) noexcept;
 
-    [[deprecated]] void camToImg(const Point &cam, Point &img) noexcept;
+    void camToImg(const Point &cam, Point &img) noexcept;
 
     [[deprecated]] void imgToGnd(const Point &img, Point &gnd) noexcept;
 

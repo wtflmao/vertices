@@ -51,24 +51,6 @@ void CoordTransform::camToGnd(const Point &cam, Point &gnd) noexcept {
     gnd.z = cam_v3d.at(0).z();
 }
 
-[[deprecated]] void CoordTransform::imgToCam(const Point &img, Point &cam) noexcept {
-    std::vector<Eigen::Vector3d> img_v3d;
-    img_v3d.emplace_back(img.x, img.y, img.z);
-    tfg.getTransWithPointCloud(IMAGE, img_v3d, CAMERA);
-    cam.x = img_v3d.at(0).x();
-    cam.y = img_v3d.at(0).y();
-    cam.z = img_v3d.at(0).z();
-}
-
-[[deprecated]] void CoordTransform::camToImg(const Point &cam, Point &img) noexcept {
-    std::vector<Eigen::Vector3d> cam_v3d;
-    cam_v3d.emplace_back(cam.x, cam.y, cam.z);
-    tfg.getTransWithPointCloud(CAMERA, cam_v3d, IMAGE);
-    img.x = cam_v3d.at(0).x();
-    img.y = cam_v3d.at(0).y();
-    img.z = cam_v3d.at(0).z();
-}
-
 [[deprecated]] void CoordTransform::imgToGnd(const Point &img, Point &gnd) noexcept {
     std::vector<Eigen::Vector3d> img_v3d;
     img_v3d.emplace_back(img.x, img.y, img.z);
@@ -85,4 +67,26 @@ void CoordTransform::camToGnd(const Point &cam, Point &gnd) noexcept {
     img.x = gnd_v3d.at(0).x();
     img.y = gnd_v3d.at(0).y();
     img.z = gnd_v3d.at(0).z();
+}
+
+// the cam should belongs to camera coord, not ground coord!
+// img is the center of 像元, belongs to image coord, not ground coord, nor camera coord
+void CoordTransform::camToImg(const Point &cam, Point &img) noexcept {
+    const auto &center = CENTER_OF_CAMERA_IN_GND;
+    const double distToCamCenterX = std::fabs(cam.x - center.at(0));
+    const double distToCamCenterY = std::fabs(cam.y - center.at(1));
+    img.z = cam.z - CAM_IMG_DISTANCE;
+    img.x = distToCamCenterX * picElemX * IMG_ZOOM_FACTOR / 2.0;
+    img.y = distToCamCenterY * picElemY * IMG_ZOOM_FACTOR / 2.0;
+}
+
+void CoordTransform::imgToCam(const Point &img, Point &cam) noexcept {
+    // img.x = std::fabs(cam.x - center.at(0)) * picElemX / 2.0;
+    // cam.x = std::sqrt((img.x * 2.0 / picElemX) * (img.x * 2.0 / picElemX) + center.at(0) * center.at(0), 0.5);
+    const auto &center = CENTER_OF_CAMERA_IN_GND;
+    cam.z = img.z + CAM_IMG_DISTANCE;
+    cam.x = std::sqrt((img.x * 2.0 / picElemX / IMG_ZOOM_FACTOR) * (img.x * 2.0 / picElemX / IMG_ZOOM_FACTOR) +
+                      center.at(0) * center.at(0));
+    cam.y = std::sqrt((img.y * 2.0 / picElemY / IMG_ZOOM_FACTOR) * (img.y * 2.0 / picElemY / IMG_ZOOM_FACTOR) +
+                      center.at(1) * center.at(1));
 }

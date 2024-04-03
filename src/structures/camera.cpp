@@ -2,15 +2,21 @@
 // Created by root on 24-3-20.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #include "camera.h"
 
-inline void CrossProduct(const double v1[3], const double v2[3], double v3[3]) {
+[[deprecated]] inline void CrossProduct(const double v1[3], const double v2[3], double v3[3]) {
     v3[0] = v1[1] * v2[2] - v2[1] * v1[2];
     v3[1] = v1[2] * v2[0] - v2[2] * v1[0];
     v3[2] = v1[0] * v2[1] - v2[0] * v1[1];
 }
 
-inline void Normalize(double v[3]) {
+[[deprecated]] inline void Normalize(double v[3]) {
     const double len = std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     if (std::abs(len) < 1e-9) {
         // handle error
@@ -21,7 +27,7 @@ inline void Normalize(double v[3]) {
     v[2] /= len;
 }
 
-inline void InverseMatrix(double matrix[3][3], double inverse[3][3]) {
+[[deprecated]] inline void InverseMatrix(double matrix[3][3], double inverse[3][3]) {
     const double det = matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[2][1] * matrix[1][2])
                        - matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0])
                        + matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0]);
@@ -45,7 +51,7 @@ inline void InverseMatrix(double matrix[3][3], double inverse[3][3]) {
 
 // camera coord system, origin point is the camera rectangle's the most left and up point
 // its x' axis and y' axis are its two egdes, z' axis comes from cross product(right-handed)
-inline void groundToCamera(const Point &A, const Point &B, const Point &ori, Point &ret) {
+[[deprecated]] inline void groundToCamera(const Point &A, const Point &B, const Point &ori, Point &ret) {
     double dx = A.x, dy = A.y, dz = A.z;
 
     // construct the rotate matrix
@@ -84,7 +90,7 @@ inline void groundToCamera(const Point &A, const Point &B, const Point &ori, Poi
     ret.z = z_prime * FACTOR;
 }
 
-inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Point &ret) {
+[[deprecated]] inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Point &ret) {
     double dx = A.x, dy = A.y, dz = A.z;
 
     // construct the rotate matrix
@@ -131,7 +137,7 @@ inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Poi
 
 void Camera::PSF() {};
 
-void Camera::shootRaysOut(const Vec &rayDirection, std::vector<Ray> *rays) {
+[[deprecated]] void Camera::shootRaysOut(const Vec &rayDirection, std::vector<Ray> *rays) {
     rays->reserve(resolutionX * resolutionY);
 
     // generate a ray for every pixel
@@ -152,11 +158,11 @@ void Camera::shootRaysOut(const Vec &rayDirection, std::vector<Ray> *rays) {
 }
 
 // x and y should starts at 0 and not bigger than resolutionX-1 and resolutionY-1
-Point getCoord(const int x, const int y) {
+[[deprecated]] Point getCoord(const int x, const int y) {
     return {x * pixelSize * 1e-6, y * pixelSize * 1e-6, 0.0};
 }
 
-Ray Camera::shootRay(const Vec &rayDirection, const int cnt) {
+[[deprecated]] Ray Camera::shootRay(const Vec &rayDirection, const int cnt) {
     if (cnt < 0 || cnt >= resolutionX * resolutionY) {
         return {};
     }
@@ -213,7 +219,15 @@ std::vector<Ray> *Camera::shootRaysRandom(const int num) {
     return rays;
 }
 
-Camera::Camera() = default;
+Camera::Camera() {
+    // init for every pixel's pos in camera coord contained by camera
+    for (int row = 0; row < resolutionX; row++) {
+        for (int col = 0; col < resolutionY; col++) {
+            auto &pixel = spectralResp_p->at(row).at(col);
+            pixel = Pixel({static_cast<double>(row), static_cast<double>(col), 0});
+        }
+    }
+}
 
 void Camera::buildSunlightSpectrum() {
     // sunlight energy distribution should be constant here
@@ -247,14 +261,33 @@ void Camera::buildSunlightSpectrum() {
     std::cout << "Default sunlight spectrum has been built." << std::endl;
 }
 
-inline double overlappingFactor(const Point &source, int x, int y) noexcept {
+[[deprecated]] inline double overlappingFactor(const Point &source, int x, int y) noexcept {
     // todo
     return 1.0;
 }
 
+// input : pos in ground coord
+// output: the closest pixel's pos in camera coord
+Point Camera::findTheClosestPixel(const Point &source) {
+    // Initially set min_distance to the highest possible value
+    double min_distance = std::numeric_limits<double>::max();
+    Point closest;
+
+    // check every pixel, and update the closest pixel and min_distance as necessary
+    for (const auto &pixel_row: (*spectralResp_p)) {
+        for (const auto &pixel: pixel_row) {
+            double curr_distance = source.distance(pixel.posInCam);
+            if (curr_distance < min_distance) {
+                min_distance = curr_distance;
+                closest = pixel.posInCam;
+            }
+        }
+    }
+    return closest;
+}
+
 // todo
 void Camera::addRaySpectrumResp(Ray &ray) noexcept {
-    auto cameraArr = *spectralResp_p;
     //Point thisPixelPoint_camera = BigO;
     //Point thisPixelPoint_ground = ray.getOrigin();
     //groundToCamera(spatialPosition[0], spatialPosition[1], thisPixelPoint_ground, thisPixelPoint_camera);
@@ -263,8 +296,9 @@ void Camera::addRaySpectrumResp(Ray &ray) noexcept {
     // travese every pixel, this (i,j) pixel is the pixel taht where we store the response
     for (int i = 0; i < resolutionX; i++) {
         for (int j = 0; j < resolutionY; j++) {
-            auto &thatPixel = cameraArr[i][j];
-            double factor = overlappingFactor(ray.getOrigin(), i, j);
+            auto &thatPixel = spectralResp_p->at(i).at(j);
+            // factor belong st [0.0, 1.0]
+            double factor = realOverlappingRatio(findTheClosestPixel(ray.getOrigin()), thatPixel.posInCam);
             for (int k = UPPER_WAVELENGTH; k < LOWER_WAVELENGTH; k += WAVELENGTH_STEP) {
                 thatPixel.pixelSpectralResp[k] += (ray.intensity_p[k] * factor);
             }
@@ -272,18 +306,16 @@ void Camera::addRaySpectrumResp(Ray &ray) noexcept {
     }
 }
 
-// the cam should belongs to camera coord, not ground coord!
-// img is the center of 像元, belongs to image coord, not ground coord, nor camera coord
-void Camera::camToImg(const Point &cam, Point &img) noexcept {
-    img.z = cam.z - CAM_IMG_DISTANCE;
-    img.x = cam.x;
-    img.y = cam.y;
-}
-
-void Camera::imgToCam(const Point &img, Point &cam) noexcept {
-    cam.z = img.z + CAM_IMG_DISTANCE;
-    cam.x = img.x;
-    cam.y = img.y;
+inline double line_segment_intersect(double startA, double lenA, double startB, double lenB) {
+    const double intersection_start = std::max(startA, startB);
+    const double intersection_end = std::min(startA + lenA, startB + lenB);
+    double intersection_length = 0.0;
+    if (startA <= startB + lenB && startB <= startA + lenA) {
+        intersection_length = intersection_end - intersection_start;
+    } else {
+        intersection_length = std::numeric_limits<double>::infinity();
+    }
+    return intersection_length;
 }
 
 // p1 and p2 should on iamge coord
@@ -304,7 +336,21 @@ double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
     p2_picElemBoundary.at(4) = p2.z;
     p2_picElemBoundary.at(5) = p2.z;
 
-    if (p1_picElemBoundary.at(1) >) {
+    const auto &p1pEB = p1_picElemBoundary;
+    const auto &p2pEB = p2_picElemBoundary;
 
+    double overlapX = 0.0, overlapY = 0.0;
+    if (overlapX = line_segment_intersect(p1pEB.at(0), p1pEB.at(1) - p1pEB.at(0), p2pEB.at(0),
+                                          p2pEB.at(1) - p2pEB.at(0)); overlapX ==
+                                                                      std::numeric_limits<double>::infinity()) {
+        overlapX = 0.0;
     }
+    if (overlapY = line_segment_intersect(p1pEB.at(2), p1pEB.at(3) - p1pEB.at(2), p2pEB.at(2),
+                                          p2pEB.at(3) - p2pEB.at(2)); overlapY ==
+                                                                      std::numeric_limits<double>::infinity()) {
+        overlapY = 0.0;
+    }
+    const auto p1Size = (p1pEB.at(1) - p1pEB.at(0)) * (p1pEB.at(3) - p1pEB.at(2));
+    const auto p2Size = (p2pEB.at(1) - p2pEB.at(0)) * (p2pEB.at(3) - p2pEB.at(2));
+    return (overlapX * overlapY) / ((p1Size + p2Size) / 2.0);
 }

@@ -1,12 +1,17 @@
 //
 // Created by root on 24-3-20.
 //
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
 
 #include "pixel.h"
 
 // d for distance between two pixel's spacial distance
 // d is in micron
-inline double overlapFactor(const double d) {
+[[deprecated]] inline double overlapFactor(const double d) {
     // sigma determines how big the overlap is as d grows
     // bigger sigma, more smooth
     // smaller sigma, steeper, goes to 0 quickly
@@ -16,7 +21,7 @@ inline double overlapFactor(const double d) {
     return A * std::exp(-d * d) / (2 * sigma * sigma);
 }
 
-double Pixel::overlapRatio(int delta_i, int delta_j) {
+[[deprecated]] double Pixel::overlapRatio(int delta_i, int delta_j) {
     // r is in meter, means 单个像素再目标面上的投影半径
     // angle in std::tan() is half of theta, theta is the single pixel's FOV
     double r = CAMERA_HEIGHT * std::tan(pixelSize * 1e-6 / (2 * focalLength));
@@ -40,5 +45,9 @@ std::array<double, spectralBands> &Pixel::getPixelSpectralResp() noexcept {
 
 void Pixel::setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept {
     pixelSpectralResp = arr;
+}
+
+Pixel::Pixel(const Point &posInCam) noexcept: posInCam(posInCam) {
+
 }
 

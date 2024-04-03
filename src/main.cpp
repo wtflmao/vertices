@@ -32,10 +32,16 @@ int main() {
     x = {0, 0, 0};
     a.camToImg(x, y);
     std::cout << y << std::endl;
-    x = {0.2, 0.3, 0.1};
+    x = y;
+    a.imgToCam(x, y);
+    std::cout << y << std::endl;
+    x = {CENTER_OF_CAMERA_IN_GND.at(0) + pixelSize * 1e-6 * resolutionX,
+         CENTER_OF_CAMERA_IN_GND.at(1) + pixelSize * 1e-6 * resolutionY, 0.1};
     a.camToImg(x, y);
     std::cout << y << std::endl;
-    exit(0);
+    x = y;
+    a.imgToCam(x, y);
+    std::cout << y << std::endl;
 
     //std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
     //        getNormal().tail << std::endl;
