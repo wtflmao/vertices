@@ -21,6 +21,7 @@
 #include <set>
 #include <queue>
 #include <tuple>
+#include <stdexcept>
 
 class Item final {
 private:
@@ -30,6 +31,9 @@ private:
     std::array<double, 3> scaleFactor = {1.0, 1.0, 1.0};
     // This center should be the center AFTER applied the zoom factor
     Point center = BigO;
+
+    std::string objPath = "";
+    std::string mtlPath = "";
 
 public:
     /*
@@ -77,9 +81,9 @@ public:
     [[nodiscard]] const std::array<double, 3>& getScaleFactor() const noexcept;
     [[nodiscard]] const Point &getCenter() const noexcept;
 
-    void setScaleFactor(const std::array<double, 3> &factor) noexcept;
+    Item &setScaleFactor(const std::array<double, 3> factor) noexcept;
 
-    void setCenter(Point &pos) noexcept;
+    Item &setCenter(Point pos) noexcept;
 
     [[nodiscard]] std::vector<std::shared_ptr<Triangle> > getFaceRefs() noexcept;
 
@@ -87,13 +91,39 @@ public:
 
     [[nodiscard]] const std::vector<std::array<int, 3> > &getFWVR() const noexcept;
 
-    void normalVecInspector() noexcept;
+    Item &inspectNormalVecForAllFaces() noexcept;
 
     [[maybe_unused]] [[nodiscard]] float getBRDFOpen(int waveLength, double i, double j, BRDF &b_ori) const noexcept;
 
     [[maybe_unused]] [[nodiscard]] double
     getBRDFClosed(int waveLength, BRDF &b_ori, double theta_i, double phi_i, double theta_r,
                   double phi_r) const noexcept;
+
+    Item &setOBJPath(const std::string &objPath_t) noexcept;
+
+    Item &setMTLPath(const std::string &mtlPath_t) noexcept;
+
+    Item &setThatCorrectFaceVertices(const std::array<int, 3> &correctFaceVertices_t) noexcept;
+
+    Item &setThatCorrectFaceIndex(const int tCFI) noexcept;
+
+    Item &setInnerPoints(const std::vector<Point> &innerPoints_t) noexcept;
+
+    Item &setForwardAxis(const int axis) noexcept;
+
+    Item &setUpAxis(const int axis) noexcept;
+
+    [[nodiscard]] const std::array<int, 3> &getThatCorrectFaceVertices() const;
+
+    [[nodiscard]] int getThatCorrectFaceIndex() const;
+
+    [[nodiscard]] const std::vector<Point> &getInnerPoints() const;
+
+    Item &readFromOBJ();
+
+    Item &readFromMTL();
 };
+
+bool readNewItem(const char *filename, Item &item);
 
 #endif //VERTICES_ITEM_H

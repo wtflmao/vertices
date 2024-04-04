@@ -55,6 +55,5 @@ void processFace(const char* line, Item& p) {
     p_t.getMutV2().setX(newV2.getX()).setY(newV2.getY()).setZ(newV2.getZ());
     p_t.updateNormalVec();
 
-    // for Item::normalVecInspector()
     p.getMutFWVR().push_back({v_i.at(0), v_i.at(1), v_i.at(2)});
 }

@@ -10,8 +10,6 @@
 
 #include "item.h"
 
-#include <memory>
-
 // make a vector of raw pointers for every Triangle from the Item
 std::vector<std::shared_ptr<Triangle> > Item::getFaceRefs() noexcept {
     std::vector<std::shared_ptr<Triangle> > refs;
@@ -38,16 +36,18 @@ std::vector<Point>& Item::getMutVertices() noexcept {
     return vertices;
 }
 
-void Item::setScaleFactor(const std::array<double, 3> &factor) noexcept {
+Item &Item::setScaleFactor(const std::array<double, 3> factor) noexcept {
     scaleFactor = factor;
+    return *this;
 }
 
 const std::array<double, 3>& Item::getScaleFactor() const noexcept {
     return scaleFactor;
 }
 
-void Item::setCenter(Point& pos) noexcept {
+Item &Item::setCenter(Point pos) noexcept {
     center = pos;
+    return *this;
 }
 
 const Point& Item::getCenter() const noexcept {
@@ -55,6 +55,90 @@ const Point& Item::getCenter() const noexcept {
 }
 
 Item::Item() = default;
+
+Item &Item::setOBJPath(const std::string &objPath_t) noexcept {
+    objPath = objPath_t;
+    return *this;
+}
+
+Item &Item::setMTLPath(const std::string &mtlPath_t) noexcept {
+    mtlPath = mtlPath_t;
+    return *this;
+}
+
+// open mesh only
+Item &Item::setThatCorrectFaceVertices(const std::array<int, 3> &correctFaceVertices_t) noexcept {
+    thatCorrectFaceVertices = correctFaceVertices_t;
+    isOpenMesh = true;
+    return *this;
+}
+
+// open mesh only
+Item &Item::setThatCorrectFaceIndex(const int tCFI) noexcept {
+    thatCorrectFaceIndex = tCFI;
+    isOpenMesh = true;
+    return *this;
+}
+
+// closed mesh only
+Item &Item::setInnerPoints(const std::vector<Point> &innerPoints_t) noexcept {
+    innerPoints.assign(innerPoints_t.begin(), innerPoints_t.end());
+    isOpenMesh = false;
+    return *this;
+}
+
+Item &Item::setForwardAxis(const int axis) noexcept {
+    forwardAxis = axis;
+    return *this;
+}
+
+Item &Item::setUpAxis(const int axis) noexcept {
+    upAxis = axis;
+    return *this;
+}
+
+// open mesh only
+const std::array<int, 3> &Item::getThatCorrectFaceVertices() const {
+    if (!isOpenMesh) {
+        std::cerr << "\a" << std::endl;
+        throw std::runtime_error("Error when attempting to run Item::getThatCorrectFaceVertices() for open mesh");
+    }
+    return thatCorrectFaceVertices;
+}
+
+// open mesh only
+int Item::getThatCorrectFaceIndex() const {
+    if (!isOpenMesh) {
+        std::cerr << "\a" << std::endl;
+        throw std::runtime_error("Error when attempting to run Item::getThatCorrectFaceIndex() for open mesh");
+    }
+    return thatCorrectFaceIndex;
+}
+
+// closed mesh only
+const std::vector<Point> &Item::getInnerPoints() const {
+    if (isOpenMesh) {
+        std::cerr << "\a" << std::endl;
+        throw std::runtime_error("Error when attempting to run Item::getInnerPoints() for closed mesh");
+    }
+    return innerPoints;
+}
+
+Item &Item::readFromOBJ() {
+    if (!readNewItem(objPath.c_str(), *this)) {
+        std::cerr << "\aError when attempting to run Item::readOBJ() for " << objPath << std::endl;
+        throw std::runtime_error("Error when attempting to run Item::readOBJ() for " + objPath);
+    }
+    return *this;
+}
+
+Item &Item::readFromMTL() {
+    if (!readNewItem(mtlPath.c_str(), *this)) {
+        std::cerr << "Error when attempting to run Item::readMTL() for " << mtlPath << std::endl;
+        throw std::runtime_error("Error when attempting to run Item::readMTL() for " + mtlPath);
+    }
+    return *this;
+}
 
 // I've decided that one item only have one set of BRDF data
 // if you want to add more, please divide the item into two different parts along with the boundary of different BRDF faces
@@ -114,9 +198,9 @@ inline double votingPower(const double x, const double y, const double z) noexce
                       1.0 + -4.0 * z / (x + y + z) + std::exp(-4.0 * z / (x + y + z)))) / 3.0;
 }
 
-void Item::normalVecInspector() noexcept {
+Item &Item::inspectNormalVecForAllFaces() noexcept {
     if (faces.empty()) {
-        return;
+        return *this;
     }
 
     if (isOpenMesh) {
@@ -237,4 +321,5 @@ void Item::normalVecInspector() noexcept {
     }
     // free the memory it consumed, as I shouldn't use it anymore
     facesWithVertexRefs.clear();
+    return *this;
 }

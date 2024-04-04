@@ -90,34 +90,51 @@ int main() {
     exit(0);
 #endif
 
+    std::cout << "Setting up field..." << std::endl;
     Field field = Field(
             Point(-200, -200, 0),
             Point(200, 200, 30)
             );
-    field.insertObject(
-            objPaths[0],
-            mtlPaths[0],
-        {1, 1, 1},
-        Point(0, 0, 0),
-        // correctFaceVertices starts from 0
-        {},
-        // tCFI starts from 0
-        0,
-        {Point(-1, -1, -1), Point(1, 1, 1), Point{0, 0, 0}},
-        false, 6, 2
-    );
-    field.insertObject(
-            objPaths[1],
-            mtlPaths[0],
-        {200, 400, 1},
-        Point(-50, -50, 0),
-        // correctFaceVertices starts from 0, reason same as tCFI
-        {598, 0, 1},
-        // tCFI starts from 0, just use the index from OBJ directly
-        0,
-        {},
-        true, 6, 2
-    );
+
+    field.newClosedObject()
+            .setOBJPath(objPaths.at(0))
+            .setMTLPath(mtlPaths.at(0))
+            .setCenter({0, 0, 0})
+            .setScaleFactor({1, 1, 1})
+            .setForwardAxis(6)
+            .setUpAxis(2)
+            .setInnerPoints({{-1, -1, -1},
+                             {1,  1,  1},
+                             {0,  0,  0}})
+            .readFromOBJ()
+            .readFromMTL()
+            .inspectNormalVecForAllFaces();
+
+    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
+                                           field.getObjects().back().getFaces().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
+                                           field.getObjects().back().getVertices().size()));
+
+    field.newOpenObject()
+            .setOBJPath(objPaths.at(1))
+            .setMTLPath(mtlPaths.at(0))
+            .setForwardAxis(6)
+            .setUpAxis(2)
+            .setCenter({-50, -50, 0})
+            .setScaleFactor({200, 400, 1})
+            .setThatCorrectFaceVertices({598, 0, 1})
+            .setThatCorrectFaceIndex(0)
+            .readFromOBJ()
+            .readFromMTL()
+            .inspectNormalVecForAllFaces();
+
+    coutLogger->writeInfoEntry(std::format("Object #{}  has been loaded", field.getObjects().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
+                                           field.getObjects().back().getFaces().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
+                                           field.getObjects().back().getVertices().size()));
+
     /*field.insertObject(
         objPaths[2],
         mtlPaths[0],
@@ -462,11 +479,6 @@ int main() {
     }
     std::cout << "Rays " << rays->size() << " " << rays->capacity() << std::endl;
 
-    for (auto &ray: *goodRays_t) {
-        // calc the ray's spectrum response
-        camera.addRaySpectrumResp(ray);
-    }
-
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Time taken: " << duration << "." << std::endl;
@@ -486,6 +498,7 @@ int main() {
         }
     }
     delete goodRays_t;
+    goodRays_t = nullptr;
 
     for (int i = 0; auto &ray: *goodRays) {
         //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray.intensity_p.at(0), ray.intensity_p.at(std::round(0.2*spectralBands)), ray.intensity_p.at(std::round(0.75*spectralBands)), ray.scatteredLevel);
@@ -495,6 +508,25 @@ int main() {
     // without any other face obstructing its path to the source point
     std::cout << "Good rays " << goodRays->size() << std::endl;
     delete rays;
+    rays = nullptr;
+
+    // sum up every pixel's spectrum response
+    for (auto &ray: *goodRays) {
+        // calc the ray's spectrum response
+        camera.addRaySpectrumResp(ray);
+    }
+
+    // show the camera's spectrum response by every pixel
+    for (int i = 0; i < spectralBands; i += 5) {
+        std::cout << "Spectrum response at " << i << "th band:" << std::endl;
+        for (auto &row: *camera.spectralResp_p) {
+            for (auto &col: row) {
+                std::cout << col.getPixelSpectralResp().at(i) << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+
 
 
 

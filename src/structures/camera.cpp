@@ -293,21 +293,16 @@ Point Camera::findTheClosestPixel(const Point &source) {
 
 // todo
 void Camera::addRaySpectrumResp(Ray &ray) noexcept {
-    //Point thisPixelPoint_camera = BigO;
-    //Point thisPixelPoint_ground = ray.getOrigin();
-    //groundToCamera(spatialPosition[0], spatialPosition[1], thisPixelPoint_ground, thisPixelPoint_camera);
-    //thisPixelPoint_camera.x = std::round(thisPixelPoint_camera.x * 1e6) / 1e6;
-
     // travese every pixel, this (i,j) pixel is the pixel taht where we store the response
     for (int i = 0; i < resolutionX; i++) {
         for (int j = 0; j < resolutionY; j++) {
             auto &thatPixel = spectralResp_p->at(i).at(j);
             // factor belong st [0.0, 1.0]
             double factor =
-                    realOverlappingRatio(findTheClosestPixel(ray.getAncestor()), (thatPixel.getPosInCam())) * 0.98;
+                    realOverlappingRatio(findTheClosestPixel(ray.getAncestor()), (thatPixel.getPosInCam())) * 0.996;
             for (int k = 0; UPPER_WAVELENGTH + k * WAVELENGTH_STEP < LOWER_WAVELENGTH; k++) {
-                // no matter what, it always multiplies at least 0.02 as "base noise".
-                thatPixel.pixelSpectralResp.at(k) += (ray.getIntensity_p().at(k) * (factor + 0.02));
+                // no matter what, it always multiplies at least 0.4% of the intensity as "base noise".
+                thatPixel.pixelSpectralResp.at(k) += (ray.getIntensity_p().at(k) * (factor + 0.004));
             }
         }
     }

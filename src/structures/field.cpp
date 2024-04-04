@@ -2,6 +2,12 @@
 // Created by root on 2024/3/16.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #include "field.h"
 
 #include <utility>
@@ -84,7 +90,19 @@ void Field::buildBVHTree() {
     std::cout << "Root node's height is " << (maxDepth = nodeCountArr[2]) << std::endl;
 }
 
-bool Field::insertObject(const std::string &objPath, const std::string &mtlPath,
+Item &Field::newOpenObject() noexcept {
+    objects.emplace_back();
+    objects.back().isOpenMesh = true;
+    return objects.back();
+}
+
+Item &Field::newClosedObject() noexcept {
+    objects.emplace_back();
+    objects.back().isOpenMesh = false;
+    return objects.back();
+}
+
+[[deprecated]] bool Field::insertObject(const std::string &objPath, const std::string &mtlPath,
                          const std::array<double, 3> &scaleFactor, Point center, std::array<int, 3> correctFaceVertices,
                          int tCFI, std::vector<Point> innerPoints, bool isOpenMesh, int forwardAxis, int upAxis) {
     objects.emplace_back();
@@ -113,7 +131,7 @@ bool Field::insertObject(const std::string &objPath, const std::string &mtlPath,
     }
 
     // check normal vec's directon is correct or not, if not, revise it
-    object.normalVecInspector();
+    object.inspectNormalVecForAllFaces();
 
     std::cout<<"Object #"<<objects.size()<<" has "<<object.getFaces().size()<<" faces."<<std::endl;
     std::cout<<"Object #"<<objects.size()<<" has "<<object.getVertices().size()<<" vertices."<<std::endl;

@@ -38,7 +38,8 @@ public:
     Field(Point min, Point max) noexcept;
     void buildBVHTree();
     //void insertObject(Item &item);
-    bool insertObject(const std::string &objPath, const std::string &mtlPath, const std::array<double, 3> &scaleFactor,
+    [[deprecated]] bool
+    insertObject(const std::string &objPath, const std::string &mtlPath, const std::array<double, 3> &scaleFactor,
                       Point center, std::array<int, 3> correctFaceVertices, int tCFI, std::vector<Point> innerPoints,
                       bool isOpenMesh, int
                       forwardAxis, int upAxis);
@@ -54,6 +55,10 @@ public:
     static std::array<std::size_t, 3> countLeafNodes(const std::shared_ptr<Node> &root);
 
     //static std::size_t countNodes(const std::unique_ptr<Node> &node);
+
+    Item &newOpenObject() noexcept;
+
+    Item &newClosedObject() noexcept;
 };
 
 #endif //VERTICES_FIELD_H
