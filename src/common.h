@@ -11,9 +11,14 @@
 #ifndef SRC_COMMON_H
 #define SRC_COMMON_H
 
+#include "logger/coutLogger.h"
+#include "logger/stdoutLogger.h"
+#include "logger/filesystemLogger.h"
 #include <random>
 #include <numbers>
 #include <array>
+#include <memory>
+#include <format>
 
 inline std::random_device rd;
 inline std::mt19937 generator(rd());
@@ -23,10 +28,15 @@ inline double rand01() {
     return distribution(generator);
 }
 
+const Logger coutLogger = std::make_shared<CoutLogger>();
+const Logger stdoutLogger = std::make_shared<StdoutLogger>();
+const Logger fsLogger = std::make_shared<FilesystemLogger>();
+
 
 // VERTICES_RAY_H
 constexpr int SCATTER_RAYS = 1;
 constexpr double STOP_LENGTH = 9999;
+
 
 // VERTICES_NODE_H
 constexpr std::size_t BVH_NODE_CHILDREN = 6;
@@ -63,6 +73,7 @@ constexpr double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6
 
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
 
+
 // VERTICES_COORDTRANSFORM_H
 // camera @ image
 // distance in meters
@@ -71,4 +82,6 @@ const double picElemX = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVx * std::numbers::
 const double picElemY = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVy * std::numbers::pi / 180.0) / 2.0);
 constexpr double IMG_ZOOM_FACTOR =
         2e+9 / CAMERA_HEIGHT / static_cast<double>(resolutionX) / static_cast<double>(resolutionY);
+
+
 #endif //SRC_COMMON_H

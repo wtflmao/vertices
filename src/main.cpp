@@ -13,6 +13,13 @@
 
 int main() {
 
+    // ===== debug only start =====
+    coutLogger->writeInfoEntry("Hello there!");
+
+    stdoutLogger->writeInfoEntry("Hi there!");
+
+    fsLogger->writeInfoEntry("hello hi!");
+
     auto a = CoordTransform();
     Point x = {0.8, 0.6, 0};
     Point y = BigO;
@@ -42,6 +49,7 @@ int main() {
     x = y;
     a.imgToCam(x, y);
     std::cout << y << std::endl;
+    // ====== debug only ends =====
 
     //std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
     //        getNormal().tail << std::endl;
@@ -528,7 +536,11 @@ int main() {
     }
 
 
+    coutLogger->writeInfoEntry("Goodbye!");
 
+    stdoutLogger->writeInfoEntry("Bye!");
+
+    fsLogger->writeInfoEntry("Bye-bye!");
 
     return 0;
 }

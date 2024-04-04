@@ -46,4 +46,11 @@ add_executable(vertices src/main.cpp
         lib/eigen3/Eigen
         src/basic/BRDF.cpp
         src/basic/BRDF.h
+        src/logger/loggingFacility.h
+        src/logger/stdoutLogger.cpp
+        src/logger/stdoutLogger.h
+        src/logger/coutLogger.cpp
+        src/logger/coutLogger.h
+        src/logger/filesystemLogger.cpp
+        src/logger/filesystemLogger.h
 )
