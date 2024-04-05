@@ -13,12 +13,10 @@
 
 #define EIGEN_MPL2_ONLY
 
-#include "../../lib/eigen3/Eigen/Dense"
 #include "../structures/point.h"
 #include "../../lib/transform3d/transforms3d.h"
 #include "../common.h"
-#include <valarray>
-#include <iostream>
+#include <memory>
 
 constexpr const char *IMAGE = "image";
 constexpr const char *CAMERA = "camera";
@@ -59,10 +57,19 @@ public:
 
     void camToImg(const Point &cam, Point &img) noexcept;
 
+    Point gndToCam(const Point &gnd) noexcept;
+
+    Point camToGnd(const Point &cam) noexcept;
+
+    Point imgToCam(const Point &img) noexcept;
+
+    Point camToImg(const Point &cam) noexcept;
+
     [[deprecated]] void imgToGnd(const Point &img, Point &gnd) noexcept;
 
     [[deprecated]] void gndToImg(const Point &gnd, Point &img) noexcept;
 };
 
+const inline auto coordTransform = std::make_shared<CoordTransform>();
 
 #endif //VERTEX_COORDTRANSFORM_H

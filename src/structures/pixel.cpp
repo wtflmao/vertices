@@ -57,10 +57,98 @@ const Point &Pixel::getPosInCam() const noexcept {
     return posInCam;
 }
 
+Pixel &Pixel::setPosInGnd(const Point &posInGnd_t) noexcept {
+    posInGnd = posInGnd_t;
+    return *this;
+}
+
+const Point &Pixel::getPosInGnd() const noexcept {
+    return posInGnd;
+}
+
+Pixel &Pixel::setPosInImg(const Point &posInGnd_t) noexcept {
+    posInImg = posInGnd_t;
+    return *this;
+}
+
+const Point &Pixel::getPosInImg() const noexcept {
+    return posInImg;
+}
+
 Pixel::Pixel(const Point &posInCam_t) noexcept {
     setPosInCam(posInCam_t);
+    pixelSpectralResp = {0.0};
 }
 
 Pixel::Pixel() noexcept {
+    pixelSpectralResp = {0.0};
+}
 
+// compute two Vecs that zhengjiao to teh normal vector
+void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent) {
+    tangent = std::fabs(normal.getTail().getX()) > std::fabs(normal.getTail().getZ())
+              ? Vec(Point(-normal.getTail().getY(), normal.getTail().getX(), 0.0))
+              : Vec(Point(0.0, -normal.getTail().getZ(), normal.getTail().getY()));
+    tangent = tangent.getNormalized();
+    bitangent = normal.cross(tangent);
+}
+
+// 在上半球空间里随机生成一个向量
+// FOVs are in degrees
+Vec uniformHemisphereDirection(const Vec &normal) {
+    // generate two random numbers stored as u and v
+    const double u = rand01();
+    const double v = rand01();
+
+    // this is a random angle theta, from 0 to pi/2.
+    //double theta = std::acos(std::sqrt(1.0 - v));
+    constexpr double fovRatio_x = FOVx / 90.0;
+    const double theta = std::acos(std::sqrt(1.0 - v * fovRatio_x));
+
+    // this is a random angle phi, ranges from 0 to 2*pi
+    //double phi = 2.0 * std::numbers::pi * u;
+    const double phi = FOVy * u * std::numbers::pi / 180.0;
+
+    // get random xyz
+    const double x = std::cos(phi) * std::sin(theta);
+    const double y = std::sin(phi) * std::sin(theta);
+    const double z = std::cos(theta);
+
+    // construct a random direction
+    const auto dir = Vec(Point(x, y, z));
+
+    // rotate the normal vector to the upper hemisphere
+    auto tangent = Vec(BigO), bitangent = Vec(BigO);
+    computeCoordinateSystem(normal, tangent, bitangent);
+    return tangent * dir.getTail().getX() + bitangent * dir.getTail().getY() + normal * dir.getTail().getZ();
+}
+
+Ray Pixel::shootRayFromPixel(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept {
+    const auto posInGnd = coordTransform->camToGnd(posInCam);
+    auto ray = Ray{};
+
+    // build up the current ray
+    ray.setOrigin(posInGnd)
+            .setAncestor(posInGnd)
+            .setIntensity_p(sunlightSpectrum)
+            //.setDirection(uniformHemisphereDirection(directionVec));
+            .setDirection(Vec{Point{0, -1.732, -1}});
+
+    // RVO happens here, don't worry about value-returning
+    return ray;
+}
+
+Ray Pixel::shootRayFromPixelFromImgPlate(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept {
+    const auto posInGnd = coordTransform->camToGnd(posInCam);
+    auto ray = Ray{};
+
+    // build up the current ray
+    ray.setOrigin(posInGnd)
+            .setAncestor(posInGnd)
+            .setIntensity_p(sunlightSpectrum)
+            //.setDirection(uniformHemisphereDirection(directionVec));
+            .setDirection(Vec{Point{0, -1.732, -1}});
+
+    // RVO happens here, don't worry about value-returning
+    return ray;
 }

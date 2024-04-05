@@ -55,6 +55,10 @@ public:
         return ret;
     }
 
+    Point operator*(const double multiplier) const noexcept {
+        return {x * multiplier, y * multiplier, z * multiplier};
+    }
+
     Point& operator*=(const double multiplier) noexcept {
         x *= multiplier;
         y *= multiplier;

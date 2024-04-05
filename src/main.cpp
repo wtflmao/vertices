@@ -20,34 +20,33 @@ int main() {
 
     fsLogger->writeInfoEntry("hello hi!");
 
-    auto a = CoordTransform();
     Point x = {0.8, 0.6, 0};
     Point y = BigO;
-    a.camToGnd(x, y);
+    coordTransform->camToGnd(x, y);
     std::cout << y << std::endl;
     x = y;
-    a.gndToCam(x, y);
+    coordTransform->gndToCam(x, y);
     std::cout << y << std::endl;
 
     x = {10.0, 5.0, 0.3};
-    a.gndToCam(x, y);
+    coordTransform->gndToCam(x, y);
     std::cout << y << std::endl;
     x = y;
-    a.camToGnd(x, y);
+    coordTransform->camToGnd(x, y);
     std::cout << y << std::endl << std::endl;
 
     x = {0, 0, 0};
-    a.camToImg(x, y);
+    coordTransform->camToImg(x, y);
     std::cout << y << std::endl;
     x = y;
-    a.imgToCam(x, y);
+    coordTransform->imgToCam(x, y);
     std::cout << y << std::endl;
     x = {CENTER_OF_CAMERA_IN_GND.at(0) + pixelSize * 1e-6 * resolutionX,
          CENTER_OF_CAMERA_IN_GND.at(1) + pixelSize * 1e-6 * resolutionY, 0.1};
-    a.camToImg(x, y);
+    coordTransform->camToImg(x, y);
     std::cout << y << std::endl;
     x = y;
-    a.imgToCam(x, y);
+    coordTransform->imgToCam(x, y);
     std::cout << y << std::endl;
     // ====== debug only ends =====
 
@@ -348,7 +347,7 @@ int main() {
 
     std::cout << ">>>>>>>>>>the fovs are " << FOVx << " " << FOVy << std::endl;
     // after this there should be resolution X*Y rays
-    auto rays_r = camera.shootRaysRandom(1);
+    auto rays_r = camera.shootRaysRandom();
     rays->insert(rays->end(), rays_r.begin(), rays_r.end());
     //delete rays_r;
     if (rays->empty()) {
@@ -535,6 +534,7 @@ int main() {
         }
     }
 
+    
 
     coutLogger->writeInfoEntry("Goodbye!");
 

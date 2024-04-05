@@ -67,7 +67,7 @@ double Ray::getScatteredLevel() const noexcept {
     return scatteredLevel;
 }
 
-Ray &Ray::setScatteredLevel(const double t) noexcept {
+Ray &Ray::setScatteredLevel(const int t) noexcept {
     scatteredLevel = t;
     return *this;
 }
@@ -76,7 +76,7 @@ const std::array<double, spectralBands> &Ray::getIntensity_p() const noexcept {
     return intensity_p;
 }
 
-Ray &Ray::setIntensity_p(std::array<double, spectralBands> &t) noexcept {
+Ray &Ray::setIntensity_p(const std::array<double, spectralBands> &t) noexcept {
     intensity_p = t;
     return *this;
 }
@@ -197,44 +197,7 @@ bool Ray::intersectsWithBox(const Box &box) const {
     return true;
 }
 
-// compute two Vecs that zhengjiao to teh normal vector
-void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent) {
-    tangent = std::fabs(normal.getTail().getX()) > std::fabs(normal.getTail().getZ())
-              ? Vec(Point(-normal.getTail().getY(), normal.getTail().getX(), 0.0))
-              : Vec(Point(0.0, -normal.getTail().getZ(), normal.getTail().getY()));
-    tangent = tangent.getNormalized();
-    bitangent = normal.cross(tangent);
-}
 
-// 在上半球空间里随机生成一个向量
-// FOVs are in degrees
-Vec uniformHemisphereDirection(const Vec &normal) {
-    // generate two random numbers stored as u and v
-    double u = rand01();
-    double v = rand01();
-
-    // this is a random angle theta, from 0 to pi/2.
-    //double theta = std::acos(std::sqrt(1.0 - v));
-    double fovRatio_x = FOVx / 90.0;
-    double theta = std::acos(std::sqrt(1.0 - v * fovRatio_x));
-
-    // this is a random angle phi, ranges from 0 to 2*pi
-    //double phi = 2.0 * std::numbers::pi * u;
-    double phi = FOVy * u * std::numbers::pi / 180.0;
-
-    // get random xyz
-    double x = std::cos(phi) * std::sin(theta);
-    double y = std::sin(phi) * std::sin(theta);
-    double z = std::cos(theta);
-
-    // construct a random direction
-    const Vec dir = Vec(Point(x, y, z));
-
-    // rotate the normal vector to the upper hemisphere
-    auto tangent = Vec(BigO), bitangent = Vec(BigO);
-    computeCoordinateSystem(normal, tangent, bitangent);
-    return tangent * dir.getTail().getX() + bitangent * dir.getTail().getY() + normal * dir.getTail().getZ();
-}
 
 Ray::Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
          int scatteredCount)

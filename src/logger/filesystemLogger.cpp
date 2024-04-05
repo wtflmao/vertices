@@ -10,20 +10,19 @@
 
 #include "filesystemLogger.h"
 
-std::filesystem::path *FilesystemLogger::p = nullptr;
-std::ofstream FilesystemLogger::out;
+//std::filesystem::path *FilesystemLogger::p = nullptr;
+//std::ofstream FilesystemLogger::out;
 
 auto getFormattedTime() {
-    auto now = std::chrono::system_clock::now();
-    auto itt = std::chrono::system_clock::to_time_t(now);
+    const auto now = std::chrono::system_clock::now();
+    const auto itt = std::chrono::system_clock::to_time_t(now);
     return std::put_time(std::localtime(&itt), "%Y%m%d%H%M%S");
 }
 
 std::string getAPathToNewTempFile() {
     std::string pathPrefix;
 #ifdef _WIN32
-    const char *temp = std::getenv("TEMP");
-    if (temp != nullptr) {
+    if (const char *temp = std::getenv("TEMP"); temp != nullptr) {
         pathPrefix = temp;
         pathPrefix += R"(\)";
     } else {
@@ -41,7 +40,7 @@ std::string getAPathToNewTempFile() {
 void FilesystemLogger::writeInfoEntry(std::string_view entry, short level) noexcept {
     out << "[  INFO ] ";
     if (level >= 1 && level <= 10) {
-        auto view = std::ranges::iota_view{1, level + 1};
+        const auto view = std::ranges::iota_view{1, level + 1};
         for (auto i: view) {
             out << "  ";
         }
@@ -52,7 +51,7 @@ void FilesystemLogger::writeInfoEntry(std::string_view entry, short level) noexc
 void FilesystemLogger::writeWarnEntry(std::string_view entry, short level) noexcept {
     out << "[  WARN ] ";
     if (level >= 1 && level <= 10) {
-        auto view = std::ranges::iota_view{1, level + 1};
+        const auto view = std::ranges::iota_view{1, level + 1};
         for (auto i: view) {
             out << "  ";
         }
@@ -63,7 +62,7 @@ void FilesystemLogger::writeWarnEntry(std::string_view entry, short level) noexc
 void FilesystemLogger::writeErrorEntry(std::string_view entry, short level) noexcept {
     out << "[ ERROR ] ";
     if (level >= 1 && level <= 10) {
-        auto view = std::ranges::iota_view{1, level + 1};
+        const auto view = std::ranges::iota_view{1, level + 1};
         for (auto i: view) {
             out << "  ";
         }

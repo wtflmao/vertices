@@ -70,7 +70,6 @@ constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 1;
 constexpr double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
 constexpr double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
-
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
 
 
@@ -82,6 +81,12 @@ const double picElemX = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVx * std::numbers::
 const double picElemY = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVy * std::numbers::pi / 180.0) / 2.0);
 constexpr double IMG_ZOOM_FACTOR =
         2e+9 / CAMERA_HEIGHT / static_cast<double>(resolutionX) / static_cast<double>(resolutionY);
+
+
+// VERTICES_FIELD_H
+// in meters
+constexpr double FIELD_LENGTH_X = 20;
+constexpr double FIELD_LENGTH_Y = 20;
 
 
 #endif //SRC_COMMON_H

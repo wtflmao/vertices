@@ -76,11 +76,11 @@ public:
 
     Ray &setOrigin(const Point &origin_t) noexcept;
 
-    Ray &setScatteredLevel(const double t) noexcept;
+    Ray &setScatteredLevel(int t) noexcept;
 
     Ray &setDirection(const Vec &d_t) noexcept;
 
-    Ray &setIntensity_p(std::array<double, spectralBands> &t) noexcept;
+    Ray &setIntensity_p(const std::array<double, spectralBands> &t) noexcept;
 };
 
 void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent);

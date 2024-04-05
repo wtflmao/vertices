@@ -184,8 +184,9 @@ void Camera::PSF() {};
     return {pixelInGroundCoord, rayDirection, sunlightSpectrum, CAMERA_RAY_STARTER_SCATTER_LEVEL};
 }
 
+/*
 // this function is for a fixed origin point with random direction, yes u heard that
-Ray Camera::shootRayRandom(const int cnt) {
+[[deprecated]] Ray Camera::shootRayRandom([[deprecated]] const int cnt) {
     // we need the origin point not out of the camera
     if (cnt < 0 || cnt >= resolutionX * resolutionY) {
         return {};
@@ -193,7 +194,8 @@ Ray Camera::shootRayRandom(const int cnt) {
 
     // generate a ray for the current pixel( given by cnt )
     // cameraPixelPoint is a point in camera coordinate system
-    auto pixelInCameraCoord = BigO, pixelInGroundCoord = BigO;
+    auto & pixelInCameraCoord = BigO;
+    auto pixelInGroundCoord = BigO;
 
     // row == std::ceil(cnt / resolutionX), col == cnt % resolutionX (row and col start from 1)
 
@@ -206,22 +208,36 @@ Ray Camera::shootRayRandom(const int cnt) {
     // generate the ray
     return {pixelInGroundCoord, uniformHemisphereDirection(Vec(Point(0, 0, -1))), sunlightSpectrum, 1};
 }
+*/
 
 // num is for "rays per pixel"
-std::vector<Ray> Camera::shootRaysRandom(const int num) {
+std::vector<Ray> Camera::shootRaysRandom() const noexcept{
     auto rays = std::vector<Ray>();
-    for (int i = 0; i < resolutionX; i++) {
-        for (int j = 0; j < resolutionY; j++) {
-            for (int k = 0; k < num; k++) {
-                rays.push_back(shootRayRandom(i * resolutionX + j));
-                rays.back().setAncestor(rays.back().getOrigin());
-            }
+
+    // traverse every pixel to shoot rays
+    for (auto & row: *spectralResp_p) {
+        for (auto & pixel: row) {
+            rays.push_back(pixel.shootRayFromPixel(platformDirection, sunlightSpectrum));
         }
     }
+
     // compiler will perform RVO here, so don't worry about returning a BIG vector
     return rays;
 }
 
+std::vector<Ray> Camera::shootRaysRandomFromImgPlate() const noexcept{
+    auto rays = std::vector<Ray>();
+
+    // traverse every pixel to shoot rays
+    for (auto & row: *spectralResp_p) {
+        for (auto & pixel: row) {
+            rays.push_back(pixel.shootRayFromPixel(platformDirection, sunlightSpectrum));
+        }
+    }
+
+    // compiler will perform RVO here, so don't worry about returning a BIG vector
+    return rays;
+}
 Camera::Camera() {
     spectralResp_p = std::make_shared<std::array<std::array<Pixel, resolutionY>, resolutionX>>();
     // init for every pixel's pos in camera coord contained by camera
@@ -229,7 +245,13 @@ Camera::Camera() {
         for (int col = 0; col < resolutionY; col++) {
             auto &pixel = spectralResp_p->at(row).at(col);
             pixel = Pixel();
-            pixel.setPosInCam(Point(static_cast<double>(row), static_cast<double>(col), 0));
+            pixel.setPosInCam(Point(row, col, 0))
+                    .setPosInGnd(coordTransform->camToGnd(pixel.getPosInCam()))
+                    .setPosInImg(coordTransform->camToImg(pixel.getPosInCam() * 1e-6));
+
+            coutLogger->writeWarnEntry(std::to_string(row*10+col) + " posInCam: " + std::to_string(row) + ", " + std::to_string(col) + ", 0", 1);
+            coutLogger->writeWarnEntry(std::to_string(row*10+col) + " posInGnd: " + std::to_string(pixel.getPosInGnd().getX()) + ", " + std::to_string(pixel.getPosInGnd().getY()) + ", " + std::to_string(pixel.getPosInGnd().getZ()), 1);
+            coutLogger->writeWarnEntry(std::to_string(row*10+col) + " posInImg: " + std::to_string(pixel.getPosInImg().getX()) + ", " + std::to_string(pixel.getPosInImg().getY()) + ", " + std::to_string(pixel.getPosInImg().getZ()), 1);
         }
     }
 }
@@ -249,7 +271,7 @@ void Camera::buildSunlightSpectrum() {
     double maximumTotRad = 0.0;
 
     std::map<int, double> sunlightSpectrumMap_t;
-    while (fscanf(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
+    while (fscanf_s(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
         sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t;
     }
 
@@ -273,7 +295,7 @@ void Camera::buildSunlightSpectrum() {
 
 // input : pos in ground coord
 // output: the closest pixel's pos in camera coord
-Point Camera::findTheClosestPixel(const Point &source) {
+Point Camera::findTheClosestPixel(const Point &source) const noexcept {
     // Initially set min_distance to the highest possible value
     double min_distance = std::numeric_limits<double>::max();
     Point closest;
@@ -281,10 +303,10 @@ Point Camera::findTheClosestPixel(const Point &source) {
     // check every pixel, and update the closest pixel and min_distance as necessary
     for (const auto &pixel_row: (*spectralResp_p)) {
         for (const auto &pixel: pixel_row) {
-            double curr_distance = source.distance((pixel.getPosInCam()));
+            double curr_distance = source.distance((pixel.getPosInGnd()));
             if (curr_distance < min_distance) {
                 min_distance = curr_distance;
-                closest = (pixel.getPosInCam());
+                closest = (pixel.getPosInGnd());
             }
         }
     }
@@ -292,14 +314,14 @@ Point Camera::findTheClosestPixel(const Point &source) {
 }
 
 // todo
-void Camera::addRaySpectrumResp(Ray &ray) noexcept {
+void Camera::addRaySpectrumResp(const Ray &ray) const noexcept {
     // travese every pixel, this (i,j) pixel is the pixel taht where we store the response
     for (int i = 0; i < resolutionX; i++) {
         for (int j = 0; j < resolutionY; j++) {
             auto &thatPixel = spectralResp_p->at(i).at(j);
             // factor belong st [0.0, 1.0]
             double factor =
-                    realOverlappingRatio(findTheClosestPixel(ray.getAncestor()), (thatPixel.getPosInCam())) * 0.996;
+                    realOverlappingRatio(findTheClosestPixel(ray.getAncestor()), (thatPixel.getPosInGnd())) * 0.996;
             for (int k = 0; UPPER_WAVELENGTH + k * WAVELENGTH_STEP < LOWER_WAVELENGTH; k++) {
                 // no matter what, it always multiplies at least 0.4% of the intensity as "base noise".
                 thatPixel.pixelSpectralResp.at(k) += (ray.getIntensity_p().at(k) * (factor + 0.004));
@@ -308,14 +330,14 @@ void Camera::addRaySpectrumResp(Ray &ray) noexcept {
     }
 }
 
-inline double line_segment_intersect(double startA, double lenA, double startB, double lenB) {
+inline double line_segment_intersect(const double startA, const double lenA, const double startB, const double lenB) {
     const double intersection_start = std::max(startA, startB);
     const double intersection_end = std::min(startA + lenA, startB + lenB);
     double intersection_length = 0.0;
     if (startA <= startB + lenB && startB <= startA + lenA) {
         intersection_length = intersection_end - intersection_start;
     } else {
-        intersection_length = std::numeric_limits<double>::infinity();
+        intersection_length = 0.0;
     }
     return intersection_length;
 }
@@ -342,17 +364,14 @@ double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
     const auto &p2pEB = p2_picElemBoundary;
 
     double overlapX = 0.0, overlapY = 0.0;
-    if (overlapX = line_segment_intersect(p1pEB.at(0), p1pEB.at(1) - p1pEB.at(0), p2pEB.at(0),
-                                          p2pEB.at(1) - p2pEB.at(0)); overlapX ==
-                                                                      std::numeric_limits<double>::infinity()) {
-        overlapX = 0.0;
-    }
-    if (overlapY = line_segment_intersect(p1pEB.at(2), p1pEB.at(3) - p1pEB.at(2), p2pEB.at(2),
-                                          p2pEB.at(3) - p2pEB.at(2)); overlapY ==
-                                                                      std::numeric_limits<double>::infinity()) {
-        overlapY = 0.0;
-    }
+    overlapX = line_segment_intersect(p1pEB.at(0), p1pEB.at(1) - p1pEB.at(0), p2pEB.at(0),
+                                          p2pEB.at(1) - p2pEB.at(0));
+    overlapY = line_segment_intersect(p1pEB.at(2), p1pEB.at(3) - p1pEB.at(2), p2pEB.at(2),
+                                          p2pEB.at(3) - p2pEB.at(2));
     const auto p1Size = (p1pEB.at(1) - p1pEB.at(0)) * (p1pEB.at(3) - p1pEB.at(2));
     const auto p2Size = (p2pEB.at(1) - p2pEB.at(0)) * (p2pEB.at(3) - p2pEB.at(2));
-    return (overlapX * overlapY) / ((p1Size + p2Size) / 2.0);
+    stdoutLogger->writeInfoEntry("overlap: " + std::to_string((overlapX * overlapY) / ((p1Size + p2Size) * 0.5)));
+    return (overlapX * overlapY) / ((p1Size + p2Size) * 0.5);
 }
+
+

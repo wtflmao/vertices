@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 project(vertices)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(vertices src/main.cpp
         src/structures/ray.cpp
@@ -53,4 +53,6 @@ add_executable(vertices src/main.cpp
         src/logger/coutLogger.h
         src/logger/filesystemLogger.cpp
         src/logger/filesystemLogger.h
+        src/structures/imagePlane.cpp
+        src/structures/imagePlane.h
 )

@@ -42,6 +42,13 @@ void CoordTransform::gndToCam(const Point &gnd, Point &cam) noexcept {
             .setZ(gnd_v3d.at(0).z());
 }
 
+Point CoordTransform::gndToCam(const Point &gnd) noexcept {
+    std::vector<Eigen::Vector3d> gnd_v3d;
+    gnd_v3d.emplace_back(gnd.getX(), gnd.getY(), gnd.getZ());
+    tfg.getTransWithPointCloud(GROUND, gnd_v3d, CAMERA);
+    return Point{gnd_v3d.at(0).x(), gnd_v3d.at(0).y(), gnd_v3d.at(0).z()};
+}
+
 void CoordTransform::camToGnd(const Point &cam, Point &gnd) noexcept {
     std::vector<Eigen::Vector3d> cam_v3d;
     cam_v3d.emplace_back(cam.getX(), cam.getY(), cam.getZ());
@@ -49,6 +56,13 @@ void CoordTransform::camToGnd(const Point &cam, Point &gnd) noexcept {
     gnd.setX(cam_v3d.at(0).x())
             .setY(cam_v3d.at(0).y())
             .setZ(cam_v3d.at(0).z());
+}
+
+Point CoordTransform::camToGnd(const Point &cam) noexcept {
+    std::vector<Eigen::Vector3d> cam_v3d;
+    cam_v3d.emplace_back(cam.getX(), cam.getY(), cam.getZ());
+    tfg.getTransWithPointCloud(CAMERA, cam_v3d, GROUND);
+    return Point{cam_v3d.at(0).x(), cam_v3d.at(0).y(), cam_v3d.at(0).z()};
 }
 
 [[deprecated]] void CoordTransform::imgToGnd(const Point &img, Point &gnd) noexcept {
@@ -75,18 +89,41 @@ void CoordTransform::camToImg(const Point &cam, Point &img) noexcept {
     const auto &center = CENTER_OF_CAMERA_IN_GND;
     const double distToCamCenterX = std::fabs(cam.getX() - center.at(0));
     const double distToCamCenterY = std::fabs(cam.getY() - center.at(1));
-    img.setZ(cam.getZ() - CAM_IMG_DISTANCE)
+    img.setZ(camToGnd(cam).getZ() - CAM_IMG_DISTANCE)
             .setX(distToCamCenterX * picElemX * IMG_ZOOM_FACTOR / 2.0)
             .setY(distToCamCenterY * picElemY * IMG_ZOOM_FACTOR / 2.0);
 }
 
+Point CoordTransform::camToImg(const Point &cam) noexcept {
+    const auto &center = CENTER_OF_CAMERA_IN_GND;
+    const double distToCamCenterX = std::fabs(cam.getX() - center.at(0));
+    const double distToCamCenterY = std::fabs(cam.getY() - center.at(1));
+    return Point{distToCamCenterX * picElemX * IMG_ZOOM_FACTOR / 2.0, distToCamCenterY * picElemY * IMG_ZOOM_FACTOR / 2.0, camToGnd(cam).getZ() - CAM_IMG_DISTANCE};
+}
+
 void CoordTransform::imgToCam(const Point &img, Point &cam) noexcept {
     const auto &center = CENTER_OF_CAMERA_IN_GND;
-    cam.setZ(img.getZ() + CAM_IMG_DISTANCE)
+    auto point_t = Point{0, 0, img.getZ() + CAM_IMG_DISTANCE};
+    cam.setZ(gndToCam(point_t).getZ())
             .setX(std::sqrt(
                     (img.getX() * 2.0 / picElemX / IMG_ZOOM_FACTOR) * (img.getX() * 2.0 / picElemX / IMG_ZOOM_FACTOR) +
                     center.at(0) * center.at(0)))
             .setY(std::sqrt(
                     (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) * (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) +
                     center.at(1) * center.at(1)));
+}
+
+Point CoordTransform::imgToCam(const Point &img) noexcept {
+    const auto &center = CENTER_OF_CAMERA_IN_GND;
+
+    auto point_t = Point{0, 0, img.getZ() + CAM_IMG_DISTANCE};
+    return Point{
+        std::sqrt((img.getX() * 2.0 / picElemX / IMG_ZOOM_FACTOR) * (img.getX() * 2.0 / picElemX / IMG_ZOOM_FACTOR) +
+                center.at(0) * center.at(0)),
+        std::sqrt(
+                (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) * (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) +
+                center.at(1) * center.at(1)),
+        //img.getZ() + CAM_IMG_DISTANCE
+        gndToCam(point_t).getZ()
+    };
 }

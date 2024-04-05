@@ -14,6 +14,7 @@
 #include "pixel.h"
 #include "vec.h"
 #include "ray.h"
+#include "imagePlane.h"
 #include <valarray>
 #include <array>
 #include <cstdio>
@@ -26,6 +27,7 @@ constexpr double FACTOR = 1.0;
 
 class Camera final {
 private:
+    ImagePlane imgPlane = ImagePlane();
 
 public:
 
@@ -34,16 +36,13 @@ public:
     // todo: deprecate spatialPosition and use CAMERA center
     // camera position
     // this should defines the pixel[0, 0]'s position, also be a flat platform
-    std::array<Point, 2> spatialPosition = {Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)};
+    [[deprecated]] std::array<Point, 2> spatialPosition = {Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)};
     // camera direction
     // should be align with the normal of the platform
-    Vec platformDirection = Vec(Point(0.0, 0.0, -1.0));
+    [[deprecated]] Vec platformDirection = Vec(Point(0.0, 0.0, -1.0));
 
     // sensor spectral response
     std::shared_ptr<std::array<std::array<Pixel, resolutionY>, resolutionX> > spectralResp_p;
-
-    // coord transform from ground to camera
-
 
     // PSF core function
     void PSF();
@@ -56,15 +55,17 @@ public:
 
     void buildSunlightSpectrum();
 
-    void addRaySpectrumResp(Ray &ray) noexcept;
+    void addRaySpectrumResp(const Ray &ray) const noexcept;
 
-    Ray shootRayRandom(int cnt);
+    //Ray shootRayRandom(int cnt);
 
-    std::vector<Ray> shootRaysRandom(int num);
+    [[nodiscard]] std::vector<Ray> shootRaysRandom() const noexcept;
 
-    double realOverlappingRatio(const Point &p1, const Point &p2);
+    [[nodiscard]] std::vector<Ray> shootRaysRandomFromImgPlate() const noexcept;
 
-    Point findTheClosestPixel(const Point &source);
+    static double realOverlappingRatio(const Point &p1, const Point &p2);
+
+    [[nodiscard]] Point findTheClosestPixel(const Point &source) const noexcept;
 };
 
 

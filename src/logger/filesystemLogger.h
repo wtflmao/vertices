@@ -24,8 +24,8 @@
 
 class FilesystemLogger : public LoggingFacility {
 private:
-    static std::filesystem::path *p;
-    static std::ofstream out;
+    std::filesystem::path *p;
+    std::ofstream out;
 
 public:
     void writeInfoEntry(std::string_view entry, short level) noexcept override;
@@ -34,14 +34,14 @@ public:
 
     void writeErrorEntry(std::string_view entry, short level) noexcept override;
 
-    ~FilesystemLogger() noexcept override {
+    /*~FilesystemLogger() noexcept override {
         if (p != nullptr) {
             if (out.is_open())
                 out.close();
             delete p;
             p = nullptr;
         }
-    }
+    }*/
 
     FilesystemLogger() noexcept;
 

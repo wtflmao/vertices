@@ -13,12 +13,16 @@
 
 #include "../common.h"
 #include "point.h"
+#include "../basic/coordTransform.h"
+#include "ray.h"
 #include <array>
 
 class Pixel final {
 private:
     // this pos indicates the location of this pixel in camera coord
     Point posInCam = BigO;
+    Point posInGnd = BigO;
+    Point posInImg = BigO;
 
 public:
     // spectral response for a single pixel
@@ -38,6 +42,18 @@ public:
     Pixel &setPosInCam(const Point &posInCam_t) noexcept;
 
     [[nodiscard]] const Point &getPosInCam() const noexcept;
+
+    Pixel &setPosInGnd(const Point &posInGnd_t) noexcept;
+
+    [[nodiscard]] const Point &getPosInGnd() const noexcept;
+
+    Pixel &setPosInImg(const Point &posInGnd_t) noexcept;
+
+    [[nodiscard]] const Point &getPosInImg() const noexcept;
+
+    [[nodiscard]] Ray shootRayFromPixel(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept;
+
+    [[nodiscard]] Ray shootRayFromPixelFromImgPlate(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept;
 };
 
 
