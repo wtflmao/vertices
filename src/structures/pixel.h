@@ -24,12 +24,14 @@ private:
     Point posInGnd = BigO;
     Point posInImg = BigO;
 
-public:
     // spectral response for a single pixel
     // let's say it's ranges from 380 - 780 nm, and we have 100 bands
     std::array<double, spectralBands> pixelSpectralResp;
 
-    std::array<double, spectralBands> &getPixelSpectralResp() noexcept;
+public:
+    [[nodiscard]] const std::array<double, spectralBands> &getPixelSpectralResp() const noexcept;
+
+    [[nodiscard]] std::array<double, spectralBands> &getMutPixelSpectralResp() noexcept;
 
     Pixel &setPixelSpectralResp(const std::array<double, spectralBands> &arr) noexcept;
 
@@ -51,9 +53,16 @@ public:
 
     [[nodiscard]] const Point &getPosInImg() const noexcept;
 
-    [[nodiscard]] Ray shootRayFromPixel(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept;
+    [[deprecated]] [[nodiscard]] Ray shootRayFromPixel(const Vec &directionVec,
+                                                       const std::array<double, spectralBands> &sunlightSpectrum) const
+        noexcept;
 
-    [[nodiscard]] Ray shootRayFromPixelFromImgPlate(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept;
+    [[deprecated]] [[nodiscard]] Ray shootRayFromPixelFromImgPlate(const Vec &directionVec,
+                                                                   const std::array<double, spectralBands> &
+                                                                   sunlightSpectrum) const
+        noexcept;
+
+    Pixel &addRaySpectralResp(Ray &ray) noexcept;
 };
 
 

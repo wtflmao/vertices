@@ -197,8 +197,8 @@ int main() {
                 fieldItem.brdfIdx = b_cnt++;
                 std::cout << "Handling a set of closed BRDF" << std::endl;
                 if (brdf_cnt_t + 1 <= size) {
-                    dynamic_cast<ClosedBRDF &>(brdfRef).ClosedBRDFInsert(BRDFPaths.at(brdf_cnt_t).second.c_str());
-
+                    //dynamic_cast<ClosedBRDF &>(brdfRef).ClosedBRDFInsert(BRDFPaths.at(brdf_cnt_t).second.c_str());
+                    dynamic_cast<ClosedBRDF &>(brdfRef).filename = BRDFPaths.at(brdf_cnt_t).second;
                 } else {
                     fprintf(stderr, "Error when initializing BRDFs. Reason: not enough closed BRDFs in the list.\a\n");
                     return 67;
@@ -210,6 +210,36 @@ int main() {
             } catch (...) {
                 std::cerr << "[Debug] Caught unknown exception in main()\a\n";
             }
+            /*
+            // debug only
+            auto thetaIn = *(dynamic_cast<ClosedBRDF*>(field.brdfList.back())->availThetaIn);
+            std::cout << "availThetaIn:";
+            for (auto & item: thetaIn) {
+                std::cout << " " << item;
+            }
+            std::cout << std::endl;
+            // debug only
+            auto phiIn = *(dynamic_cast<ClosedBRDF*>(field.brdfList.back())->availPhiIn);
+            std::cout << "availPhiIn:";
+            for (auto & item: phiIn) {
+                std::cout << " " << item;
+            }
+            std::cout << std::endl;
+            // debug only
+            auto thetaOut = *(dynamic_cast<ClosedBRDF*>(field.brdfList.back())->availThetaOut);
+            std::cout << "availThetaOut:";
+            for (auto & item: thetaOut) {
+                std::cout << " " << item;
+            }
+            std::cout << std::endl;
+            // debug only
+            auto phiOut = *(dynamic_cast<ClosedBRDF*>(field.brdfList.back())->availPhiOut);
+            std::cout << "availPhiOut:";
+            for (auto & item: phiOut) {
+                std::cout << " " << item;
+            }
+            std::cout << std::endl;
+            */
         }
     }
 
@@ -341,17 +371,19 @@ int main() {
     // use default constructor for now
     auto camera = Camera();
     // commonly the height from ground is 200m
-    camera.spatialPosition = {Point(-0.008, -0.006, CAMERA_HEIGHT), Point(0.008, 0.006, CAMERA_HEIGHT)};
+    //camera.spatialPosition = {Point(-0.008, -0.006, CAMERA_HEIGHT), Point(0.008, 0.006, CAMERA_HEIGHT)};
     rays->clear();
-    camera.buildSunlightSpectrum();
+    //camera.buildSunlightSpectrum();
 
     std::cout << ">>>>>>>>>>the fovs are " << FOVx << " " << FOVy << std::endl;
     // after this there should be resolution X*Y rays
-    auto rays_r = camera.shootRaysRandom();
-    rays->insert(rays->end(), rays_r.begin(), rays_r.end());
-    //delete rays_r;
+    //auto rays_r = camera.shootRaysRandom();
+    auto rays_r = camera.shootRays(1);
+    rays->insert(rays->end(), rays_r->begin(), rays_r->end());
+    delete rays_r;
+    rays_r = nullptr;
     if (rays->empty()) {
-        std::cout << "trying to deref a nullptr in main() from camera.shootRaysRandom() call\a" << std::endl;
+        std::cout << "trying to deref a nullptr in main() from camera.shootRays() call\a" << std::endl;
         return 8;
     }
     auto goodRays_t = new std::vector<Ray>();
@@ -366,7 +398,7 @@ int main() {
     // use BVH to accelerate the determination of whether the ray intersecting
     for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
         // get one ray at a time to avoid memory overhead
-        auto ray = Ray();
+        //auto ray = Ray();
         //if (cnt < resolutionX * resolutionY) {
         //ray = camera.shootRayRandom(cnt++);
         //ray.ancestor = ray.getOrigin();
@@ -374,7 +406,7 @@ int main() {
         //} else {
         // now every raw ray from camera has been investigated, traverse the rays vector
         flag = false;
-        ray = rays->at(rayIndex);
+        auto ray = rays->at(rayIndex);
         //}
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
@@ -388,8 +420,8 @@ int main() {
                         ray.setRayStopPoint(intersection);
                         //std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                         //        << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
-                        // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the REAL sunlight's direction
-                        Ray ray_t = Ray(intersection, field.sunlightDirectionToGround * -1);
+                        // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the matching real pixel from camrea
+                        Ray ray_t = Ray(intersection, Vec(intersection, ray.getSourcePixelPosInGnd()));
                         ray_t.setAncestor(ray.getAncestor());
                         bool validity = true;
                         Point intersection_t = BigO;
@@ -425,9 +457,8 @@ int main() {
 
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
-                        // todo: use BRDF
                         for (const auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
-                                face->faceBRDF)); const auto &ray_sp:
+                                                                        face->faceBRDF)); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
@@ -438,23 +469,23 @@ int main() {
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
                                     Ray ray_tt = scatteredRays.at(j);
                                     ray_tt.setAncestor(ray_t.getAncestor());
-                                    bool validity_tt = true;
+                                    bool validity_tt = false;
                                     for (int nodeIndex_tt = 0;
-                                         nodeIndex_tt < field.nodeCount && validity_tt; nodeIndex_tt++) {
+                                         nodeIndex_tt < field.nodeCount && !validity_tt; nodeIndex_tt++) {
                                         auto &node_tt = node_ptrs.at(nodeIndex_tt);
                                         // Check if the ray intersects with the node (box)
                                         if (ray_tt.intersectsWithBox(node_tt->bbox)) {
                                             // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                                             for (int faceIndex_tt = 0;
                                                  faceIndex_tt < node_tt->boxedFaces.size() &&
-                                                 validity_tt; faceIndex_tt++) {
+                                                 !validity_tt; faceIndex_tt++) {
                                                 auto &face_tt = node_tt->boxedFaces.at(faceIndex_tt);
                                                 if (auto intersection_tt = ray_tt.mollerTrumboreIntersection(
                                                             *face_tt); (
                                                         NO_INTERSECT != intersection_tt &&
                                                         intersection_tt != intersection_t)) {
-                                                    // bad, has intersection, the original ray is not valid
-                                                    validity_tt = false;
+                                                    // good, scatter ray has intersection
+                                                    validity_tt = true;
                                                     break;
                                                 }
                                             }
@@ -492,6 +523,7 @@ int main() {
     std::cout << "Ray count: " << rays->size() << "." << std::endl;
 
     // clean up rays that have no spectrum response
+    // I've got no idea why they're there, but they are there, so yeah
     auto goodRays = new std::vector<Ray>();
     for (auto &ray: *goodRays_t) {
         bool flaga = false;
@@ -520,13 +552,13 @@ int main() {
     // sum up every pixel's spectrum response
     for (auto &ray: *goodRays) {
         // calc the ray's spectrum response
-        camera.addRaySpectrumResp(ray);
+        camera.addSingleRaySpectralRespToPixel(ray);
     }
 
     // show the camera's spectrum response by every pixel
-    for (int i = 0; i < spectralBands; i += 5) {
+    for (int i = 0; i < spectralBands; i += 10) {
         std::cout << "Spectrum response at " << i << "th band:" << std::endl;
-        for (auto &row: *camera.spectralResp_p) {
+        for (auto &row: *camera.getPixel2D()) {
             for (auto &col: row) {
                 std::cout << col.getPixelSpectralResp().at(i) << " ";
             }
@@ -534,7 +566,6 @@ int main() {
         }
     }
 
-    
 
     coutLogger->writeInfoEntry("Goodbye!");
 

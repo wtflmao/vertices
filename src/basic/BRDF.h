@@ -22,6 +22,8 @@
 #include <array>
 #include <memory>
 #include <cctype>
+#include <set>
+#include <cstring>
 
 #define BRDF_SAMPLING_RES_THETA_H       90
 #define BRDF_SAMPLING_RES_THETA_D       90
@@ -39,6 +41,11 @@ constexpr int GREEN_LOWER = 605;
 constexpr int RED_UPPER = 605;
 // actually the RED_LOWER should be 752 but im lazy to add shortwave infrared BRDF
 constexpr int RED_LOWER = LOWER_WAVELENGTH;
+
+constexpr short BOUNDRY_LOW_THETA = 0;
+constexpr short BOUNDRY_HIGH_THETA = 15533;
+constexpr short BOUNDRY_LOW_PHI = -31241;
+constexpr short BOUNDRY_HIGH_PHI = 31241;
 
 enum class BRDFType {
     Default, Open, Closed
@@ -75,15 +82,21 @@ public:
 
 class ClosedBRDF final : public BRDF {
 public:
-// for closed mesh, brdf data holder
-    std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>> *RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();
+    std::string filename;
+    // for closed mesh, brdf data holder
+    //std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>> *RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();
 
-    [[nodiscard]] std::tuple<float, float, float>
-    getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const;
+    //std::shared_ptr<std::set<short>> availThetaIn;
+    //std::shared_ptr<std::set<short>> availPhiIn;
+    //std::shared_ptr<std::set<short>> availThetaOut;
+    //std::shared_ptr<std::set<short>> availPhiOut;
 
-    void ClosedBRDFInsert(const char *pathToDataset);
+    //[[deprecated]] [[nodiscard]] std::tuple<float, float, float> getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const;
 
-    explicit ClosedBRDF(const char *pathToDataset) noexcept;
+    [[nodiscard]] std::tuple<double, double, double> lookUpBRDF(const char *filename, double theta_in, double phi_in,
+                                                                double theta_out, double phi_out) const noexcept;
+
+    //[[deprecated]] void ClosedBRDFInsert(const char *pathToDataset);
 
     ClosedBRDF() noexcept;
 

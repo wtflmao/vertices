@@ -47,8 +47,8 @@ constexpr std::size_t SAMPLINGS = 64;
 
 // VERTICES_PIXEL_H
 // 1024 by 768 pixels
-constexpr int resolutionX = 4;
-constexpr int resolutionY = 3;
+inline int resolutionX = 4;
+inline int resolutionY = 3;
 constexpr int spectralBands = 100;
 // all in nanometer, please be in integer
 constexpr int UPPER_WAVELENGTH = 380;
@@ -58,7 +58,7 @@ constexpr int WAVELENGTH_STEP = (LOWER_WAVELENGTH - UPPER_WAVELENGTH) / spectral
 
 // VERTICES_CAMERA_H
 // this eight means the first pixel's height
-constexpr double CAMERA_HEIGHT = 1.2;
+constexpr double CAMERA_HEIGHT = 30;
 // pixel distance in micron 6969
 constexpr double pixelSize = 6.9;
 // GSD in meter
@@ -79,7 +79,7 @@ constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
 constexpr double CAM_IMG_DISTANCE = CAMERA_HEIGHT / 60.0;
 const double picElemX = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVx * std::numbers::pi / 180.0) / 2.0);
 const double picElemY = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVy * std::numbers::pi / 180.0) / 2.0);
-constexpr double IMG_ZOOM_FACTOR =
+const double IMG_ZOOM_FACTOR =
         2e+9 / CAMERA_HEIGHT / static_cast<double>(resolutionX) / static_cast<double>(resolutionY);
 
 

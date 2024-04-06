@@ -39,7 +39,11 @@
     }
 };
 
-std::array<double, spectralBands> &Pixel::getPixelSpectralResp() noexcept {
+const std::array<double, spectralBands> &Pixel::getPixelSpectralResp() const noexcept {
+    return pixelSpectralResp;
+}
+
+std::array<double, spectralBands> &Pixel::getMutPixelSpectralResp() noexcept {
     return pixelSpectralResp;
 }
 
@@ -77,18 +81,18 @@ const Point &Pixel::getPosInImg() const noexcept {
 
 Pixel::Pixel(const Point &posInCam_t) noexcept {
     setPosInCam(posInCam_t);
-    pixelSpectralResp = {0.0};
+    pixelSpectralResp = {0};
 }
 
 Pixel::Pixel() noexcept {
-    pixelSpectralResp = {0.0};
+    pixelSpectralResp = {0};
 }
 
 // compute two Vecs that zhengjiao to teh normal vector
 void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent) {
     tangent = std::fabs(normal.getTail().getX()) > std::fabs(normal.getTail().getZ())
-              ? Vec(Point(-normal.getTail().getY(), normal.getTail().getX(), 0.0))
-              : Vec(Point(0.0, -normal.getTail().getZ(), normal.getTail().getY()));
+                  ? Vec(Point(-normal.getTail().getY(), normal.getTail().getX(), 0.0))
+                  : Vec(Point(0.0, -normal.getTail().getZ(), normal.getTail().getY()));
     tangent = tangent.getNormalized();
     bitangent = normal.cross(tangent);
 }
@@ -123,7 +127,8 @@ Vec uniformHemisphereDirection(const Vec &normal) {
     return tangent * dir.getTail().getX() + bitangent * dir.getTail().getY() + normal * dir.getTail().getZ();
 }
 
-Ray Pixel::shootRayFromPixel(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept {
+Ray Pixel::shootRayFromPixel(const Vec &directionVec,
+                             const std::array<double, spectralBands> &sunlightSpectrum) const noexcept {
     const auto posInGnd = coordTransform->camToGnd(posInCam);
     auto ray = Ray{};
 
@@ -138,7 +143,8 @@ Ray Pixel::shootRayFromPixel(const Vec& directionVec, const std::array<double, s
     return ray;
 }
 
-Ray Pixel::shootRayFromPixelFromImgPlate(const Vec& directionVec, const std::array<double, spectralBands>& sunlightSpectrum) const noexcept {
+Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
+                                         const std::array<double, spectralBands> &sunlightSpectrum) const noexcept {
     const auto posInGnd = coordTransform->camToGnd(posInCam);
     auto ray = Ray{};
 
@@ -151,4 +157,13 @@ Ray Pixel::shootRayFromPixelFromImgPlate(const Vec& directionVec, const std::arr
 
     // RVO happens here, don't worry about value-returning
     return ray;
+}
+
+Pixel &Pixel::addRaySpectralResp(Ray &ray) noexcept {
+    auto &resp = getMutPixelSpectralResp();
+    int i = 0;
+    for (auto &val: resp) {
+        val += ray.getMutIntensity_p().at(i++);
+    }
+    return *this;
 }

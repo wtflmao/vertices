@@ -36,6 +36,15 @@ Ray::Ray(const Point &origin, const Vec &direction,
     ancestor = origin;
 }
 
+void *Ray::getSourcePixel() const noexcept {
+    return sourcePixel;
+}
+
+Ray &Ray::setSourcePixel(void *p) noexcept {
+    sourcePixel = p;
+    return *this;
+}
+
 const Point &Ray::getOrigin() const noexcept {
     return origin;
 }
@@ -51,6 +60,15 @@ const Point &Ray::getAncestor() const noexcept {
 
 Ray &Ray::setAncestor(const Point &ancestor_t) noexcept {
     ancestor = ancestor_t;
+    return *this;
+}
+
+const Point &Ray::getSourcePixelPosInGnd() const noexcept {
+    return sourcePixelPosInGnd;
+}
+
+Ray &Ray::setSourcePixelPosInGnd(const Point &t) noexcept {
+    sourcePixelPosInGnd = t;
     return *this;
 }
 
@@ -73,6 +91,10 @@ Ray &Ray::setScatteredLevel(const int t) noexcept {
 }
 
 const std::array<double, spectralBands> &Ray::getIntensity_p() const noexcept {
+    return intensity_p;
+}
+
+std::array<double, spectralBands> &Ray::getMutIntensity_p() noexcept {
     return intensity_p;
 }
 
@@ -284,9 +306,107 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             }
         } else if (itemBRDF->type == BRDFType::Closed) {
             // here's closed mesh's BRDF
-            // todo: rotate the coordinate system to compute 4 angles
-            // here's a dummy intensity
-            reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+            // todo: rotate the coordinate system to compute phi_in
+            // here's two dummy in_angles
+            double theta_in = std::abs(
+                std::acos(
+                    this->dotVec(tri.getNormal()) / this->getDirection().getLength() / tri.getNormal().getLength()) -
+                0.5 * std::numbers::pi), phi_in = std::numbers::pi * 2.0 * rand01() - std::numbers::pi;
+            // we use random out_angles that resides in upper hemisphere
+            double theta_out = std::numbers::pi / 2.0 * rand01(), phi_out =
+                    std::numbers::pi * 2.0 * rand01() - std::numbers::pi;
+
+            /*
+            auto theta_in_s = static_cast<short>(std::round(theta_in * 1e4));
+            auto phi_in_s = static_cast<short>(std::round(phi_in * 1e4));
+            auto theta_out_s = static_cast<short>(std::round(theta_out * 1e4));
+            auto phi_out_s = static_cast<short>(std::round(phi_out * 1e4));
+
+            if (dynamic_cast<ClosedBRDF *>(itemBRDF)->availThetaIn->empty()) {
+                coutLogger->writeErrorEntry("availThetaIn from ClosedBRDF is empty");
+                exit(111);
+            }
+            if (dynamic_cast<ClosedBRDF *>(itemBRDF)->availPhiIn->empty()) {
+                coutLogger->writeErrorEntry("availPhiIn from ClosedBRDF is empty");
+                exit(112);
+            }
+            if (dynamic_cast<ClosedBRDF *>(itemBRDF)->availThetaOut->empty()) {
+                coutLogger->writeErrorEntry("availThetaOut from ClosedBRDF is empty");
+                exit(113);
+            }
+            if (dynamic_cast<ClosedBRDF *>(itemBRDF)->availPhiOut->empty()) {
+                coutLogger->writeErrorEntry("availPhiOut from ClosedBRDF is empty");
+                exit(114);
+            }
+
+            bool flag = false;
+            for (const auto item: *(dynamic_cast<ClosedBRDF *>(itemBRDF)->availThetaIn)) {
+                if (item >= theta_in_s) {
+                    theta_in_s = item;
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                theta_in_s = *dynamic_cast<ClosedBRDF *>(itemBRDF)->availThetaIn->end();
+            }
+
+            flag = false;
+            for (const auto item: *(dynamic_cast<ClosedBRDF *>(itemBRDF)->availThetaOut)) {
+                if (item >= theta_out_s) {
+                    theta_out_s = item;
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                theta_out_s = *dynamic_cast<ClosedBRDF *>(itemBRDF)->availThetaOut->end();
+            }
+
+            flag = false;
+            for (const auto item: *(dynamic_cast<ClosedBRDF *>(itemBRDF)->availPhiIn)) {
+                if (item >= phi_in_s) {
+                    phi_in_s = item;
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                phi_in_s = *dynamic_cast<ClosedBRDF *>(itemBRDF)->availPhiIn->end();
+            }
+
+            flag = false;
+            for (const auto item: *(dynamic_cast<ClosedBRDF *>(itemBRDF)->availPhiOut)) {
+                if (item >= phi_out_s) {
+                    phi_out_s = item;
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                phi_out_s = *dynamic_cast<ClosedBRDF *>(itemBRDF)->availPhiOut->end();
+            }
+            */
+
+            //coutLogger->writeInfoEntry("theta_in: " + std::to_string(theta_in) + " phi_in: " + std::to_string(phi_in) + " theta_out: " + std::to_string(theta_out) + " phi_out: " + std::to_string(phi_out), 1);
+
+            /*
+            auto w = UPPER_WAVELENGTH + j * WAVELENGTH_STEP;
+            if (w <= UPPER_WAVELENGTH || w >= LOWER_WAVELENGTH) {
+                reflectedIntensity[j] = intensity_p[j] * 0.0;
+            } else if (w >= BLUE_UPPER && w < BLUE_LOWER) {
+                reflectedIntensity[j] = intensity_p[j] * std::get<2>(dynamic_cast<ClosedBRDF *>(itemBRDF)
+                        ->lookUpBRDF(dynamic_cast<ClosedBRDF *>(itemBRDF)->filename.c_str(), theta_in, phi_in, theta_out, phi_out));
+            } else if (w >= GREEN_UPPER && w < GREEN_LOWER) {
+                reflectedIntensity[j] = intensity_p[j] * std::get<1>(dynamic_cast<ClosedBRDF *>(itemBRDF)
+                        ->lookUpBRDF(dynamic_cast<ClosedBRDF *>(itemBRDF)->filename.c_str(), theta_in, phi_in, theta_out, phi_out));
+            } else if (w >= RED_UPPER && w <= RED_LOWER) {
+                reflectedIntensity[j] = intensity_p[j] * std::get<0>(dynamic_cast<ClosedBRDF *>(itemBRDF)
+                        ->lookUpBRDF(dynamic_cast<ClosedBRDF *>(itemBRDF)->filename.c_str(), theta_in, phi_in, theta_out, phi_out));
+            } else {
+                reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
+            }*/
+            reflectedIntensity[j] = intensity_p[j] * (1.0 - rand01() * rand01());
         } else {
             std::cerr << "[Error] no implementation for BRDFType::Default typed BRDF\a" << std::endl;
         }

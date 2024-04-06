@@ -138,7 +138,7 @@ inline void cameraToGround(const Point &A, const Point &B, const Point &ori, Poi
 
 
 void Camera::PSF() {};
-
+/*
 [[deprecated]] void Camera::shootRaysOut(const Vec &rayDirection, std::vector<Ray> *rays) {
     rays->reserve(resolutionX * resolutionY);
 
@@ -183,7 +183,7 @@ void Camera::PSF() {};
     // generate the ray
     return {pixelInGroundCoord, rayDirection, sunlightSpectrum, CAMERA_RAY_STARTER_SCATTER_LEVEL};
 }
-
+*/
 /*
 // this function is for a fixed origin point with random direction, yes u heard that
 [[deprecated]] Ray Camera::shootRayRandom([[deprecated]] const int cnt) {
@@ -209,14 +209,14 @@ void Camera::PSF() {};
     return {pixelInGroundCoord, uniformHemisphereDirection(Vec(Point(0, 0, -1))), sunlightSpectrum, 1};
 }
 */
-
+/*
 // num is for "rays per pixel"
-std::vector<Ray> Camera::shootRaysRandom() const noexcept{
+std::vector<Ray> Camera::shootRaysRandom() const noexcept {
     auto rays = std::vector<Ray>();
 
     // traverse every pixel to shoot rays
-    for (auto & row: *spectralResp_p) {
-        for (auto & pixel: row) {
+    for (auto &row: *spectralResp_p) {
+        for (auto &pixel: row) {
             rays.push_back(pixel.shootRayFromPixel(platformDirection, sunlightSpectrum));
         }
     }
@@ -225,12 +225,12 @@ std::vector<Ray> Camera::shootRaysRandom() const noexcept{
     return rays;
 }
 
-std::vector<Ray> Camera::shootRaysRandomFromImgPlate() const noexcept{
+std::vector<Ray> Camera::shootRaysRandomFromImgPlate() const noexcept {
     auto rays = std::vector<Ray>();
 
     // traverse every pixel to shoot rays
-    for (auto & row: *spectralResp_p) {
-        for (auto & pixel: row) {
+    for (auto &row: *spectralResp_p) {
+        for (auto &pixel: row) {
             rays.push_back(pixel.shootRayFromPixel(platformDirection, sunlightSpectrum));
         }
     }
@@ -238,6 +238,8 @@ std::vector<Ray> Camera::shootRaysRandomFromImgPlate() const noexcept{
     // compiler will perform RVO here, so don't worry about returning a BIG vector
     return rays;
 }
+*/
+/*
 Camera::Camera() {
     spectralResp_p = std::make_shared<std::array<std::array<Pixel, resolutionY>, resolutionX>>();
     // init for every pixel's pos in camera coord contained by camera
@@ -249,11 +251,42 @@ Camera::Camera() {
                     .setPosInGnd(coordTransform->camToGnd(pixel.getPosInCam()))
                     .setPosInImg(coordTransform->camToImg(pixel.getPosInCam() * 1e-6));
 
-            coutLogger->writeWarnEntry(std::to_string(row*10+col) + " posInCam: " + std::to_string(row) + ", " + std::to_string(col) + ", 0", 1);
-            coutLogger->writeWarnEntry(std::to_string(row*10+col) + " posInGnd: " + std::to_string(pixel.getPosInGnd().getX()) + ", " + std::to_string(pixel.getPosInGnd().getY()) + ", " + std::to_string(pixel.getPosInGnd().getZ()), 1);
-            coutLogger->writeWarnEntry(std::to_string(row*10+col) + " posInImg: " + std::to_string(pixel.getPosInImg().getX()) + ", " + std::to_string(pixel.getPosInImg().getY()) + ", " + std::to_string(pixel.getPosInImg().getZ()), 1);
+            coutLogger->writeWarnEntry(
+                std::to_string(row * 10 + col) + " posInCam: " + std::to_string(row) + ", " + std::to_string(col) +
+                ", 0", 1);
+            coutLogger->writeWarnEntry(
+                std::to_string(row * 10 + col) + " posInGnd: " + std::to_string(pixel.getPosInGnd().getX()) + ", " +
+                std::to_string(pixel.getPosInGnd().getY()) + ", " + std::to_string(pixel.getPosInGnd().getZ()), 1);
+            coutLogger->writeWarnEntry(
+                std::to_string(row * 10 + col) + " posInImg: " + std::to_string(pixel.getPosInImg().getX()) + ", " +
+                std::to_string(pixel.getPosInImg().getY()) + ", " + std::to_string(pixel.getPosInImg().getZ()), 1);
         }
     }
+}
+*/
+
+Camera::Camera() {
+    // first initialize samplePoints from ImagePlane
+    imgPlane = ImagePlane();
+    // then initialize Pixel2D (real objects) and toPixel_p (just pointters to real object) from ImagePlane
+    for (int i = 0; i < imgPlane.getCountX(); i++) {
+        // TODO: this emplace_back() encountered a SIGSEGV, but i gtg
+        pixel2D->emplace_back();
+        coutLogger->writeInfoEntry("normal here");
+        for (int j = 0; j < imgPlane.getCountY(); j++) {
+            pixel2D->at(i).emplace_back();
+            auto sourcePoint = imgPlane.getSamplePoints().at(i).at(j);
+            // TODO: use real X and Y, insteal of wrong X and Y;  Z is correct btw.
+            // TODO: edit: Now X and Y should be OK
+            sourcePoint.setZ(sourcePoint.getZ() + CAM_IMG_DISTANCE)
+                    .setX(sourcePoint.getX() * 1e-6)
+                    .setY(sourcePoint.getY() * 1e-6);
+            coutLogger->writeInfoEntry("normal here222");
+            pixel2D->at(i).at(j).setPosInGnd(sourcePoint);
+            imgPlane.getSamplePointsPixel().at(i).at(j) = std::make_shared<Pixel>(pixel2D->at(i).at(j));
+        }
+    }
+    buildSunlightSpectrum();
 }
 
 void Camera::buildSunlightSpectrum() {
@@ -288,10 +321,12 @@ void Camera::buildSunlightSpectrum() {
     std::cout << "Default sunlight spectrum has been built." << std::endl;
 }
 
+/*
 [[deprecated]] inline double overlappingFactor(const Point &source, int x, int y) noexcept {
     // todo
     return 1.0;
 }
+
 
 // input : pos in ground coord
 // output: the closest pixel's pos in camera coord
@@ -330,6 +365,8 @@ void Camera::addRaySpectrumResp(const Ray &ray) const noexcept {
     }
 }
 
+*/
+
 inline double line_segment_intersect(const double startA, const double lenA, const double startB, const double lenB) {
     const double intersection_start = std::max(startA, startB);
     const double intersection_end = std::min(startA + lenA, startB + lenB);
@@ -365,13 +402,25 @@ double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
 
     double overlapX = 0.0, overlapY = 0.0;
     overlapX = line_segment_intersect(p1pEB.at(0), p1pEB.at(1) - p1pEB.at(0), p2pEB.at(0),
-                                          p2pEB.at(1) - p2pEB.at(0));
+                                      p2pEB.at(1) - p2pEB.at(0));
     overlapY = line_segment_intersect(p1pEB.at(2), p1pEB.at(3) - p1pEB.at(2), p2pEB.at(2),
-                                          p2pEB.at(3) - p2pEB.at(2));
+                                      p2pEB.at(3) - p2pEB.at(2));
     const auto p1Size = (p1pEB.at(1) - p1pEB.at(0)) * (p1pEB.at(3) - p1pEB.at(2));
     const auto p2Size = (p2pEB.at(1) - p2pEB.at(0)) * (p2pEB.at(3) - p2pEB.at(2));
     stdoutLogger->writeInfoEntry("overlap: " + std::to_string((overlapX * overlapY) / ((p1Size + p2Size) * 0.5)));
     return (overlapX * overlapY) / ((p1Size + p2Size) * 0.5);
 }
 
+std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
+    return imgPlane.shootRays(multiplier);
+}
+
+Camera &Camera::addSingleRaySpectralRespToPixel(Ray &ray) noexcept {
+    static_cast<Pixel *>(ray.getSourcePixel())->addRaySpectralResp(ray);
+    return *this;
+}
+
+std::shared_ptr<std::vector<std::vector<Pixel> > > &Camera::getPixel2D() noexcept {
+    return pixel2D;
+}
 

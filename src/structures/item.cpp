@@ -161,6 +161,7 @@ float Item::getBRDFOpen(int waveLength, double i, double j, BRDF &b_ori) const n
     return 1.0;
 }
 
+/*
 double Item::getBRDFClosed(int waveLength, BRDF &b_ori, double theta_i = 0.0, double phi_i = 0.0, double theta_r = 0.0,
                            double phi_r = 0.0) const noexcept {
     auto &b = dynamic_cast<ClosedBRDF &>(b_ori);
@@ -181,6 +182,7 @@ double Item::getBRDFClosed(int waveLength, BRDF &b_ori, double theta_i = 0.0, do
         return 1.0;
     }
 }
+*/
 
 std::vector<std::array<int, 3> > &Item::getMutFWVR() noexcept {
     return facesWithVertexRefs;

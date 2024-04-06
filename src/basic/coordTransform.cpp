@@ -98,7 +98,10 @@ Point CoordTransform::camToImg(const Point &cam) noexcept {
     const auto &center = CENTER_OF_CAMERA_IN_GND;
     const double distToCamCenterX = std::fabs(cam.getX() - center.at(0));
     const double distToCamCenterY = std::fabs(cam.getY() - center.at(1));
-    return Point{distToCamCenterX * picElemX * IMG_ZOOM_FACTOR / 2.0, distToCamCenterY * picElemY * IMG_ZOOM_FACTOR / 2.0, camToGnd(cam).getZ() - CAM_IMG_DISTANCE};
+    return Point{
+        distToCamCenterX * picElemX * IMG_ZOOM_FACTOR / 2.0, distToCamCenterY * picElemY * IMG_ZOOM_FACTOR / 2.0,
+        camToGnd(cam).getZ() - CAM_IMG_DISTANCE
+    };
 }
 
 void CoordTransform::imgToCam(const Point &img, Point &cam) noexcept {
@@ -119,10 +122,10 @@ Point CoordTransform::imgToCam(const Point &img) noexcept {
     auto point_t = Point{0, 0, img.getZ() + CAM_IMG_DISTANCE};
     return Point{
         std::sqrt((img.getX() * 2.0 / picElemX / IMG_ZOOM_FACTOR) * (img.getX() * 2.0 / picElemX / IMG_ZOOM_FACTOR) +
-                center.at(0) * center.at(0)),
+                  center.at(0) * center.at(0)),
         std::sqrt(
-                (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) * (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) +
-                center.at(1) * center.at(1)),
+            (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) * (img.getY() * 2.0 / picElemY / IMG_ZOOM_FACTOR) +
+            center.at(1) * center.at(1)),
         //img.getZ() + CAM_IMG_DISTANCE
         gndToCam(point_t).getZ()
     };

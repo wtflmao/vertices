@@ -11,47 +11,59 @@
 #include "imagePlane.h"
 
 
-std::vector<std::vector<Point>>& ImagePlane::getSamplePoints() noexcept {
+std::vector<std::vector<Point> > &ImagePlane::getSamplePoints() noexcept {
     return samplePoints;
 }
 
-const Point& ImagePlane::getPlaneCenter() const noexcept {
-    return planeCenter;
+std::vector<std::vector<std::shared_ptr<Pixel> > > ImagePlane::getSamplePointsPixel() noexcept {
+    return toPixel_p;
 }
 
-const Vec& ImagePlane::getPlaneNormal() const noexcept {
-    return planeNormal;
-}
-
-const Vec& ImagePlane::getOX() const noexcept {
-    return OX;
-}
-
-const Vec& ImagePlane::getOY() const noexcept {
-    return OY;
-}
-
-ImagePlane& ImagePlane::setSamplePoints(const std::vector<std::vector<Point>> &s) noexcept {
-    samplePoints = s;
+ImagePlane &ImagePlane::setAPixel(const std::shared_ptr<Pixel> &p, const int x, const int y) noexcept {
+    toPixel_p.at(x).at(y) = p;
     return *this;
 }
 
-ImagePlane& ImagePlane::setPlaneCenter(const Point& p) noexcept {
+const Point &ImagePlane::getPlaneCenter() const noexcept {
+    return planeCenter;
+}
+
+const Vec &ImagePlane::getPlaneNormal() const noexcept {
+    return planeNormal;
+}
+
+const Vec &ImagePlane::getOX() const noexcept {
+    return OX;
+}
+
+const Vec &ImagePlane::getOY() const noexcept {
+    return OY;
+}
+
+int ImagePlane::getCountX() const noexcept {
+    return countX;
+}
+
+int ImagePlane::getCountY() const noexcept {
+    return countY;
+}
+
+ImagePlane &ImagePlane::setPlaneCenter(const Point &p) noexcept {
     planeCenter = p;
     return *this;
 }
 
-ImagePlane& ImagePlane::setPlaneNormal(const Vec& v) noexcept {
+ImagePlane &ImagePlane::setPlaneNormal(const Vec &v) noexcept {
     planeNormal = v;
     return *this;
 }
 
-ImagePlane& ImagePlane::setOX(const Vec& v) noexcept {
+ImagePlane &ImagePlane::setOX(const Vec &v) noexcept {
     OX = v;
     return *this;
 }
 
-ImagePlane& ImagePlane::setOY(const Vec& v) noexcept {
+ImagePlane &ImagePlane::setOY(const Vec &v) noexcept {
     OY = v;
     return *this;
 }
@@ -60,7 +72,7 @@ ImagePlane::ImagePlane() {
     buildImagePlane();
 };
 
-ImagePlane& ImagePlane::buildImagePlane() noexcept {
+ImagePlane &ImagePlane::buildImagePlane() noexcept {
     coutLogger->writeInfoEntry("picElemX and Y: " + std::to_string(picElemX) + " " + std::to_string(picElemY));
 
     // to make sure that the Xcount and Ycount are even numbers
@@ -75,16 +87,45 @@ ImagePlane& ImagePlane::buildImagePlane() noexcept {
     setOX(getOX() * picElemX);
     setOY(getOY() * picElemY);
 
-    for (int i = -Xcount/2, rowCnt = 0; i <= Xcount/2; i++) {
-        if (i == 0) continue;
+    // but here row.size() == X.count+1 and col.size() = Y.count+1, they are odd numbers
+    for (int i = -Xcount / 2, rowCnt = 0; i <= Xcount / 2; i++) {
         samplePoints.emplace_back();
-        auto& row = samplePoints.at(rowCnt++);
-        for (int j = -Ycount/2, colCnt = 0; j <= Ycount/2; j++) {
-            if (j == 0) continue;
+        toPixel_p.emplace_back();
+        countY = 0;
+        auto &row = samplePoints.at(rowCnt);
+        auto &rowForToPixel = toPixel_p.at(rowCnt++);
+        for (int j = -Ycount / 2, colCnt = 0; j <= Ycount / 2; j++) {
             auto source = getOY() * j + (getOX() * i + getPlaneCenter());
-            row.push_back(source);
+            row.emplace_back(source);
+            rowForToPixel.emplace_back(nullptr);
+
+            //std::ostringstream s;
+            //s << "source: " << source;
+            //coutLogger->writeInfoEntry(s.view());
         }
     }
-
+    countX = samplePoints.size();
+    countY = samplePoints.front().size();
+    coutLogger->writeInfoEntry("Done imageplane building");
     return *this;
+}
+
+std::vector<Ray> *ImagePlane::shootRays(const int N) const noexcept {
+    auto *rays = new std::vector<Ray>();
+    for (int n = 0; n < N; n++) {
+        for (int i = 0; i < samplePoints.size(); i++) {
+            for (int j = 0; j < samplePoints.at(i).size(); j++) {
+                auto &source = samplePoints[i][j];
+                Ray ray = {};
+                ray.setOrigin(source)
+                        .setAncestor(source)
+                        .setDirection(planeNormal)
+                        .setScatteredLevel(CAMERA_RAY_STARTER_SCATTER_LEVEL)
+                        .setSourcePixelPosInGnd(toPixel_p[i][j]->getPosInGnd())
+                        .setSourcePixel(static_cast<void *>(toPixel_p[i][j].get()));
+                rays->push_back(ray);
+            }
+        }
+    }
+    return rays;
 }

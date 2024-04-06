@@ -15,7 +15,10 @@ OpenBRDF::OpenBRDF() noexcept: BRDF(true) {
 }
 
 ClosedBRDF::ClosedBRDF() noexcept: BRDF(false) {
-
+    //availThetaIn = std::make_shared<std::set<short>>();
+    //availPhiIn = std::make_shared<std::set<short>>();
+    //availThetaOut = std::make_shared<std::set<short>>();
+    //availPhiOut = std::make_shared<std::set<short>>();
 }
 
 auto getFileSize(const std::shared_ptr<FILE *> &fp_s) {
@@ -96,10 +99,7 @@ OpenBRDF::OpenBRDF(const char *pathToDataset, std::array<int, 2> band) noexcept:
     OpenBRDFInsert(pathToDataset, band);
 }
 
-ClosedBRDF::ClosedBRDF(const char *pathToDataset) noexcept: BRDF(false) {
-    ClosedBRDFInsert(pathToDataset);
-}
-
+/*
 // all four angles in radians, both in_angles are in [0, 0.5*pi], both out_angles are in [0, 2*pi]
 std::tuple<float, float, float>
 ClosedBRDF::getBRDF(double theta_in, double phi_in, double theta_out, double phi_out) const {
@@ -110,6 +110,7 @@ ClosedBRDF::getBRDF(double theta_in, double phi_in, double theta_out, double phi
             static_cast<short>(std::round(phi_out * 10000))
     ));
 }
+*/
 
 // Copyright 2005 Mitsubishi Electric Research Laboratories All Rights Reserved.
 
@@ -306,32 +307,49 @@ void lookup_brdf_val(const double *brdf, double theta_in, double fi_in,
 
 // Read BRDF data
 bool read_brdf(const char *filename, double *&brdf) {
-    FILE *f = fopen(filename, "rb");
-    if (!f)
+    FILE *fp = fopen(filename, "rb");
+    if (!fp)
         return false;
 
-    fprintf(stdout, "BRDF file size: %zu bytes\n", getFileSize(std::make_shared<FILE *>(f)));
-    fseek(f, 0, SEEK_SET);
+    //fprintf(stdout, "BRDF file size: %zu bytes\n", getFileSize(std::make_shared<FILE *>(fp)));
+    fseek(fp, 0, SEEK_SET);
 
     int dims[3];
-    fread(dims, sizeof(int), 3, f);
+    fread(dims, sizeof(int), 3, fp);
     int n = dims[0] * dims[1] * dims[2];
     if (n != BRDF_SAMPLING_RES_THETA_H *
              BRDF_SAMPLING_RES_THETA_D *
              BRDF_SAMPLING_RES_PHI_D / 2) {
         fprintf(stderr, "Dimensions don't match\n");
-        fclose(f);
+        //fclose(fp);
         return false;
     }
 
     //brdf = (double*) malloc (sizeof(double)*3*n);
     brdf = new double[3 * n];
-    fread(brdf, sizeof(double), 3 * n, f);
+    fread(brdf, sizeof(double), 3 * n, fp);
 
-    fclose(f);
+    fclose(fp);
     return true;
 }
+// Copyright 2005 MERL ends here
 
+std::tuple<double, double, double> ClosedBRDF::lookUpBRDF(const char *filename, const double theta_in,
+                                                          const double phi_in, const double theta_out,
+                                                          const double phi_out) const noexcept {
+    double red, green, blue;
+    double *brdf;
+    // read brdf
+    if (!read_brdf(filename, brdf)) {
+        fprintf(stderr, "Error reading %s\n", filename);
+        exit(1);
+    }
+    lookup_brdf_val(brdf, theta_in, phi_in, theta_out, phi_out, red, green, blue);
+    free(brdf);
+    return {red, green, blue};
+}
+
+/*
 void ClosedBRDF::ClosedBRDFInsert(const char *pathToDataset) {
     const char *filename = pathToDataset;
     double *brdf;
@@ -342,34 +360,42 @@ void ClosedBRDF::ClosedBRDFInsert(const char *pathToDataset) {
         exit(1);
     }
 
-    // print out a 16x64x16x64 table table of BRDF values
-    const int n = 16;
+    // print out a 8x32x8x32 table table of BRDF values
+    const int n = 8;
     for (int i = 0; i < n; i++) {
-        double theta_in = i * 0.5 * std::numbers::pi / n;
+        const double theta_in = i * 0.5 * std::numbers::pi / n;
         for (int j = 0; j < 4 * n; j++) {
-            double phi_in = j * 2.0 * std::numbers::pi / (4 * n);
+            const double phi_in = j * 2.0 * std::numbers::pi / (4 * n);
             for (int k = 0; k < n; k++) {
-                double theta_out = k * 0.5 * std::numbers::pi / n;
+                const double theta_out = k * 0.5 * std::numbers::pi / n;
                 for (int l = 0; l < 4 * n; l++) {
-                    double phi_out = l * 2.0 * std::numbers::pi / (4 * n);
+                    const double phi_out = l * 2.0 * std::numbers::pi / (4 * n);
                     double red, green, blue;
                     lookup_brdf_val(brdf, theta_in, phi_in, theta_out, phi_out, red, green, blue);
                     //RGBVal = new std::map<std::tuple<short, short, short, short>, std::tuple<float, float, float>>();
-                    RGBVal->insert({
-                                           std::make_tuple(
-                                                   static_cast<short>(std::round(theta_in * 10000)),
-                                                   static_cast<short>(std::round(phi_in * 10000)),
-                                                   static_cast<short>(std::round(theta_out * 10000)),
-                                                   static_cast<short>(std::round(phi_out * 10000))
-                                           ), std::make_tuple(static_cast<float>(red), static_cast<float>(green),
-                                                              static_cast<float>(blue))
-                                   });
-                    //printf("%f %f %f\n", (float)red, (float)green, (float)blue);
+
+                    const auto theta_in_s = static_cast<short>(std::round(theta_in * 10000));
+                    const auto phi_in_s = static_cast<short>(std::round(phi_in * 10000));
+                    const auto theta_out_s = static_cast<short>(std::round(theta_out * 10000));
+                    const auto phi_out_s = static_cast<short>(std::round(phi_out * 10000));
+
+                    if (theta_in_s >= BOUNDRY_LOW_THETA && theta_in_s <= BOUNDRY_HIGH_THETA)
+                        if (theta_out_s >= BOUNDRY_LOW_THETA && theta_out_s <= BOUNDRY_HIGH_THETA)
+                            if (phi_in_s >= BOUNDRY_LOW_PHI && phi_in_s <= BOUNDRY_HIGH_PHI)
+                                if (phi_out_s >= BOUNDRY_LOW_PHI && phi_out_s <= BOUNDRY_HIGH_PHI) {
+                                    RGBVal->insert({std::make_tuple(theta_in_s, phi_in_s, theta_out_s, phi_out_s),
+                                        std::make_tuple(static_cast<float>(red), static_cast<float>(green), static_cast<float>(blue))});
+                                    availThetaIn->insert(theta_in_s);
+                                    availPhiIn->insert(phi_in_s);
+                                    availThetaOut->insert(theta_out_s);
+                                    availPhiOut->insert(phi_out_s);
+                                    //coutLogger->writeInfoEntry(std::to_string(static_cast<float>(red)) + " " + std::to_string(static_cast<float>(green)) + " " + std::to_string(static_cast<float>(blue)));
+                                }
                 }
             }
         }
     }
     free(brdf);
 }
-// Copyright 2005 MERL ends here
+*/
 

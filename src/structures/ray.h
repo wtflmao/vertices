@@ -33,6 +33,8 @@ private:
     Point ancestor = BigO;
     int scatteredLevel = 0;
     std::array<double, spectralBands> intensity_p = {};
+    Point sourcePixelPosInGnd = BigO;
+    void *sourcePixel = nullptr;
 
 public:
 
@@ -43,6 +45,10 @@ public:
 
     Ray(const Point &origin, const Vec &direction,
         std::array<double, spectralBands> intensity_p) noexcept;
+
+    [[nodiscard]] void *getSourcePixel() const noexcept;
+
+    Ray &setSourcePixel(void *p) noexcept;
 
     Ray() noexcept;
 
@@ -72,7 +78,13 @@ public:
 
     [[nodiscard]] const std::array<double, spectralBands> &getIntensity_p() const noexcept;
 
+    [[nodiscard]] std::array<double, spectralBands> &getMutIntensity_p() noexcept;
+
     Ray &setAncestor(const Point &ancestor_t) noexcept;
+
+    [[nodiscard]] const Point &getSourcePixelPosInGnd() const noexcept;
+
+    Ray &setSourcePixelPosInGnd(const Point &t) noexcept;
 
     Ray &setOrigin(const Point &origin_t) noexcept;
 
