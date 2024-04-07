@@ -27,7 +27,7 @@ constexpr double FACTOR = 1.0;
 
 class Camera final {
 private:
-    ImagePlane imgPlane;
+    std::unique_ptr<ImagePlane> imgPlane_u;
     std::shared_ptr<std::vector<std::vector<Pixel> > > pixel2D;
 
 public:

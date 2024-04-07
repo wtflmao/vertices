@@ -15,13 +15,8 @@ std::vector<std::vector<Point> > &ImagePlane::getSamplePoints() noexcept {
     return samplePoints;
 }
 
-std::vector<std::vector<std::shared_ptr<Pixel> > > ImagePlane::getSamplePointsPixel() noexcept {
+std::vector<std::vector<Pixel *> > ImagePlane::getMutSamplePointsPixel() noexcept {
     return toPixel_p;
-}
-
-ImagePlane &ImagePlane::setAPixel(const std::shared_ptr<Pixel> &p, const int x, const int y) noexcept {
-    toPixel_p.at(x).at(y) = p;
-    return *this;
 }
 
 const Point &ImagePlane::getPlaneCenter() const noexcept {
@@ -68,11 +63,11 @@ ImagePlane &ImagePlane::setOY(const Vec &v) noexcept {
     return *this;
 }
 
-ImagePlane::ImagePlane() {
-    buildImagePlane();
+ImagePlane::ImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a) {
+    buildImagePlane(a);
 };
 
-ImagePlane &ImagePlane::buildImagePlane() noexcept {
+ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a) noexcept {
     coutLogger->writeInfoEntry("picElemX and Y: " + std::to_string(picElemX) + " " + std::to_string(picElemY));
 
     // to make sure that the Xcount and Ycount are even numbers
@@ -97,7 +92,7 @@ ImagePlane &ImagePlane::buildImagePlane() noexcept {
         for (int j = -Ycount / 2, colCnt = 0; j <= Ycount / 2; j++) {
             auto source = getOY() * j + (getOX() * i + getPlaneCenter());
             row.emplace_back(source);
-            rowForToPixel.emplace_back(nullptr);
+            rowForToPixel.push_back(nullptr);
 
             //std::ostringstream s;
             //s << "source: " << source;
@@ -121,8 +116,9 @@ std::vector<Ray> *ImagePlane::shootRays(const int N) const noexcept {
                         .setAncestor(source)
                         .setDirection(planeNormal)
                         .setScatteredLevel(CAMERA_RAY_STARTER_SCATTER_LEVEL)
-                        .setSourcePixelPosInGnd(toPixel_p[i][j]->getPosInGnd())
-                        .setSourcePixel(static_cast<void *>(toPixel_p[i][j].get()));
+                        // TODO: this line below encountered SIGSEGV
+                        //.setSourcePixelPosInGnd(toPixel_p[i][j]->getPosInGnd())
+                        .setSourcePixel(static_cast<void *>(toPixel_p[i][j]));
                 rays->push_back(ray);
             }
         }

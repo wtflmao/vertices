@@ -267,23 +267,25 @@ Camera::Camera() {
 
 Camera::Camera() {
     // first initialize samplePoints from ImagePlane
-    imgPlane = ImagePlane();
+    pixel2D = std::make_shared<std::vector<std::vector<Pixel> > >();
+    imgPlane_u = std::make_unique<ImagePlane>(pixel2D);
+    auto imgPlane = *imgPlane_u;
     // then initialize Pixel2D (real objects) and toPixel_p (just pointters to real object) from ImagePlane
     for (int i = 0; i < imgPlane.getCountX(); i++) {
-        // TODO: this emplace_back() encountered a SIGSEGV, but i gtg
         pixel2D->emplace_back();
-        coutLogger->writeInfoEntry("normal here");
+        //coutLogger->writeInfoEntry("normal here");
         for (int j = 0; j < imgPlane.getCountY(); j++) {
-            pixel2D->at(i).emplace_back();
-            auto sourcePoint = imgPlane.getSamplePoints().at(i).at(j);
+            (*pixel2D)[i].emplace_back();
+            auto sourcePoint = imgPlane.getSamplePoints()[i][j];
             // TODO: use real X and Y, insteal of wrong X and Y;  Z is correct btw.
             // TODO: edit: Now X and Y should be OK
             sourcePoint.setZ(sourcePoint.getZ() + CAM_IMG_DISTANCE)
                     .setX(sourcePoint.getX() * 1e-6)
                     .setY(sourcePoint.getY() * 1e-6);
-            coutLogger->writeInfoEntry("normal here222");
-            pixel2D->at(i).at(j).setPosInGnd(sourcePoint);
-            imgPlane.getSamplePointsPixel().at(i).at(j) = std::make_shared<Pixel>(pixel2D->at(i).at(j));
+            //coutLogger->writeInfoEntry("normal here222");
+            (*pixel2D)[i][j].setPosInGnd(sourcePoint);
+            //imgPlane.getMutSamplePointsPixel()[i][j] = std::make_shared<Pixel>((*pixel2D)[i][j]);
+            imgPlane.getMutSamplePointsPixel()[i][j] = &((*pixel2D)[i][j]);
         }
     }
     buildSunlightSpectrum();
@@ -412,7 +414,7 @@ double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
 }
 
 std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
-    return imgPlane.shootRays(multiplier);
+    return imgPlane_u->shootRays(multiplier);
 }
 
 Camera &Camera::addSingleRaySpectralRespToPixel(Ray &ray) noexcept {

@@ -32,16 +32,14 @@ private:
     // sample points are where ORIGINAL rays are started
     // they all haven't initialized
     std::vector<std::vector<Point>> samplePoints;
-    std::vector<std::vector<std::shared_ptr<Pixel> > > toPixel_p;
+    std::vector<std::vector<Pixel *> > toPixel_p;
 
     int countX = 0, countY = 0;
 
 public:
     [[nodiscard]] std::vector<std::vector<Point> > &getSamplePoints() noexcept;
 
-    std::vector<std::vector<std::shared_ptr<Pixel> > > getSamplePointsPixel() noexcept;
-
-    ImagePlane &setAPixel(const std::shared_ptr<Pixel> &p, int x, int y) noexcept;
+    std::vector<std::vector<Pixel *> > getMutSamplePointsPixel() noexcept;
 
     [[nodiscard]] const Point &getPlaneCenter() const noexcept;
 
@@ -63,9 +61,9 @@ public:
 
     ImagePlane &setOY(const Vec &v) noexcept;
 
-    ImagePlane();
+    explicit ImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a);
 
-    ImagePlane &buildImagePlane() noexcept;
+    ImagePlane &buildImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a) noexcept;
 
     [[nodiscard]] std::vector<Ray> *shootRays(int N = 1) const noexcept;
 };

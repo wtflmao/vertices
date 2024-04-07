@@ -380,6 +380,9 @@ int main() {
     //auto rays_r = camera.shootRaysRandom();
     auto rays_r = camera.shootRays(1);
     rays->insert(rays->end(), rays_r->begin(), rays_r->end());
+    coutLogger->writeInfoEntry(
+        "The rays_r's size is " + std::to_string(rays_r->size()) + " and teh rays's size is " + std::to_string(
+            rays->size()));
     delete rays_r;
     rays_r = nullptr;
     if (rays->empty()) {

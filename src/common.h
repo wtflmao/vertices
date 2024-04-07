@@ -58,7 +58,7 @@ constexpr int WAVELENGTH_STEP = (LOWER_WAVELENGTH - UPPER_WAVELENGTH) / spectral
 
 // VERTICES_CAMERA_H
 // this eight means the first pixel's height
-constexpr double CAMERA_HEIGHT = 30;
+constexpr double CAMERA_HEIGHT = 300;
 // pixel distance in micron 6969
 constexpr double pixelSize = 6.9;
 // GSD in meter
