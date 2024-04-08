@@ -15,7 +15,7 @@ std::vector<std::vector<Point> > &ImagePlane::getSamplePoints() noexcept {
     return samplePoints;
 }
 
-std::vector<std::vector<Pixel *> > ImagePlane::getMutSamplePointsPixel() noexcept {
+std::vector<std::vector<Pixel *> > &ImagePlane::getMutSamplePointsPixel() noexcept {
     return toPixel_p;
 }
 
@@ -71,8 +71,8 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
     coutLogger->writeInfoEntry("picElemX and Y: " + std::to_string(picElemX) + " " + std::to_string(picElemY));
 
     // to make sure that the Xcount and Ycount are even numbers
-    auto Xcount = static_cast<int>(FIELD_LENGTH_X / picElemX);
-    auto Ycount = static_cast<int>(FIELD_LENGTH_Y / picElemY);
+    auto Xcount = std::min(static_cast<int>(FIELD_LENGTH_X / picElemX), 20);
+    auto Ycount = std::min(static_cast<int>(FIELD_LENGTH_Y / picElemY), 20);
     if (Xcount == 0) Xcount = 2;
     if (Ycount == 0) Ycount = 2;
     if (Xcount % 2 == 1) Xcount++;
@@ -116,9 +116,10 @@ std::vector<Ray> *ImagePlane::shootRays(const int N) const noexcept {
                         .setAncestor(source)
                         .setDirection(planeNormal)
                         .setScatteredLevel(CAMERA_RAY_STARTER_SCATTER_LEVEL)
-                        // TODO: this line below encountered SIGSEGV
-                        //.setSourcePixelPosInGnd(toPixel_p[i][j]->getPosInGnd())
                         .setSourcePixel(static_cast<void *>(toPixel_p[i][j]));
+                // TODO: this line below encountered SIGSEGV
+                //.setSourcePixelPosInGnd(toPixel_p[i][j]->getPosInGnd());
+                static_cast<Pixel *>(ray.getSourcePixel())->setPosInGnd(toPixel_p[i][j]->getPosInGnd());
                 rays->push_back(ray);
             }
         }

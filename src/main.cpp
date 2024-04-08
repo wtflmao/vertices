@@ -291,7 +291,8 @@ int main() {
                 if (NO_INTERSECT != intersection) {
                     ray.setRayStopPoint(intersection);
                     std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
-                    const auto scatteredRays = ray.scatter(face, intersection, field.brdfList.at(obj.brdfIdx));
+                    const auto scatteredRays = ray.scatter(face, intersection, field.brdfList.at(obj.brdfIdx),
+                                                           ray.getSourcePixel());
                     for (int j = 0; j < scatteredRays.size(); j++) {
                         bool flag = false;
                         for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
@@ -342,8 +343,9 @@ int main() {
                                 << intersection << std::endl;
                         for (const auto scatteredRays = ray.scatter(*face,
                                                                     intersection,
-                                                                    field.brdfList.at(face->faceBRDF));
-                                const auto &ray_sp:
+                                                                    field.brdfList.at(face->faceBRDF),
+                                                                    ray.getSourcePixel());
+                             const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
@@ -378,6 +380,7 @@ int main() {
     std::cout << ">>>>>>>>>>the fovs are " << FOVx << " " << FOVy << std::endl;
     // after this there should be resolution X*Y rays
     //auto rays_r = camera.shootRaysRandom();
+
     auto rays_r = camera.shootRays(1);
     rays->insert(rays->end(), rays_r->begin(), rays_r->end());
     coutLogger->writeInfoEntry(
@@ -389,6 +392,19 @@ int main() {
         std::cout << "trying to deref a nullptr in main() from camera.shootRays() call\a" << std::endl;
         return 8;
     }
+
+    Ray tmp;
+    //tmp.setOrigin({0, 0, 3}).setDirection(Vec({0, 0, -1})).setIntensity_p(camera.sunlightSpectrum).setAncestor({0, 0, 3}).setScatteredLevel(1).setSourcePixel(static_cast<void*>(&camera.getPixel2D()->at(camera.getPixel2D()->size()/2).at(camera.getPixel2D()->size()/2)));
+    tmp.setOrigin({0, 0, 3}).setDirection(Vec({0, 0, -1})).setIntensity_p(camera.sunlightSpectrum).
+            setAncestor({0, 0, 3}).setScatteredLevel(1).
+            setSourcePixel(static_cast<void *>(&camera.getPixel2D()->at(0).at(0))).setSourcePixelPosInGnd(
+                static_cast<Pixel *>(tmp.getSourcePixel())->getPosInGnd());
+    rays->push_back(tmp);
+
+    coutLogger->writeInfoEntry(
+        "camrea.pixel2d size:" + std::to_string(camera.getPixel2D()->size()) + " " + std::to_string(
+            camera.getPixel2D()->at(0).size()));
+
     auto goodRays_t = new std::vector<Ray>();
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
@@ -461,7 +477,8 @@ int main() {
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
                         for (const auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
-                                                                        face->faceBRDF)); const auto &ray_sp:
+                                                                        face->faceBRDF),
+                                                                    ray.getSourcePixel()); const auto &ray_sp:
                              scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
@@ -553,21 +570,36 @@ int main() {
     rays = nullptr;
 
     // sum up every pixel's spectrum response
-    for (auto &ray: *goodRays) {
-        // calc the ray's spectrum response
-        camera.addSingleRaySpectralRespToPixel(ray);
+    {
+        int i = 0;
+        for (auto &ray: *goodRays) {
+            std::cout << "goodRays[" << i++ << "]" << std::endl;
+            for (auto &r: ray.getIntensity_p()) {
+                std::cout << r << " ";
+            }
+            std::cout << std::endl;
+            // calc the ray's spectrum response
+            camera.addSingleRaySpectralRespToPixel(ray);
+        }
     }
 
+    for (auto &a: camera.sunlightSpectrum) {
+        std::cout << a << " ";
+    }
+    std::cout << std::endl;
+
+
     // show the camera's spectrum response by every pixel
-    for (int i = 0; i < spectralBands; i += 10) {
-        std::cout << "Spectrum response at " << i << "th band:" << std::endl;
+    for (int i = 0; i < spectralBands; i += 20) {
+        std::cout << "For every pixel, spectrum response at " << i << "th band:" << std::endl;
         for (auto &row: *camera.getPixel2D()) {
             for (auto &col: row) {
-                std::cout << col.getPixelSpectralResp().at(i) << " ";
+                std::cout << col.getPixelSpectralResp()[i] << " ";
             }
             std::cout << std::endl;
         }
     }
+
 
 
     coutLogger->writeInfoEntry("Goodbye!");

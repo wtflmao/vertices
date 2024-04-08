@@ -241,7 +241,7 @@ inline double reflectanceCorrection(const double x) {
 // returns a Ray object
 // ior means index of refraction, for materials that non-transparent we set ior = 1.0
 std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point &intersection,
-                                               BRDF *itemBRDF) const {
+                                               BRDF *itemBRDF, void *sourcePixel_p) const {
     if (scatteredLevel >= 2) {
         //std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
         return {std::array<Ray, SCATTER_RAYS + 1>{}};
@@ -440,6 +440,23 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         //        " "
         //        << theRays[i].intensity_p[0] << std::endl;
         //}
+    }
+
+    // set a ponter to source pixel
+    if (sourcePixel_p != nullptr) {
+        for (auto &ray: theRays) {
+            ray.setSourcePixel(sourcePixel_p);
+        }
+    } else {
+        if (sourcePixel != nullptr) {
+            for (auto &ray: theRays) {
+                ray.setSourcePixel(sourcePixel);
+            }
+        } else {
+            // trying to find the Pixel by Pixel's position
+            coutLogger->writeErrorEntry(
+                "in Ray::scatter() the class member `void* sourcePixel` AND fallback argument `void* sourcePixel_p` both are nullptr");
+        }
     }
     return theRays;
 }

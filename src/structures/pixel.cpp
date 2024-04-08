@@ -144,16 +144,19 @@ Ray Pixel::shootRayFromPixel(const Vec &directionVec,
 }
 
 Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
-                                         const std::array<double, spectralBands> &sunlightSpectrum) const noexcept {
-    const auto posInGnd = coordTransform->camToGnd(posInCam);
+                                         const std::array<double, spectralBands> &sunlightSpectrum,
+                                         Pixel *pixel_p) const noexcept {
+    const auto posInGnd = BigO;
     auto ray = Ray{};
 
     // build up the current ray
     ray.setOrigin(posInGnd)
             .setAncestor(posInGnd)
             .setIntensity_p(sunlightSpectrum)
-            //.setDirection(uniformHemisphereDirection(directionVec));
-            .setDirection(Vec{Point{0, -1.732, -1}});
+            .setScatteredLevel(CAMERA_RAY_STARTER_SCATTER_LEVEL)
+            .setSourcePixel(pixel_p)
+            .setSourcePixelPosInGnd(pixel_p->getPosInGnd())
+            .setDirection(directionVec);
 
     // RVO happens here, don't worry about value-returning
     return ray;
@@ -161,9 +164,7 @@ Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
 
 Pixel &Pixel::addRaySpectralResp(Ray &ray) noexcept {
     auto &resp = getMutPixelSpectralResp();
-    int i = 0;
-    for (auto &val: resp) {
-        val += ray.getMutIntensity_p().at(i++);
-    }
+    for (int i = 0; i < resp.size(); i++)
+        resp[i] += ray.getIntensity_p()[i];
     return *this;
 }

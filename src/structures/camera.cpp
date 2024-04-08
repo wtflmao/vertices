@@ -284,8 +284,9 @@ Camera::Camera() {
                     .setY(sourcePoint.getY() * 1e-6);
             //coutLogger->writeInfoEntry("normal here222");
             (*pixel2D)[i][j].setPosInGnd(sourcePoint);
+            imgPlane.getMutSamplePointsPixel().at(i).at(j) = &pixel2D->at(i).at(j);
             //imgPlane.getMutSamplePointsPixel()[i][j] = std::make_shared<Pixel>((*pixel2D)[i][j]);
-            imgPlane.getMutSamplePointsPixel()[i][j] = &((*pixel2D)[i][j]);
+            //imgPlane.getMutSamplePointsPixel()[i][j] = &((*pixel2D)[i][j]);
         }
     }
     buildSunlightSpectrum();
@@ -414,7 +415,68 @@ double Camera::realOverlappingRatio(const Point &p1, const Point &p2) {
 }
 
 std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
-    return imgPlane_u->shootRays(multiplier);
+    //return imgPlane_u->shootRays(multiplier);
+
+    // I should use multi-threading to accelerate
+    // this takes soooooo long I can't bear it when debugging
+    const auto &planeNormVec = imgPlane_u->getPlaneNormal();
+    auto rays = new std::vector<Ray>;
+    /*
+    for (int i = 0; i < multiplier; i++)
+        for (auto &pixelRow: *pixel2D) {
+            for (auto &pixel: pixelRow) {
+                rays->push_back(pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+            }
+        }
+    */
+    dp::thread_pool pool(std::max(std::thread::hardware_concurrency(), 1u));
+    auto results = new std::vector<std::future<std::vector<Ray> *> >;
+    //auto arrayOfRays = new std::vector<std::vector<Ray>*>;
+    //arrayOfRays->reserve(pixel2D->size());
+    //for (auto &item: *arrayOfRays)
+    //    item = new std::vector<Ray>;
+
+    //std::vector<std::jthread> threads;
+
+    for (int n = 0; n < multiplier; n++) {
+        for (int i = 0; i < pixel2D->size(); i++) {
+            /*threads.emplace_back([&, i]() {
+                for (auto &pixel: pixel2D->at(i)) {
+                    arrayOfRays->at(i)->push_back(pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+                }
+            });*/
+            results->emplace_back(pool.enqueue([&](int j) {
+                auto raysForThisThread = new std::vector<Ray>;
+                for (auto &pixel: pixel2D->at(j)) {
+                    raysForThisThread->push_back(
+                        pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+                }
+                return raysForThisThread;
+            }, i));
+        }
+    }
+
+    //coutLogger->writeInfoEntry("Camera::shootRays() created " + std::to_string(threads.size()) + " threads");
+    coutLogger->writeInfoEntry("Camera::shootRays() created " + std::to_string(pool.size()) + " threads");
+
+    // now we await for all the threads to exit
+    for (auto &result: *results) {
+        auto data = result.get();
+        rays->insert(rays->end(), data->begin(), data->end());
+        delete data;
+    }
+    /*for (auto& thread : threads) {
+        thread.join();
+    }*/
+
+    /*for (auto & rayVec: *arrayOfRays) {
+        for (auto &ray: *rayVec)
+            rays->push_back(ray);
+        delete rayVec;
+    }*/
+    //delete arrayOfRays;
+
+    return rays;
 }
 
 Camera &Camera::addSingleRaySpectralRespToPixel(Ray &ray) noexcept {

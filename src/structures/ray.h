@@ -32,7 +32,7 @@ private:
     // ancestor indicates where is this ray's ancestor(the one has the lowest scatter level) starts
     Point ancestor = BigO;
     int scatteredLevel = 0;
-    std::array<double, spectralBands> intensity_p = {};
+    std::array<double, spectralBands> intensity_p = {0.0};
     Point sourcePixelPosInGnd = BigO;
     void *sourcePixel = nullptr;
 
@@ -64,7 +64,7 @@ public:
         int scatteredCount);
 
     [[nodiscard]] std::array<Ray, SCATTER_RAYS + 1> scatter(const Triangle &tri, const Point &intersection,
-                                                            BRDF *itemBRDF) const;
+                                                            BRDF *itemBRDF, void *sourcePixel = nullptr) const;
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;
 

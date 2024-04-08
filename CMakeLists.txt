@@ -55,4 +55,5 @@ add_executable(vertices src/main.cpp
         src/logger/filesystemLogger.h
         src/structures/imagePlane.cpp
         src/structures/imagePlane.h
+        lib/thread_pool/thread_pool.h
 )
