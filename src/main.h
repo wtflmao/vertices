@@ -17,12 +17,21 @@
 #include "structures/camera.h"
 #include "basic/coordTransform.h"
 #include "basic/BRDF.h"
+//#include "../lib/thread_pool/thread_pool.h"
+#include "basic/threadPool.h"
 
 #include <iostream>
 #include <array>
 #include <vector>
 #include <chrono>
 #include <memory>
+#include <thread>
+#include <future>
+
+struct wrappedRays {
+    std::vector<Ray> rays;
+    bool done = false;
+};
 
 
 const Point NO_INTERSECT = Point(DBL_MAX, DBL_MAX, DBL_MAX);

@@ -11,8 +11,139 @@
 
 #include "main.h"
 
-int main() {
+void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
+             const std::vector<std::pair<std::vector<Ray>::iterator, std::vector<Ray>::iterator> > &constSubVecs,
+             int idx, wrappedRays *ret) {
+    auto goodRays_per_thread = new std::vector<Ray>();
+    for (auto it = constSubVecs.at(idx).first; it != constSubVecs.at(idx).second; ++it) {
+        //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
+        // get one ray at a time to avoid memory overhead
+        //auto ray = Ray();
+        //if (cnt < resolutionX * resolutionY) {
+        //ray = camera.shootRayRandom(cnt++);
+        //ray.ancestor = ray.getOrigin();
+        //rayIndex--;
+        //} else {
+        // now every raw ray from camera has been investigated, traverse the rays vector
+        bool flag = true;
+        flag = false;
+        Ray ray = *it;
+        //}
+        // Iterate over all nodes(boxes) and using BVH algorithm
+        for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
+            auto &node = node_ptrs[nodeIndex];
+            // Check if the ray intersects with the node (box)
+            if (ray.intersectsWithBox(node->bbox)) {
+                // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
+                for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
+                    auto &face = node->boxedFaces[faceIndex];
+                    if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
+                        ray.setRayStopPoint(intersection);
+                        //std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
+                        //        << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
+                        // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the matching real pixel from camrea
+                        Ray ray_t = Ray(intersection, Vec(intersection, ray.getSourcePixelPosInGnd()));
+                        ray_t.setAncestor(ray.getAncestor());
+                        bool validity = true;
+                        Point intersection_t = BigO;
+                        for (int nodeIndex_t = 0; nodeIndex_t < field.nodeCount && validity; nodeIndex_t++) {
+                            auto &node_t = node_ptrs.at(nodeIndex_t);
+                            // Check if the ray intersects with the node (box)
+                            if (ray_t.intersectsWithBox(node_t->bbox)) {
+                                // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
+                                for (int faceIndex_t = 0;
+                                     faceIndex_t < node_t->boxedFaces.size() && validity; faceIndex_t++) {
+                                    auto &face_t = node_t->boxedFaces.at(faceIndex_t);
+                                    if (intersection_t = ray_t.mollerTrumboreIntersection(*face_t); (
+                                        NO_INTERSECT != intersection_t && intersection_t != intersection)) {
+                                        // bad, has intersection, the original ray is not valid
+                                        validity = false;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                // If not intersects, skip all children
+                                nodeIndex_t += node_t->boxedFaces.size();
+                            }
+                        }
+                        //std::cout << "(";
+                        if (validity) {
+                            goodRays_per_thread->push_back(ray);
+                            //std::cout << goodCnt++;
+                        } else {
+                            //std::cout << "  ";
+                        }
+                        //std::cout << "," << totCnt++ << ")";
+                        //std::cout << std::endl;
 
+                        // here we handle the scattered rays
+                        // the intensity for every scattered rays should be determined by BRDF(....)
+                        for (const auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
+                                                                        face->faceBRDF),
+                                                                    ray.getSourcePixel()); const auto &ray_sp:
+                             scatteredRays) {
+                            for (int j = 0; j < scatteredRays.size(); j++) {
+                                bool flag_tt = false;
+                                for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
+                                    if (scatteredRays.at(j).getIntensity_p().at(k) > 1e-10) flag_tt = true;
+                                if (flag_tt) {
+                                    //rays->push_back(scatteredRays[j]);
+                                    // for 2+ scattered rays, the source of them is not THE SUN but the original ray
+                                    // so, eh, yeah, IDK how to write this, whatever, just see the code below
+                                    Ray ray_tt = scatteredRays.at(j);
+                                    ray_tt.setAncestor(ray_t.getAncestor());
+                                    bool validity_tt = false;
+                                    for (int nodeIndex_tt = 0;
+                                         nodeIndex_tt < field.nodeCount && !validity_tt; nodeIndex_tt++) {
+                                        auto &node_tt = node_ptrs.at(nodeIndex_tt);
+                                        // Check if the ray intersects with the node (box)
+                                        if (ray_tt.intersectsWithBox(node_tt->bbox)) {
+                                            // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
+                                            for (int faceIndex_tt = 0;
+                                                 faceIndex_tt < node_tt->boxedFaces.size() &&
+                                                 !validity_tt; faceIndex_tt++) {
+                                                auto &face_tt = node_tt->boxedFaces.at(faceIndex_tt);
+                                                if (auto intersection_tt = ray_tt.mollerTrumboreIntersection(
+                                                    *face_tt); (
+                                                    NO_INTERSECT != intersection_tt &&
+                                                    intersection_tt != intersection_t)) {
+                                                    // good, scatter ray has intersection
+                                                    validity_tt = true;
+                                                    break;
+                                                }
+                                            }
+                                        } else {
+                                            // If not intersects, skip all children
+                                            nodeIndex_tt += node_tt->boxedFaces.size();
+                                        }
+                                    }
+                                    //std::cout << "(";
+                                    if (validity_tt) {
+                                        goodRays_per_thread->push_back(ray_tt);
+                                        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.intensity_p.at(0), ray_tt.intensity_p.at(std::round(0.2*spectralBands)), ray_tt.intensity_p.at(0.75*spectralBands), ray_tt.scatteredLevel);
+                                        //std::cout << goodCnt++;
+                                    } else {
+                                        //std::cout << "  ";
+                                    }
+                                    //std::cout << "," << totCnt++ << ")";
+                                    //std::cout << std::endl;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // If not intersects, skip all children
+                nodeIndex += node->boxedFaces.size();
+            }
+        }
+    }
+    //return goodRays_per_thread;
+    ret->rays = std::move(*goodRays_per_thread);
+    ret->done = true;
+}
+
+int main() {
     // ===== debug only start =====
     coutLogger->writeInfoEntry("Hello there!");
 
@@ -123,7 +254,7 @@ int main() {
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
 
-    field.newOpenObject()
+    /*field.newOpenObject()
             .setOBJPath(objPaths.at(1))
             .setMTLPath(mtlPaths.at(0))
             .setForwardAxis(6)
@@ -141,6 +272,7 @@ int main() {
                                            field.getObjects().back().getFaces().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
+                                           */
 
     /*field.insertObject(
         objPaths[2],
@@ -405,143 +537,67 @@ int main() {
         "camrea.pixel2d size:" + std::to_string(camera.getPixel2D()->size()) + " " + std::to_string(
             camera.getPixel2D()->at(0).size()));
 
-    auto goodRays_t = new std::vector<Ray>();
 
     std::cout << "-------Camera----using----BVH----method----to-----accelerate--------" << std::endl;
     // only for timing
     start = std::chrono::high_resolution_clock::now();
 
     int cnt = 0;
-    bool flag = true;
     int goodCnt = 0, totCnt = 0;
     // use BVH to accelerate the determination of whether the ray intersecting
-    for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
-        // get one ray at a time to avoid memory overhead
-        //auto ray = Ray();
-        //if (cnt < resolutionX * resolutionY) {
-        //ray = camera.shootRayRandom(cnt++);
-        //ray.ancestor = ray.getOrigin();
-        //rayIndex--;
-        //} else {
-        // now every raw ray from camera has been investigated, traverse the rays vector
-        flag = false;
-        auto ray = rays->at(rayIndex);
-        //}
-        // Iterate over all nodes(boxes) and using BVH algorithm
-        for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
-            auto &node = node_ptrs[nodeIndex];
-            // Check if the ray intersects with the node (box)
-            if (ray.intersectsWithBox(node->bbox)) {
-                // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
-                for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
-                    auto &face = node->boxedFaces[faceIndex];
-                    if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
-                        ray.setRayStopPoint(intersection);
-                        //std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
-                        //        << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
-                        // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the matching real pixel from camrea
-                        Ray ray_t = Ray(intersection, Vec(intersection, ray.getSourcePixelPosInGnd()));
-                        ray_t.setAncestor(ray.getAncestor());
-                        bool validity = true;
-                        Point intersection_t = BigO;
-                        for (int nodeIndex_t = 0; nodeIndex_t < field.nodeCount && validity; nodeIndex_t++) {
-                            auto &node_t = node_ptrs.at(nodeIndex_t);
-                            // Check if the ray intersects with the node (box)
-                            if (ray_t.intersectsWithBox(node_t->bbox)) {
-                                // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
-                                for (int faceIndex_t = 0;
-                                     faceIndex_t < node_t->boxedFaces.size() && validity; faceIndex_t++) {
-                                    auto &face_t = node_t->boxedFaces.at(faceIndex_t);
-                                    if (intersection_t = ray_t.mollerTrumboreIntersection(*face_t); (
-                                            NO_INTERSECT != intersection_t && intersection_t != intersection)) {
-                                        // bad, has intersection, the original ray is not valid
-                                        validity = false;
-                                        break;
-                                    }
-                                }
-                            } else {
-                                // If not intersects, skip all children
-                                nodeIndex_t += node_t->boxedFaces.size();
-                            }
-                        }
-                        //std::cout << "(";
-                        if (validity) {
-                            goodRays_t->push_back(ray);
-                            //std::cout << goodCnt++;
-                        } else {
-                            //std::cout << "  ";
-                        }
-                        //std::cout << "," << totCnt++ << ")";
-                        //std::cout << std::endl;
+    coutLogger->writeInfoEntry(std::to_string(rays->size()));
 
-                        // here we handle the scattered rays
-                        // the intensity for every scattered rays should be determined by BRDF(....)
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
-                                                                        face->faceBRDF),
-                                                                    ray.getSourcePixel()); const auto &ray_sp:
-                             scatteredRays) {
-                            for (int j = 0; j < scatteredRays.size(); j++) {
-                                bool flag_tt = false;
-                                for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
-                                    if (scatteredRays.at(j).getIntensity_p().at(k) > 1e-10) flag_tt = true;
-                                if (flag_tt) {//rays->push_back(scatteredRays[j]);
-                                    // for 2+ scattered rays, the source of them is not THE SUN but the original ray
-                                    // so, eh, yeah, IDK how to write this, whatever, just see the code below
-                                    Ray ray_tt = scatteredRays.at(j);
-                                    ray_tt.setAncestor(ray_t.getAncestor());
-                                    bool validity_tt = false;
-                                    for (int nodeIndex_tt = 0;
-                                         nodeIndex_tt < field.nodeCount && !validity_tt; nodeIndex_tt++) {
-                                        auto &node_tt = node_ptrs.at(nodeIndex_tt);
-                                        // Check if the ray intersects with the node (box)
-                                        if (ray_tt.intersectsWithBox(node_tt->bbox)) {
-                                            // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
-                                            for (int faceIndex_tt = 0;
-                                                 faceIndex_tt < node_tt->boxedFaces.size() &&
-                                                 !validity_tt; faceIndex_tt++) {
-                                                auto &face_tt = node_tt->boxedFaces.at(faceIndex_tt);
-                                                if (auto intersection_tt = ray_tt.mollerTrumboreIntersection(
-                                                            *face_tt); (
-                                                        NO_INTERSECT != intersection_tt &&
-                                                        intersection_tt != intersection_t)) {
-                                                    // good, scatter ray has intersection
-                                                    validity_tt = true;
-                                                    break;
-                                                }
-                                            }
-                                        } else {
-                                            // If not intersects, skip all children
-                                            nodeIndex_tt += node_tt->boxedFaces.size();
-                                        }
-                                    }
-                                    //std::cout << "(";
-                                    if (validity_tt) {
-                                        goodRays_t->push_back(ray_tt);
-                                        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.intensity_p.at(0), ray_tt.intensity_p.at(std::round(0.2*spectralBands)), ray_tt.intensity_p.at(0.75*spectralBands), ray_tt.scatteredLevel);
-                                        //std::cout << goodCnt++;
-                                    } else {
-                                        //std::cout << "  ";
-                                    }
-                                    //std::cout << "," << totCnt++ << ")";
-                                    //std::cout << std::endl;
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                // If not intersects, skip all children
-                nodeIndex += node->boxedFaces.size();
-            }
-        }
+    //dp::thread_pool pool(std::max(std::thread::hardware_concurrency(), 1u));
+    ThreadPool pool;
+    //auto results = new std::vector<std::future<std::vector<Ray>*>>;
+    std::vector<std::future<void> > futures;
+    //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
+
+    // divide rays into CPU cores amount of smaller rays
+    const int numOfChunks = static_cast<int>(std::max(std::thread::hardware_concurrency(), 1u));
+    std::vector<std::pair<std::vector<Ray>::iterator, std::vector<Ray>::iterator> > subVectors;
+    int chunkSize = static_cast<int>(rays->size() / numOfChunks);
+    for (int i = 0; i < numOfChunks; i++) {
+        subVectors.emplace_back(rays->begin() + i * chunkSize, rays->begin() + (i + 1) * chunkSize);
     }
-    std::cout << "Rays " << rays->size() << " " << rays->capacity() << std::endl;
+    // If vector size is not divisible by numOfChunks, remaining elements go to the last chunk
+    if (rays->size() % numOfChunks != 0) {
+        subVectors.back().second = rays->end();
+    }
 
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Time taken: " << duration << "." << std::endl;
-    std::cout << "Ray count: " << rays->size() << "." << std::endl;
+    const auto &constSubVecs = subVectors;
 
+    auto groupsOfWrappedRays = new std::vector<wrappedRays>(numOfChunks);
+
+    for (int idx = 0; idx < constSubVecs.size(); idx++) {
+        auto task = [&]() {
+            return checker(std::ref(field), std::ref(node_ptrs), std::ref(constSubVecs), idx,
+                           &groupsOfWrappedRays->at(idx));
+        };
+        futures.emplace_back(pool.submit(task));
+    }
+
+    auto goodRays_t = new std::vector<Ray>;
+    for (auto &result: futures) {
+        //auto data = result.get();
+        result.get();
+        //goodRays_t->insert(goodRays_t->end(), data->begin(), data->end());
+        //delete data;
+    }
+    bool allDone = false;
+    while (!allDone) {
+        allDone = true;
+        for (auto &[rays, done]: *groupsOfWrappedRays)
+            allDone &= done;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    for (auto &[rays, done]: *groupsOfWrappedRays) {
+        goodRays_t->insert(goodRays_t->end(), rays.begin(), rays.end());
+        delete &rays;
+    }
+
+    coutLogger->writeInfoEntry("cool here");
     // clean up rays that have no spectrum response
     // I've got no idea why they're there, but they are there, so yeah
     auto goodRays = new std::vector<Ray>();
@@ -558,6 +614,13 @@ int main() {
     }
     delete goodRays_t;
     goodRays_t = nullptr;
+    end = std::chrono::high_resolution_clock::now();
+    std::cout << "GoodRays " << goodRays->size() << " " << goodRays->capacity() << std::endl;
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Time taken: " << duration << "." << std::endl;
+    std::cout << "Ray count: " << rays->size() << "." << std::endl;
+
+
 
     for (int i = 0; auto &ray: *goodRays) {
         //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray.intensity_p.at(0), ray.intensity_p.at(std::round(0.2*spectralBands)), ray.intensity_p.at(std::round(0.75*spectralBands)), ray.scatteredLevel);
