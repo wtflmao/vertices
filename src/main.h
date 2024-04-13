@@ -27,6 +27,7 @@
 #include <memory>
 #include <thread>
 #include <future>
+#include <iomanip>
 
 struct wrappedRays {
     std::vector<Ray> rays;

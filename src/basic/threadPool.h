@@ -13,9 +13,18 @@
 #include <vector>
 #include <memory>
 
-struct join_threads final
-{
-    explicit join_threads(std::vector<std::thread>&) {}
+class join_threads {
+public:
+    explicit join_threads(std::vector<std::thread> &threads) : threads_(threads) { }
+
+    ~join_threads()
+    {
+        for (auto &t : threads_)
+            if (t.joinable()) { t.join(); }
+    }
+
+private:
+    std::vector<std::thread> &threads_;
 };
 
 class ThreadPool final {
@@ -23,9 +32,10 @@ private:
     std::atomic_bool done;
     // we use our own FunctionWrapper instead of std::function here
     //ThreadSafeQueue<FunctionWrapper> work_queue;
-    ThreadSafeQueue<std::function<void()>> work_queue;
+    ThreadSafeQueue<std::function<void()> > work_queue;
     std::vector<std::thread> threads;
     join_threads joiner;
+
     void workerThread() {
         while (!done) {
             //FunctionWrapper task;
@@ -39,7 +49,7 @@ private:
 
 public:
     ThreadPool() : done(false), joiner(threads) {
-        unsigned const thread_count = std::max(1u, std::thread::hardware_concurrency());
+        unsigned const thread_count = 1;//std::max(1u, std::thread::hardware_concurrency());
         threads.reserve(thread_count);
         try {
             for (unsigned i = 0; i < thread_count; ++i)
@@ -49,31 +59,24 @@ public:
             throw;
         }
     }
+
     ~ThreadPool() {
         done = true;
+        for(auto & thread : threads){
+          if(thread.joinable()) thread.join();
+        }
     }
-    /*template<typename FunctionType>
-    std::future<std::result_of_t<FunctionType()>> submit(FunctionType f) {
-        typedef std::result_of_t<FunctionType()> result_type;
-        std::packaged_task<result_type()> task(std::move(f));
-        std::future<result_type> res(task.get_future());
-        work_queue.push(std::move(task));
-        return res;
-    }*/
-    template<typename FunctionType>
-    std::future<typename std::result_of<FunctionType()>::type> submit(FunctionType f) {
-        typedef typename std::result_of<FunctionType()>::type result_type;
 
-        auto ptask = std::make_shared<std::packaged_task<result_type()>>(std::move(f));
+    template<typename FunctionType>
+    std::future<std::invoke_result_t<FunctionType>> submit(FunctionType f) {
+        typedef std::invoke_result_t<FunctionType> result_type;
+
+        auto ptask = std::make_shared<std::packaged_task<result_type()> >(std::move(f));
         auto res = ptask->get_future();
-        //std::packaged_task<result_type()> task(std::move(f));
-        //std::future<result_type> res(task.get_future());
-        //work_queue.push(std::move(task));
         work_queue.push([ptask]() { (*ptask)(); });
         return res;
     }
 };
-
 
 
 #endif //VERTICES_THREADPOOL_H

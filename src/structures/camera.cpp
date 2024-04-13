@@ -280,8 +280,8 @@ Camera::Camera() {
             // TODO: use real X and Y, insteal of wrong X and Y;  Z is correct btw.
             // TODO: edit: Now X and Y should be OK
             sourcePoint.setZ(sourcePoint.getZ() + CAM_IMG_DISTANCE)
-                    .setX(sourcePoint.getX() * 1e-6)
-                    .setY(sourcePoint.getY() * 1e-6);
+                    .setX(sourcePoint.getX())
+                    .setY(sourcePoint.getY());
             //coutLogger->writeInfoEntry("normal here222");
             (*pixel2D)[i][j].setPosInGnd(sourcePoint);
             imgPlane.getMutSamplePointsPixel().at(i).at(j) = &pixel2D->at(i).at(j);

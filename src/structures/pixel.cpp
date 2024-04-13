@@ -146,7 +146,6 @@ Ray Pixel::shootRayFromPixel(const Vec &directionVec,
 Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
                                          const std::array<double, spectralBands> &sunlightSpectrum,
                                          Pixel *pixel_p) const noexcept {
-    const auto posInGnd = BigO;
     auto ray = Ray{};
 
     // build up the current ray

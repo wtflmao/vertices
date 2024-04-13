@@ -9,13 +9,35 @@
  * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
  */
 
+#ifndef VERTICES_CONFIG_
+#define VERTICES_CONFIG_
+
+//#define VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
+#define VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
+
+#endif
+
 #include "main.h"
 
-void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
-             const std::vector<std::pair<std::vector<Ray>::iterator, std::vector<Ray>::iterator> > &constSubVecs,
+void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, const std::vector<Ray> *rays,
+             const std::pair<int, int> &constSubVec,
              int idx, wrappedRays *ret) {
+    // advanced return if empty
+    if (constSubVec.first == constSubVec.second) {
+        ret->rays = {};
+        ret->done = true;
+        return;
+    }
+
     auto goodRays_per_thread = new std::vector<Ray>();
-    for (auto it = constSubVecs.at(idx).first; it != constSubVecs.at(idx).second; ++it) {
+    std::ostringstream s_;
+    s_<<"checker thread "<<std::this_thread::get_id()<<" started ";
+coutLogger->writeInfoEntry(s_.view());
+
+    s_<<"ANd "<<rays->size()<<" "<<constSubVec.first<<" "<<constSubVec.second;
+    coutLogger->writeInfoEntry(s_.view());
+    for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
+            //std::cout<<"it "<<it<<std::endl;
         //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
         // get one ray at a time to avoid memory overhead
         //auto ray = Ray();
@@ -27,15 +49,17 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
         // now every raw ray from camera has been investigated, traverse the rays vector
         bool flag = true;
         flag = false;
-        Ray ray = *it;
+        auto ray = rays->at(it);
         //}
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
+            //std::cout<<"nodeIndex "<<nodeIndex<<std::endl;
             auto &node = node_ptrs[nodeIndex];
             // Check if the ray intersects with the node (box)
             if (ray.intersectsWithBox(node->bbox)) {
                 // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                 for (int faceIndex = 0; faceIndex < node->boxedFaces.size(); faceIndex++) {
+                    //std::cout<<"faceIndex "<<faceIndex<<std::endl;
                     auto &face = node->boxedFaces[faceIndex];
                     if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
                         ray.setRayStopPoint(intersection);
@@ -47,12 +71,14 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         bool validity = true;
                         Point intersection_t = BigO;
                         for (int nodeIndex_t = 0; nodeIndex_t < field.nodeCount && validity; nodeIndex_t++) {
+                            //std::cout<<"nodeIndex_t "<<nodeIndex_t<<std::endl;
                             auto &node_t = node_ptrs.at(nodeIndex_t);
                             // Check if the ray intersects with the node (box)
                             if (ray_t.intersectsWithBox(node_t->bbox)) {
                                 // If intersects, iterate over all faces in this bounding box, the faces may come from diffrent objects
                                 for (int faceIndex_t = 0;
                                      faceIndex_t < node_t->boxedFaces.size() && validity; faceIndex_t++) {
+                                    //std::cout<<"faceIndex_t "<<faceIndex_t<<std::endl;
                                     auto &face_t = node_t->boxedFaces.at(faceIndex_t);
                                     if (intersection_t = ray_t.mollerTrumboreIntersection(*face_t); (
                                         NO_INTERSECT != intersection_t && intersection_t != intersection)) {
@@ -68,7 +94,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         }
                         //std::cout << "(";
                         if (validity) {
-                            goodRays_per_thread->push_back(ray);
+                            goodRays_per_thread->push_back(std::move(ray));
                             //std::cout << goodCnt++;
                         } else {
                             //std::cout << "  ";
@@ -90,7 +116,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //rays->push_back(scatteredRays[j]);
                                     // for 2+ scattered rays, the source of them is not THE SUN but the original ray
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
-                                    Ray ray_tt = scatteredRays.at(j);
+                                    auto ray_tt = scatteredRays.at(j);
                                     ray_tt.setAncestor(ray_t.getAncestor());
                                     bool validity_tt = false;
                                     for (int nodeIndex_tt = 0;
@@ -119,7 +145,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     }
                                     //std::cout << "(";
                                     if (validity_tt) {
-                                        goodRays_per_thread->push_back(ray_tt);
+                                        goodRays_per_thread->push_back(std::move(ray_tt));
                                         //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.intensity_p.at(0), ray_tt.intensity_p.at(std::round(0.2*spectralBands)), ray_tt.intensity_p.at(0.75*spectralBands), ray_tt.scatteredLevel);
                                         //std::cout << goodCnt++;
                                     } else {
@@ -138,9 +164,13 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
             }
         }
     }
+
     //return goodRays_per_thread;
     ret->rays = std::move(*goodRays_per_thread);
     ret->done = true;
+    std::ostringstream s;
+    s<<"checker thread "<<std::this_thread::get_id()<<" done"<<std::endl;
+    coutLogger->writeInfoEntry(s.view());
 }
 
 int main() {
@@ -546,7 +576,15 @@ int main() {
     int goodCnt = 0, totCnt = 0;
     // use BVH to accelerate the determination of whether the ray intersecting
     coutLogger->writeInfoEntry(std::to_string(rays->size()));
+    for (auto &ray: *rays) {
+        std::cout << "Ray " << cnt++ << ": "<< ray.getOrigin()<< " "<< ray.getAncestor() << "\n";
+    }
+    cnt = 0;
 
+    void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, const std::vector<Ray> *rays,
+                 const std::pair<int, int> &constSubVec,
+                 int idx, wrappedRays *ret);
+#ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS
     //dp::thread_pool pool(std::max(std::thread::hardware_concurrency(), 1u));
     ThreadPool pool;
     //auto results = new std::vector<std::future<std::vector<Ray>*>>;
@@ -554,36 +592,46 @@ int main() {
     //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
 
     // divide rays into CPU cores amount of smaller rays
-    const int numOfChunks = static_cast<int>(std::max(std::thread::hardware_concurrency(), 1u));
-    std::vector<std::pair<std::vector<Ray>::iterator, std::vector<Ray>::iterator> > subVectors;
+    const int numOfChunks = 1;//static_cast<int>(std::max(std::thread::hardware_concurrency(), 1u));
+    std::vector<std::pair<int, int>> subVectors;
     int chunkSize = static_cast<int>(rays->size() / numOfChunks);
     for (int i = 0; i < numOfChunks; i++) {
-        subVectors.emplace_back(rays->begin() + i * chunkSize, rays->begin() + (i + 1) * chunkSize);
+        // [left_idx, right_idx)
+        subVectors.emplace_back(i * chunkSize, (i + 1) * chunkSize);
     }
     // If vector size is not divisible by numOfChunks, remaining elements go to the last chunk
     if (rays->size() % numOfChunks != 0) {
-        subVectors.back().second = rays->end();
+        subVectors.back().second = static_cast<int>(rays->size());
     }
+    coutLogger->writeInfoEntry("subVectors size:" + std::to_string(subVectors.size()));
 
     const auto &constSubVecs = subVectors;
 
     auto groupsOfWrappedRays = new std::vector<wrappedRays>(numOfChunks);
+    for (int p = 0; p < numOfChunks; p++)
+        groupsOfWrappedRays->emplace_back();
 
     for (int idx = 0; idx < constSubVecs.size(); idx++) {
         auto task = [&]() {
-            return checker(std::ref(field), std::ref(node_ptrs), std::ref(constSubVecs), idx,
+            return checker(std::ref(field), std::ref(node_ptrs), std::ref(rays), std::ref(constSubVecs.at(idx)), idx,
                            &groupsOfWrappedRays->at(idx));
         };
         futures.emplace_back(pool.submit(task));
     }
+    coutLogger->writeInfoEntry("cool here yyy");
 
     auto goodRays_t = new std::vector<Ray>;
     for (auto &result: futures) {
-        //auto data = result.get();
-        result.get();
-        //goodRays_t->insert(goodRays_t->end(), data->begin(), data->end());
-        //delete data;
+        try {
+            result.get();
+        } catch (const std::exception& e) {
+            coutLogger->writeErrorEntry("Exception caught when at futures .wait(): " + std::string(e.what()));
+        } catch (...) {
+            coutLogger->writeErrorEntry("thread pool futures .wait() unknown exception occurred");
+        }
     }
+    coutLogger->writeInfoEntry("not cool here ddd");
+
     bool allDone = false;
     while (!allDone) {
         allDone = true;
@@ -591,13 +639,49 @@ int main() {
             allDone &= done;
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    coutLogger->writeInfoEntry("not not cool here ddddd");
 
     for (auto &[rays, done]: *groupsOfWrappedRays) {
         goodRays_t->insert(goodRays_t->end(), rays.begin(), rays.end());
         delete &rays;
     }
+    coutLogger->writeInfoEntry("not cool here ddddddd");
+#endif
+#ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
+    auto ret = new wrappedRays();
+    for (auto &ray: *rays) {
+        checker(field, node_ptrs, rays, std::make_pair(0, rays->size()), 0, ret);
+    }
+    auto *goodRays_t = &ret->rays;
 
-    coutLogger->writeInfoEntry("cool here");
+#endif
+#ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
+    std::vector<std::thread> threads;
+    std::vector<std::pair<int, int>> subVectors;
+    auto threadAmount = std::max(1u, std::thread::hardware_concurrency());
+    int chunkSize = rays->size() / threadAmount;
+    auto rets = new std::vector<wrappedRays>();
+    for (int i = 0; i < rays->size(); i+=chunkSize) {
+        // [left_idx, right_idx)
+        if (i >= rays->size()) {subVectors.emplace_back(-1, -1);}
+        else if (i + chunkSize >= rays->size()) {subVectors.emplace_back(i, rays->size());}
+        else {subVectors.emplace_back(i, i + chunkSize);}
+        rets->emplace_back();
+    }
+    int i_ = 0;
+    for (const auto & sub: subVectors) {
+        threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0, &rets->at(i_));
+    }
+    for (auto& thread : threads) {
+        thread.join();
+    }
+    auto goodRays_t = new std::vector<Ray>;
+    for (auto &[rays, done]: *rets) {
+        if (done) goodRays_t->insert(goodRays_t->end(), rays.begin(), rays.end());
+    }
+    delete rets;
+#endif
+
     // clean up rays that have no spectrum response
     // I've got no idea why they're there, but they are there, so yeah
     auto goodRays = new std::vector<Ray>();
@@ -636,11 +720,11 @@ int main() {
     {
         int i = 0;
         for (auto &ray: *goodRays) {
-            std::cout << "goodRays[" << i++ << "]" << std::endl;
-            for (auto &r: ray.getIntensity_p()) {
-                std::cout << r << " ";
-            }
-            std::cout << std::endl;
+            std::cout << "goodRays[" << i++ << "]" ;//<< std::endl;
+            //for (auto &r: ray) {
+                std::cout << ray.getOrigin()<< " "<< ray.getAncestor() << "\n";
+            //}
+            //std::cout << std::endl;
             // calc the ray's spectrum response
             camera.addSingleRaySpectralRespToPixel(ray);
         }
@@ -657,7 +741,7 @@ int main() {
         std::cout << "For every pixel, spectrum response at " << i << "th band:" << std::endl;
         for (auto &row: *camera.getPixel2D()) {
             for (auto &col: row) {
-                std::cout << col.getPixelSpectralResp()[i] << " ";
+                std::cout << std::setprecision(2) << col.getPixelSpectralResp()[i] << " ";
             }
             std::cout << std::endl;
         }
