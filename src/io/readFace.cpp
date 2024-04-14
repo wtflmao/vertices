@@ -53,6 +53,7 @@ void processFace(const char* line, Item& p) {
     p_t.getMutV0().setX(newV0.getX()).setY(newV0.getY()).setZ(newV0.getZ());
     p_t.getMutV1().setX(newV1.getX()).setY(newV1.getY()).setZ(newV1.getZ());
     p_t.getMutV2().setX(newV2.getX()).setY(newV2.getY()).setZ(newV2.getZ());
+    p_t.computeCentroid();
     p_t.updateNormalVec();
 
     p.getMutFWVR().push_back({v_i.at(0), v_i.at(1), v_i.at(2)});

@@ -66,7 +66,7 @@ public:
 
     ImagePlane &buildImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a) noexcept;
 
-    [[nodiscard]] std::vector<Ray> *shootRays(int N = 1) const noexcept;
+    [[deprecated]] [[nodiscard]] std::vector<Ray> *shootRays(int N = 1) const noexcept;
 };
 
 #endif //VERTICES_IMAGEPLANE_H

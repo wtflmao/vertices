@@ -31,13 +31,13 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
 
     auto goodRays_per_thread = new std::vector<Ray>();
     std::ostringstream s_;
-    s_<<"checker thread "<<std::this_thread::get_id()<<" started ";
-coutLogger->writeInfoEntry(s_.view());
+    s_ << "checker thread " << std::this_thread::get_id() << " started ";
+    coutLogger->writeInfoEntry(s_.view());
 
-    s_<<"ANd "<<rays->size()<<" "<<constSubVec.first<<" "<<constSubVec.second;
+    s_ << "ANd " << rays->size() << " " << constSubVec.first << " " << constSubVec.second;
     coutLogger->writeInfoEntry(s_.view());
     for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
-            //std::cout<<"it "<<it<<std::endl;
+        //std::cout<<"it "<<it<<std::endl;
         //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
         // get one ray at a time to avoid memory overhead
         //auto ray = Ray();
@@ -67,6 +67,9 @@ coutLogger->writeInfoEntry(s_.view());
                         //        << intersection << " with intensity[0] " << ray.intensity_p[0] << std::endl;
                         // check if this ray is valid by checking if there's no any faces in the way from the intersection, in the direction of the matching real pixel from camrea
                         Ray ray_t = Ray(intersection, Vec(intersection, ray.getSourcePixelPosInGnd()));
+                        std::ostringstream sss;
+                        //sss << std::setprecision(4) << ray.getOrigin() << " sourcePixelPosInGnd " << ray.getSourcePixelPosInGnd().getX() << " " << ray.getSourcePixelPosInGnd().getY() << " " << ray.getSourcePixelPosInGnd().getZ();
+                        //coutLogger->writeInfoEntry(sss.view());
                         ray_t.setAncestor(ray.getAncestor());
                         bool validity = true;
                         Point intersection_t = BigO;
@@ -98,6 +101,7 @@ coutLogger->writeInfoEntry(s_.view());
                             //std::cout << goodCnt++;
                         } else {
                             //std::cout << "  ";
+                            continue;
                         }
                         //std::cout << "," << totCnt++ << ")";
                         //std::cout << std::endl;
@@ -150,6 +154,7 @@ coutLogger->writeInfoEntry(s_.view());
                                         //std::cout << goodCnt++;
                                     } else {
                                         //std::cout << "  ";
+                                        continue;
                                     }
                                     //std::cout << "," << totCnt++ << ")";
                                     //std::cout << std::endl;
@@ -169,7 +174,7 @@ coutLogger->writeInfoEntry(s_.view());
     ret->rays = std::move(*goodRays_per_thread);
     ret->done = true;
     std::ostringstream s;
-    s<<"checker thread "<<std::this_thread::get_id()<<" done"<<std::endl;
+    s << "checker thread " << std::this_thread::get_id() << " done" << std::endl;
     coutLogger->writeInfoEntry(s.view());
 }
 
@@ -260,8 +265,8 @@ int main() {
 
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
-            Point(-200, -200, 0),
-            Point(200, 200, 30)
+            Point(-20, -20, -1),
+            Point(20, 20, 30)
             );
 
     field.newClosedObject()
@@ -284,13 +289,13 @@ int main() {
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
 
-    /*field.newOpenObject()
+    field.newOpenObject()
             .setOBJPath(objPaths.at(1))
             .setMTLPath(mtlPaths.at(0))
             .setForwardAxis(6)
             .setUpAxis(2)
-            .setCenter({-50, -50, 0})
-            .setScaleFactor({200, 400, 1})
+            .setCenter({0, 0, 0})
+            .setScaleFactor({200, 200, 1})
             .setThatCorrectFaceVertices({598, 0, 1})
             .setThatCorrectFaceIndex(0)
             .readFromOBJ()
@@ -302,7 +307,7 @@ int main() {
                                            field.getObjects().back().getFaces().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
-                                           */
+
 
     /*field.insertObject(
         objPaths[2],
@@ -561,7 +566,7 @@ int main() {
             setAncestor({0, 0, 3}).setScatteredLevel(1).
             setSourcePixel(static_cast<void *>(&camera.getPixel2D()->at(0).at(0))).setSourcePixelPosInGnd(
                 static_cast<Pixel *>(tmp.getSourcePixel())->getPosInGnd());
-    rays->push_back(tmp);
+    //rays->push_back(tmp);
 
     coutLogger->writeInfoEntry(
         "camrea.pixel2d size:" + std::to_string(camera.getPixel2D()->size()) + " " + std::to_string(
@@ -577,7 +582,7 @@ int main() {
     // use BVH to accelerate the determination of whether the ray intersecting
     coutLogger->writeInfoEntry(std::to_string(rays->size()));
     for (auto &ray: *rays) {
-        std::cout << "Ray " << cnt++ << ": "<< ray.getOrigin()<< " "<< ray.getAncestor() << "\n";
+        //std::cout << "Ray " << cnt++ << ": " << ray.getOrigin() << " " << ray.getAncestor() << "\n";
     }
     cnt = 0;
 
@@ -657,22 +662,22 @@ int main() {
 #endif
 #ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
     std::vector<std::thread> threads;
-    std::vector<std::pair<int, int>> subVectors;
+    std::vector<std::pair<int, int> > subVectors;
     auto threadAmount = std::max(1u, std::thread::hardware_concurrency());
-    int chunkSize = rays->size() / threadAmount;
+    int chunkSize = static_cast<int>(rays->size() / threadAmount);
     auto rets = new std::vector<wrappedRays>();
-    for (int i = 0; i < rays->size(); i+=chunkSize) {
+    for (int i = 0; i < rays->size(); i += chunkSize) {
         // [left_idx, right_idx)
-        if (i >= rays->size()) {subVectors.emplace_back(-1, -1);}
-        else if (i + chunkSize >= rays->size()) {subVectors.emplace_back(i, rays->size());}
-        else {subVectors.emplace_back(i, i + chunkSize);}
+        if (i >= rays->size()) { subVectors.emplace_back(-1, -1); } else if (i + chunkSize >= rays->size()) {
+            subVectors.emplace_back(i, rays->size());
+        } else { subVectors.emplace_back(i, i + chunkSize); }
         rets->emplace_back();
     }
     int i_ = 0;
-    for (const auto & sub: subVectors) {
+    for (const auto &sub: subVectors) {
         threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0, &rets->at(i_));
     }
-    for (auto& thread : threads) {
+    for (auto &thread: threads) {
         thread.join();
     }
     auto goodRays_t = new std::vector<Ray>;
@@ -720,9 +725,9 @@ int main() {
     {
         int i = 0;
         for (auto &ray: *goodRays) {
-            std::cout << "goodRays[" << i++ << "]" ;//<< std::endl;
+            std::cout << "goodRays[" << i++ << "]"; //<< std::endl;
             //for (auto &r: ray) {
-                std::cout << ray.getOrigin()<< " "<< ray.getAncestor() << "\n";
+            std::cout << std::setprecision(4) << ray.getOrigin() << " " << ray.getAncestor() << " " << ray.getSourcePixelPosInGnd() << "\n";
             //}
             //std::cout << std::endl;
             // calc the ray's spectrum response

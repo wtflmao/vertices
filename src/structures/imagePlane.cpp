@@ -70,14 +70,15 @@ ImagePlane::ImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > 
 ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a) noexcept {
     coutLogger->writeInfoEntry("picElemX and Y: " + std::to_string(picElemX) + " " + std::to_string(picElemY));
 
-    // to make sure that the Xcount and Ycount are even numbers
-    auto Xcount = std::min(static_cast<int>(FIELD_LENGTH_X / picElemX), 20);
-    auto Ycount = std::min(static_cast<int>(FIELD_LENGTH_Y / picElemY), 20);
+    // here the 40 is for debug only
+    auto Xcount = std::min(static_cast<int>(FIELD_LENGTH_X / picElemX), 40);
+    auto Ycount = std::min(static_cast<int>(FIELD_LENGTH_Y / picElemY), 40);
     if (Xcount == 0) Xcount = 2;
     if (Ycount == 0) Ycount = 2;
     if (Xcount % 2 == 1) Xcount++;
     if (Ycount % 2 == 1) Ycount++;
     coutLogger->writeInfoEntry("Xcount and Ycount: " + std::to_string(Xcount) + " " + std::to_string(Ycount));
+    coutLogger->writeInfoEntry("X_Length and Y_Length: " + std::to_string(picElemX * Xcount/2) + " " + std::to_string(picElemY * Ycount/2));
 
     setOX(getOX() * picElemX);
     setOY(getOY() * picElemY);
@@ -99,8 +100,8 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
             //coutLogger->writeInfoEntry(s.view());
         }
     }
-    countX = samplePoints.size();
-    countY = samplePoints.front().size();
+    countX = static_cast<int>(samplePoints.size());
+    countY = static_cast<int>(samplePoints.front().size());
     coutLogger->writeInfoEntry("Done imageplane building");
     return *this;
 }

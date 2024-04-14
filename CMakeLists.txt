@@ -57,7 +57,7 @@ add_executable(vertices src/main.cpp
         src/structures/imagePlane.h
         lib/thread_pool/thread_pool.h
         src/basic/threadPool.h
-        src/basic/FunctionWrapper.h
+        src/basic/functionWrapper.h
         src/basic/threadSafeQueue.h
 )
 

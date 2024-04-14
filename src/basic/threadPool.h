@@ -15,11 +15,11 @@
 
 class join_threads {
 public:
-    explicit join_threads(std::vector<std::thread> &threads) : threads_(threads) { }
+    explicit join_threads(std::vector<std::thread> &threads) : threads_(threads) {
+    }
 
-    ~join_threads()
-    {
-        for (auto &t : threads_)
+    ~join_threads() {
+        for (auto &t: threads_)
             if (t.joinable()) { t.join(); }
     }
 
@@ -49,7 +49,7 @@ private:
 
 public:
     ThreadPool() : done(false), joiner(threads) {
-        unsigned const thread_count = 1;//std::max(1u, std::thread::hardware_concurrency());
+        unsigned const thread_count = std::max(1u, std::thread::hardware_concurrency());
         threads.reserve(thread_count);
         try {
             for (unsigned i = 0; i < thread_count; ++i)
@@ -62,13 +62,13 @@ public:
 
     ~ThreadPool() {
         done = true;
-        for(auto & thread : threads){
-          if(thread.joinable()) thread.join();
+        for (auto &thread: threads) {
+            if (thread.joinable()) thread.join();
         }
     }
 
     template<typename FunctionType>
-    std::future<std::invoke_result_t<FunctionType>> submit(FunctionType f) {
+    std::future<std::invoke_result_t<FunctionType> > submit(FunctionType f) {
         typedef std::invoke_result_t<FunctionType> result_type;
 
         auto ptask = std::make_shared<std::packaged_task<result_type()> >(std::move(f));

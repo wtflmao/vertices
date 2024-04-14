@@ -85,8 +85,8 @@ const double IMG_ZOOM_FACTOR =
 
 // VERTICES_FIELD_H
 // in meters
-constexpr double FIELD_LENGTH_X = 20;
-constexpr double FIELD_LENGTH_Y = 20;
+constexpr double FIELD_LENGTH_X = 20 * 1.618;
+constexpr double FIELD_LENGTH_Y = 20 * 1.618;
 
 
 #endif //SRC_COMMON_H

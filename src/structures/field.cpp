@@ -31,13 +31,28 @@ void Field::mergeFacesOfObjects() {
             auto ptrVec = object.getFaceRefs();
 
             if (!ptrVec.empty()) {
-                allFaces.reserve(allFaces.size() + ptrVec.size());
-                if (!ptrVec.empty()) {
-                    allFaces.insert(allFaces.end(), ptrVec.begin(), ptrVec.end());
+                auto filteredFaces = new std::vector<std::shared_ptr<Triangle> >();
+                for (const auto &face: ptrVec) {
+                    if ([&face, this]() {
+                        auto centroid = face->getCentroid();
+                        if (centroid.getX() >= bounds[0].getX() && centroid.getX() <= bounds[1].getX()
+                            && centroid.getY() >= bounds[0].getY() && centroid.getY() <= bounds[1].getY()
+                            && centroid.getZ() >= bounds[0].getZ() && centroid.getZ() <= bounds[1].getZ())
+                            return true;
+                        return false;
+                    }())
+                        filteredFaces->push_back(face);
                 }
+                allFaces.reserve(allFaces.size() + filteredFaces->size());
+                if (!filteredFaces->empty()) {
+                    allFaces.insert(allFaces.end(), filteredFaces->begin(), filteredFaces->end());
+                }
+                delete filteredFaces;
+                //allFaces.reserve(allFaces.size() + ptrVec.size());
+                //allFaces.insert(allFaces.end(), ptrVec.begin(), ptrVec.end());
             }
         }
-    } catch (const std::length_error &e) {
+    } catch (const std::exception &e) {
         std::cerr << "Error in Field::mergeFacesOfObjects(): " << e.what() << std::endl;
     }
 }
@@ -81,6 +96,7 @@ void Field::buildBVHTree() {
     // this "tree" should be the root node
     //initPfaces(p_faces);
     mergeFacesOfObjects();
+    coutLogger->writeInfoEntry("There are " + std::to_string(allFaces.size()) + " faces in the boundry");
     tree = std::make_shared<Node>(allFaces, 1LL);
     tree->split();
     std::cout << "BVH tree has been built." << std::endl;
