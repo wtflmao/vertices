@@ -247,12 +247,12 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         return {std::array<Ray, SCATTER_RAYS + 1>{}};
     }
     // debug only
-        for (auto & intensity_: getIntensity_p())
-            if (intensity_ < 0) {
-                std::ostringstream ss;
-                ss<<"this->getIntensity() is negative "<<std::setprecision(4)<<intensity_;
-                coutLogger->writeErrorEntry(ss.view());
-            }
+    for (auto &intensity_: getIntensity_p())
+        if (intensity_ < 0) {
+            std::ostringstream ss;
+            ss << "this->getIntensity() is negative " << std::setprecision(4) << intensity_;
+            coutLogger->writeErrorEntry(ss.view());
+        }
     /* refletance is a value between 0 and 1
      * 1.0: total mirror reflection
      * 0.0: total scatter, direction is random
@@ -288,7 +288,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                                                                                              1)))).at(
                                                 static_cast<std::size_t>(std::round(rand01() *
                                                                                             (dynamic_cast<OpenBRDF *>(itemBRDF)->MODIS_HDF_DATA_DIM_Y -
-                                                                                             1)))) / 32767;
+                                                                                                1)))) / 32767;
             } else if (w >= GREEN_UPPER && w < GREEN_LOWER) {
                 reflectedIntensity[j] = intensity_p[j] *
                         dynamic_cast<OpenBRDF *>(itemBRDF)->valMap->at({GREEN_UPPER, GREEN_LOWER}).at(
@@ -297,7 +297,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                                                                                              1)))).at(
                                                 static_cast<std::size_t>(std::round(rand01() *
                                                                                             (dynamic_cast<OpenBRDF *>(itemBRDF)->MODIS_HDF_DATA_DIM_Y -
-                                                                                             1)))) / 32767;
+                                                                                                1)))) / 32767;
             } else if (w >= RED_UPPER && w <= RED_LOWER) {
                 reflectedIntensity[j] = intensity_p[j] *
                         dynamic_cast<OpenBRDF *>(itemBRDF)->valMap->at({RED_UPPER, RED_LOWER}).at(
@@ -306,17 +306,17 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                                                                                              1)))).at(
                                                 static_cast<std::size_t>(std::round(rand01() *
                                                                                             (dynamic_cast<OpenBRDF *>(itemBRDF)->MODIS_HDF_DATA_DIM_Y -
-                                                                                             1)))) / 32767;
+                                                                                                1)))) / 32767;
             } else {
                 reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
             }
             // debug only
-                for (auto & intensity_: reflectedIntensity)
-                    if (intensity_ < 0) {
-                        std::ostringstream ss;
-                        ss<<"OpenBRDF negative ray intensity generated "<<std::setprecision(4)<<intensity_;
-                        coutLogger->writeErrorEntry(ss.view());
-                    }
+            for (auto &intensity_: reflectedIntensity)
+                if (intensity_ < 0) {
+                    std::ostringstream ss;
+                    ss << "OpenBRDF negative ray intensity generated " << std::setprecision(4) << intensity_;
+                    coutLogger->writeErrorEntry(ss.view());
+                }
         } else if (itemBRDF->type == BRDFType::Closed) {
             // here's closed mesh's BRDF
             // todo: rotate the coordinate system to compute phi_in
@@ -423,10 +423,10 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             reflectedIntensity[j] = intensity_p[j] * (1.0 - rand01() * rand01());
 
             // debug only
-            for (auto & intensity_: reflectedIntensity)
+            for (auto &intensity_: reflectedIntensity)
                 if (intensity_ < 0) {
                     std::ostringstream ss;
-                    ss<<"ClosedBRDF negative ray intensity generated "<<std::setprecision(4)<<intensity_;
+                    ss << "ClosedBRDF negative ray intensity generated " << std::setprecision(4) << intensity_;
                     coutLogger->writeErrorEntry(ss.view());
                 }
         } else {
@@ -446,9 +446,10 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     auto &totalScatteredIntensity = *totalScatteredIntensity_p;
 
     for (int j = 0; j < reflectedIntensity.size(); j++) {
-        if (intensity_p[j] - reflectedIntensity[j] < 0 ) {
+        if (intensity_p[j] - reflectedIntensity[j] < 0) {
             std::ostringstream ss;
-            ss<<"Negative ray intensity generated "<<std::setprecision(4)<<intensity_p[j]<<" "<<reflectedIntensity[j];
+            ss << "Negative ray intensity generated " << std::setprecision(4) << intensity_p[j] << " " <<
+                    reflectedIntensity[j];
             coutLogger->writeErrorEntry(ss.view());
         }
         totalScatteredIntensity[j] = std::max(intensity_p[j] - reflectedIntensity[j], 0.0);

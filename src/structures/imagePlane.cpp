@@ -78,7 +78,9 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
     if (Xcount % 2 == 1) Xcount++;
     if (Ycount % 2 == 1) Ycount++;
     coutLogger->writeInfoEntry("Xcount and Ycount: " + std::to_string(Xcount) + " " + std::to_string(Ycount));
-    coutLogger->writeInfoEntry("X_Length and Y_Length: " + std::to_string(picElemX * Xcount/2) + " " + std::to_string(picElemY * Ycount/2));
+    coutLogger->writeInfoEntry(
+        "X_Length and Y_Length: " + std::to_string(picElemX * Xcount / 2) + " " + std::to_string(
+            picElemY * Ycount / 2));
 
     setOX(getOX() * picElemX);
     setOY(getOY() * picElemY);

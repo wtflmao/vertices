@@ -284,7 +284,9 @@ Camera::Camera() {
                     .setY(sourcePoint.getY() * 1e-6);
             //coutLogger->writeInfoEntry("normal here222");
             if (sourcePoint.getZ() < 0)
-                coutLogger->writeWarnEntry("With the height of " + std::to_string(CAMERA_HEIGHT) + " and CAM_IMG_DISTANCE of " + std::to_string(CAM_IMG_DISTANCE) + ", negative Z encountered once.");
+                coutLogger->writeWarnEntry(
+                    "With the height of " + std::to_string(CAMERA_HEIGHT) + " and CAM_IMG_DISTANCE of " +
+                    std::to_string(CAM_IMG_DISTANCE) + ", negative Z encountered once.");
             (*pixel2D)[i][j].setPosInGnd(sourcePoint);
             imgPlane.getMutSamplePointsPixel().at(i).at(j) = &pixel2D->at(i).at(j);
             //imgPlane.getMutSamplePointsPixel()[i][j] = std::make_shared<Pixel>((*pixel2D)[i][j]);

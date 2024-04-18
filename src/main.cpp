@@ -265,9 +265,9 @@ int main() {
 
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
-            Point(-20, -20, -1),
-            Point(20, 20, 30)
-            );
+        Point(-20, -20, -1),
+        Point(20, 20, 30)
+    );
 
     field.newClosedObject()
             .setOBJPath(objPaths.at(0))
@@ -727,7 +727,8 @@ int main() {
         for (auto &ray: *goodRays) {
             std::cout << "goodRays[" << i++ << "]"; //<< std::endl;
             //for (auto &r: ray) {
-            std::cout << std::setprecision(4) << ray.getOrigin() << " " << ray.getAncestor() << " " << ray.getSourcePixelPosInGnd() << "\n";
+            std::cout << std::setprecision(4) << ray.getOrigin() << " " << ray.getAncestor() << " " << ray.
+                    getSourcePixelPosInGnd() << "\n";
             //}
             //std::cout << std::endl;
             // calc the ray's spectrum response

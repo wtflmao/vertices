@@ -58,8 +58,8 @@ public:
         noexcept;
 
     [[nodiscard]] Ray shootRayFromPixelFromImgPlate(const Vec &directionVec,
-                                                                   const std::array<double, 100> &sunlightSpectrum,
-                                                                   Pixel *pixel_p) const
+                                                    const std::array<double, 100> &sunlightSpectrum,
+                                                    Pixel *pixel_p) const
         noexcept;
 
     Pixel &addRaySpectralResp(Ray &ray) noexcept;
