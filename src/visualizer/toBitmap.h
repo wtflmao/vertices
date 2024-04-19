@@ -10,14 +10,9 @@
 #include <string>
 #include <chrono>
 
-static bmp::Pixel random_color() {
-    // using 8-bit-color per channel in RGB mode
-    return bmp::Pixel{static_cast<unsigned char>(randab(0, 255)), static_cast<unsigned char>(randab(0, 255)), static_cast<unsigned char>(randab(0, 255))};
-}
-
 class ToBitmap {
 private:
-    bmp::Bitmap* image = nullptr;
+    bmp::Bitmap *image = nullptr;
     int resX;
     int resY;
 
@@ -30,25 +25,29 @@ public:
 
     [[nodiscard]] int getResolutionY() const noexcept;
 
-    ToBitmap& setResolutionX(int x) noexcept;
+    ToBitmap &setResolutionX(int x) noexcept;
 
-    ToBitmap& setResolutionY(int y) noexcept;
+    ToBitmap &setResolutionY(int y) noexcept;
 
-    void setPixel(int x, int y, std::uint8_t color) noexcept;
+    void setPixel(int x, int y, std::int32_t color) const noexcept;
 
-    ToBitmap& fillWithRandom() noexcept;
+    void setPixelByChannel(int x, int y, std::uint8_t r, std::uint8_t g, std::uint8_t b) const noexcept;
 
-    ToBitmap& fillWithZebra() noexcept;
+    ToBitmap &fillWithRandom() noexcept;
 
-    ToBitmap& fillWithAColor(std::uint8_t color) noexcept;
+    ToBitmap &fillWithZebra() noexcept;
 
-    [[nodiscard]] std::string saveToTmpDir(const std::string &timeStr, const std::string &additionalInfo) const noexcept;
+    ToBitmap &fillWithGray() noexcept;
+
+    ToBitmap &fillWithAColor(std::int32_t color) noexcept;
+
+    [[nodiscard]] std::string saveToTmpDir(const std::string &timeStr,
+                                           const std::string &additionalInfo) const noexcept;
 
     [[nodiscard]] const bmp::Bitmap &getImage() const noexcept;
 
     [[nodiscard]] bmp::Bitmap &getMutImage() const noexcept;
 };
-
 
 
 #endif //VERTICES_TOBITMAP_H

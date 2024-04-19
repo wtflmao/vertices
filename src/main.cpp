@@ -289,7 +289,7 @@ int main() {
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
 
-    /*field.newOpenObject()
+
     field.newOpenObject()
             .setOBJPath(objPaths.at(1))
             .setMTLPath(mtlPaths.at(0))
@@ -308,7 +308,7 @@ int main() {
                                            field.getObjects().back().getFaces().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
-    */
+
 
     /*field.insertObject(
         objPaths[2],
@@ -756,32 +756,45 @@ int main() {
 
 
     // save the camera's spectrum response to a bitmap
-    double maxResp = 0.0f;
-    auto testOutput = ToBitmap{camera.getPixel2D()->size(), camera.getPixel2D()->at(0).size()};
+    double maxResp = -1.0f;
+    constexpr int MUL = 8;
+    auto testOutput = ToBitmap{camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(0).size() * MUL};
     //coutLogger->writeInfoEntry(testOutput.fillWithRandom().saveToTmpDir("", "random"));
     //coutLogger->writeInfoEntry(testOutput.fillWithZebra().saveToTmpDir("", "black_and_white"));
-    //coutLogger->writeInfoEntry(testOutput.fillWithAColor(0x23272a).saveToTmpDir("", "blurple"));
+    //coutLogger->writeInfoEntry(testOutput.fillWithGray().saveToTmpDir("", "grayscale"));
+    //coutLogger->writeInfoEntry(testOutput.fillWithAColor(0x5865f2).saveToTmpDir("", "blurple"));
 
     for (int i = 0; i < camera.getPixel2D()->size(); i++) {
         for (const auto &j: (*camera.getPixel2D())[i]) {
-            if (j.getPixelSpectralResp()[19] > maxResp) {
-                maxResp = j.getPixelSpectralResp()[19];
+            if (j.getPixelSpectralResp()[20] > maxResp) {
+                maxResp = j.getPixelSpectralResp()[20];
             }
         }
     }
-    for (int i = 0; i < camera.getPixel2D()->size(); i++) {
-        for (int j = 0; j < (*camera.getPixel2D())[i].size(); j++) {
-            if ((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] > maxResp) {
-                //testOutput.setPixel(i, j, grayscaleToRGB(static_cast<std::uint8_t>(std::round((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp * 255))));
-                testOutput.getMutImage().set(i, j, bmp::Pixel{
-                                                 grayscaleToRGB(static_cast<std::uint8_t>(std::round(
-                                                     (*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp *
-                                                     255)))
-                                             });
-            }
+    coutLogger->writeInfoEntry("Max resp: " + std::to_string(maxResp));
+    for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
+        for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
+            //if ((*camera.getPixel2D())[i][j].getPixelSpectralResp()[20] > 1e-6) {
+
+            //coutLogger->writeInfoEntry("val is: " + std::to_string((*camera.getPixel2D())[i][j].getPixelSpectralResp()[20]/maxResp) + " i,j " + std::to_string(i) + "," + std::to_string(j));
+
+            //}
+
+            //testOutput.setPixel(i, j, grayscaleToRGB(static_cast<std::uint8_t>(std::round((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp * 255))));
+                const auto val = static_cast<std::uint8_t>(std::round(
+                                                     (*camera.getPixel2D())[i/MUL][j/MUL].getPixelSpectralResp()[20] / maxResp *
+                                                     255));
+
+            for (int ii = i; ii < i + MUL; ii++)
+                for (int jj = j; jj < j + MUL; jj++)
+                    testOutput.setPixelByChannel(ii, jj, val, val, val);
+                //testOutput.getMutImage().set(i, j, bmp::Pixel{val, val, val});
+
         }
     }
-    coutLogger->writeInfoEntry(testOutput.saveToTmpDir("", "band19"));
+    auto outp = testOutput.saveToTmpDir("", "band20");
+    coutLogger->writeInfoEntry(outp);
+    system(("start " + outp).c_str());
 
 
     coutLogger->writeInfoEntry("Goodbye!");

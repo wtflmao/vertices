@@ -19,6 +19,7 @@
 #include <array>
 #include <memory>
 #include <format>
+#include <cstdint>
 
 inline std::random_device rd;
 inline std::mt19937 generator(rd());
@@ -93,13 +94,19 @@ constexpr double FIELD_LENGTH_X = 20 * 1.618;
 constexpr double FIELD_LENGTH_Y = 20 * 1.618;
 
 // VERTICES_TOBITMAP_H
-// according to sRGB IEC61966-2.1 standard
+// according to sRGB IEC61966-2.1 standard, returns an integer in range of [0, 255]
 inline std::uint8_t RGBToGrayscale(const std::uint8_t r, const std::uint8_t g, const std::uint8_t b) {
     return static_cast<std::uint8_t>(0.2126 * r + 0.7152 * g + 0.0722 * b) & static_cast<std::uint8_t>(0xff);
 }
 
-inline auto grayscaleToRGB(const std::uint8_t gray) {
-    return static_cast<std::uint8_t>(gray << 16 | gray << 8 | gray);
+// accepts an integer in range [0, 255], returns an integer in range of [0x0, 0xffffff]
+inline auto grayscaleToRGB_int(const std::uint8_t gray) {
+    return static_cast<std::int32_t>(gray << 16 | gray << 8 | gray);
+}
+
+// accepts an integer in range [0, 255], returns an array of integer that its elements are in range of [0, 255]
+inline auto grayscaleToRGB_3array(const std::uint8_t gray) {
+    return std::array{gray, gray, gray};
 }
 
 #endif //SRC_COMMON_H
