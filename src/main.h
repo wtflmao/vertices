@@ -19,6 +19,7 @@
 #include "basic/BRDF.h"
 //#include "../lib/thread_pool/thread_pool.h"
 #include "basic/threadPool.h"
+#include "visualizer/toBitmap.h"
 
 #include <iostream>
 #include <array>

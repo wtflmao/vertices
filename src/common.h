@@ -28,6 +28,10 @@ inline double rand01() {
     return distribution(generator);
 }
 
+inline int randab(const int a, const int b) {
+    return std::uniform_int_distribution<std::int32_t>(a, b)(generator);
+}
+
 const Logger coutLogger = std::make_shared<CoutLogger>();
 const Logger stdoutLogger = std::make_shared<StdoutLogger>();
 const Logger fsLogger = std::make_shared<FilesystemLogger>();
@@ -88,5 +92,14 @@ const double IMG_ZOOM_FACTOR =
 constexpr double FIELD_LENGTH_X = 20 * 1.618;
 constexpr double FIELD_LENGTH_Y = 20 * 1.618;
 
+// VERTICES_TOBITMAP_H
+// according to sRGB IEC61966-2.1 standard
+inline std::uint8_t RGBToGrayscale(const std::uint8_t r, const std::uint8_t g, const std::uint8_t b) {
+    return static_cast<std::uint8_t>(0.2126 * r + 0.7152 * g + 0.0722 * b) & static_cast<std::uint8_t>(0xff);
+}
+
+inline auto grayscaleToRGB(const std::uint8_t gray) {
+    return static_cast<std::uint8_t>(gray << 16 | gray << 8 | gray);
+}
 
 #endif //SRC_COMMON_H

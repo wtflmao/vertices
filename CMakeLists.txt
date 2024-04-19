@@ -59,6 +59,9 @@ add_executable(vertices src/main.cpp
         src/basic/threadPool.h
         src/basic/functionWrapper.h
         src/basic/threadSafeQueue.h
+        lib/BitmapPlusPlus/BitmapPlusPlus.hpp
+        src/visualizer/toBitmap.cpp
+        src/visualizer/toBitmap.h
 )
 
 

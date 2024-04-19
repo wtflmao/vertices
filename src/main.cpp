@@ -289,6 +289,7 @@ int main() {
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
 
+    /*field.newOpenObject()
     field.newOpenObject()
             .setOBJPath(objPaths.at(1))
             .setMTLPath(mtlPaths.at(0))
@@ -307,7 +308,7 @@ int main() {
                                            field.getObjects().back().getFaces().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
-
+    */
 
     /*field.insertObject(
         objPaths[2],
@@ -753,6 +754,34 @@ int main() {
         }
     }
 
+
+    // save the camera's spectrum response to a bitmap
+    double maxResp = 0.0f;
+    auto testOutput = ToBitmap{camera.getPixel2D()->size(), camera.getPixel2D()->at(0).size()};
+    //coutLogger->writeInfoEntry(testOutput.fillWithRandom().saveToTmpDir("", "random"));
+    //coutLogger->writeInfoEntry(testOutput.fillWithZebra().saveToTmpDir("", "black_and_white"));
+    //coutLogger->writeInfoEntry(testOutput.fillWithAColor(0x23272a).saveToTmpDir("", "blurple"));
+
+    for (int i = 0; i < camera.getPixel2D()->size(); i++) {
+        for (const auto &j: (*camera.getPixel2D())[i]) {
+            if (j.getPixelSpectralResp()[19] > maxResp) {
+                maxResp = j.getPixelSpectralResp()[19];
+            }
+        }
+    }
+    for (int i = 0; i < camera.getPixel2D()->size(); i++) {
+        for (int j = 0; j < (*camera.getPixel2D())[i].size(); j++) {
+            if ((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] > maxResp) {
+                //testOutput.setPixel(i, j, grayscaleToRGB(static_cast<std::uint8_t>(std::round((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp * 255))));
+                testOutput.getMutImage().set(i, j, bmp::Pixel{
+                                                 grayscaleToRGB(static_cast<std::uint8_t>(std::round(
+                                                     (*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp *
+                                                     255)))
+                                             });
+            }
+        }
+    }
+    coutLogger->writeInfoEntry(testOutput.saveToTmpDir("", "band19"));
 
 
     coutLogger->writeInfoEntry("Goodbye!");
