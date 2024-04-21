@@ -31,7 +31,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
 
     auto goodRays_per_thread = new std::vector<Ray>();
     std::ostringstream s_;
-    s_ << "checker thread " << std::this_thread::get_id() << " started ANd " << rays->size() << " " << constSubVec.first << " " << constSubVec.second;
+    s_ << "checker thread " << std::this_thread::get_id() << " started ANd " << rays->size() << " " << constSubVec.first
+            << " " << constSubVec.second;
     coutLogger->writeInfoEntry(s_.view());
 
     for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
@@ -101,12 +102,12 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
                         for (auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
-                                                                        face->faceBRDF),
-                                                                    ray.getSourcePixel()); const auto &ray_sp:
+                                                                  face->faceBRDF),
+                                                              ray.getSourcePixel()); const auto &ray_sp:
                              scatteredRays) {
                             //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
                             // config all scattered rays' sourcePixelInGnd
-                            for (auto & r: scatteredRays) {
+                            for (auto &r: scatteredRays) {
                                 if (r.getSourcePixelPosInGnd() == BigO) {
                                     r.setSourcePixelPosInGnd(ray.getSourcePixelPosInGnd());
                                     r.setSourcePixel(ray.getSourcePixel());
@@ -114,7 +115,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                 //std::cout << "\tscatOrigin" << r.getOrigin() << " tail" << r.getDirection().getTail() << " intensity[20]" << r.getIntensity_p()[20] << " level" << r.getScatteredLevel()<< std::endl;
                             }
                             // debug test only
-                            goodRays_per_thread->insert(goodRays_per_thread->end(), scatteredRays.begin(), scatteredRays.end());
+                            goodRays_per_thread->insert(goodRays_per_thread->end(), scatteredRays.begin(),
+                                                        scatteredRays.end());
                             continue;
 
                             for (int j = 0; j < scatteredRays.size(); j++) {
@@ -285,9 +287,10 @@ int main() {
             .setScaleFactor({2, 2, 1})
             .setForwardAxis(6)
             .setUpAxis(2)
-            .setInnerPoints({{-0.1, -0.1, -0.1},
-                             {0.1,  0.1,  0.1},
-                             {0,  0,  0}})
+            .setInnerPoints({
+                {-0.1, -0.1, -0.1},
+                {0.1, 0.1, 0.1},
+                {0,  0,  0}})
             .readFromOBJ()
             .readFromMTL()
             .inspectNormalVecForAllFaces();
@@ -698,7 +701,7 @@ int main() {
     for (auto &thread: threads) {
         try {
             thread.join();
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             coutLogger->writeErrorEntry("Exception caught when at threads.join() in main(): " + std::string(e.what()));
         } catch (...) {
             coutLogger->writeErrorEntry("threads.join() in main() encountered unknown exception");
@@ -714,7 +717,7 @@ int main() {
     threads.clear();
 
     // again--------------------------------------------
-    chunkSize = static_cast<int>(goodRays_tt->size() / threadAmount)+1;
+    chunkSize = static_cast<int>(goodRays_tt->size() / threadAmount) + 1;
     rets = new std::vector<wrappedRays>();
     for (int i = 0; i < goodRays_tt->size(); i += chunkSize) {
         // [left_idx, right_idx)
@@ -729,12 +732,13 @@ int main() {
     }
     i_ = 0;
     for (const auto &sub: subVectors) {
-        threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), goodRays_tt, std::ref(sub), 0, &rets->at(i_++));
+        threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), goodRays_tt, std::ref(sub), 0,
+                             &rets->at(i_++));
     }
     for (auto &thread: threads) {
         try {
             thread.join();
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             coutLogger->writeErrorEntry("Exception caught when at threads.join() in main(): " + std::string(e.what()));
         } catch (...) {
             coutLogger->writeErrorEntry("threads.join() in main() encountered unknown exception");
@@ -854,7 +858,7 @@ int main() {
             for (int ii = i; ii < i + MUL; ii++)
                 for (int jj = j; jj < j + MUL; jj++)
                     testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
-                    //testOutput.setPixelByChannel(ii, jj, val & static_cast<std::uint8_t>(0xff0000), val & static_cast<std::uint8_t>(0x00ff00), val & static_cast<std::uint8_t>(0x0000ff));
+            //testOutput.setPixelByChannel(ii, jj, val & static_cast<std::uint8_t>(0xff0000), val & static_cast<std::uint8_t>(0x00ff00), val & static_cast<std::uint8_t>(0x0000ff));
             //testOutput.getMutImage().set(i, j, bmp::Pixel{val, val, val});
         }
     }

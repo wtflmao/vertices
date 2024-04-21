@@ -99,5 +99,5 @@ void computeCoordinateSystem(const Vec &normal, Vec &tangent, Vec &bitangent);
 
 Vec uniformHemisphereDirection(const Vec &normal);
 
-Vec uniformHemisphereDirectionWithCenterOfMonteCarloSpace(const Vec& normal, const Vec& reflectionDirection);
+Vec uniformHemisphereDirectionWithCenterOfMonteCarloSpace(const Vec &normal, const Vec &reflectionDirection);
 #endif //VERTICES_RAY_H

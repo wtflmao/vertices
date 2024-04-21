@@ -420,7 +420,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             }
             */
             // for debug-stage acceleration only, plz remove the one line below and uncomment code above
-            reflectedIntensity[j] = intensity_p[j] ;//* (1.0 - rand01() * rand01() * rand01());
+            reflectedIntensity[j] = intensity_p[j]; //* (1.0 - rand01() * rand01() * rand01());
 
             // debug only
             for (auto &intensity_: reflectedIntensity)
