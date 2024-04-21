@@ -19,11 +19,11 @@
 
 #include "main.h"
 
-void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, const std::vector<Ray> *rays,
+void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, std::vector<Ray> *rays,
              const std::pair<int, int> &constSubVec,
              int idx, wrappedRays *ret) {
     // advanced return if empty
-    if (constSubVec.first == constSubVec.second) {
+    if (constSubVec.first >= constSubVec.second) {
         ret->rays = {};
         ret->done = true;
         return;
@@ -31,11 +31,9 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
 
     auto goodRays_per_thread = new std::vector<Ray>();
     std::ostringstream s_;
-    s_ << "checker thread " << std::this_thread::get_id() << " started ";
+    s_ << "checker thread " << std::this_thread::get_id() << " started ANd " << rays->size() << " " << constSubVec.first << " " << constSubVec.second;
     coutLogger->writeInfoEntry(s_.view());
 
-    s_ << "ANd " << rays->size() << " " << constSubVec.first << " " << constSubVec.second;
-    coutLogger->writeInfoEntry(s_.view());
     for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
         //std::cout<<"it "<<it<<std::endl;
         //for (int rayIndex = 0; rayIndex < rays->size() || flag; rayIndex++) {
@@ -49,7 +47,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
         // now every raw ray from camera has been investigated, traverse the rays vector
         bool flag = true;
         flag = false;
-        auto ray = rays->at(it);
+        auto &ray = rays->at(it);
         //}
         // Iterate over all nodes(boxes) and using BVH algorithm
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
@@ -95,23 +93,30 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                 nodeIndex_t += node_t->boxedFaces.size();
                             }
                         }
-                        //std::cout << "(";
-                        if (validity) {
-                            goodRays_per_thread->push_back(std::move(ray));
-                            //std::cout << goodCnt++;
-                        } else {
-                            //std::cout << "  ";
+                        if (!validity) {
                             continue;
                         }
-                        //std::cout << "," << totCnt++ << ")";
-                        //std::cout << std::endl;
+                        //goodRays_per_thread->push_back(ray);
 
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
-                        for (const auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
+                        for (auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
                                                                         face->faceBRDF),
                                                                     ray.getSourcePixel()); const auto &ray_sp:
                              scatteredRays) {
+                            //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
+                            // config all scattered rays' sourcePixelInGnd
+                            for (auto & r: scatteredRays) {
+                                if (r.getSourcePixelPosInGnd() == BigO) {
+                                    r.setSourcePixelPosInGnd(ray.getSourcePixelPosInGnd());
+                                    r.setSourcePixel(ray.getSourcePixel());
+                                }
+                                //std::cout << "\tscatOrigin" << r.getOrigin() << " tail" << r.getDirection().getTail() << " intensity[20]" << r.getIntensity_p()[20] << " level" << r.getScatteredLevel()<< std::endl;
+                            }
+                            // debug test only
+                            goodRays_per_thread->insert(goodRays_per_thread->end(), scatteredRays.begin(), scatteredRays.end());
+                            continue;
+
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
                                 for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
@@ -136,7 +141,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                                 if (auto intersection_tt = ray_tt.mollerTrumboreIntersection(
                                                     *face_tt); (
                                                     NO_INTERSECT != intersection_tt &&
-                                                    intersection_tt != intersection_t)) {
+                                                    intersection_tt != intersection)) {
                                                     // good, scatter ray has intersection
                                                     validity_tt = true;
                                                     break;
@@ -150,9 +155,13 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //std::cout << "(";
                                     if (validity_tt) {
                                         goodRays_per_thread->push_back(std::move(ray_tt));
-                                        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.intensity_p.at(0), ray_tt.intensity_p.at(std::round(0.2*spectralBands)), ray_tt.intensity_p.at(0.75*spectralBands), ray_tt.scatteredLevel);
+                                        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.getIntensity_p().at(0), ray_tt.getIntensity_p().at(std::round(0.2*spectralBands)), ray_tt.getIntensity_p().at(0.75*spectralBands), ray_tt.getScatteredLevel());
                                         //std::cout << goodCnt++;
                                     } else {
+                                        for (auto &inten: ray_tt.getMutIntensity_p()) {
+                                            //inten *= -1;
+                                        }
+                                        //goodRays_per_thread->push_back(std::move(ray_tt));
                                         //std::cout << "  ";
                                         continue;
                                     }
@@ -174,7 +183,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     ret->rays = std::move(*goodRays_per_thread);
     ret->done = true;
     std::ostringstream s;
-    s << "checker thread " << std::this_thread::get_id() << " done" << std::endl;
+    s << "checker thread " << std::this_thread::get_id() << " done with " << ret->rays.size() << " rays." << constSubVec.first << " " << constSubVec.second << std::endl;
     coutLogger->writeInfoEntry(s.view());
 }
 
@@ -235,11 +244,11 @@ int main() {
     std::vector<std::pair<std::array<int, 2>, std::string>> BRDFPaths;
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
-                           R"(C:\Users\root\Downloads\debug.mini.459.479.txt)");
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band3.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
-                           R"(C:\Users\root\Downloads\debug.mini.545.565.txt)");
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band4.545.565.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{RED_UPPER, RED_LOWER},
-                           R"(C:\Users\root\Downloads\debug.mini.620.670.txt)");
+                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band1.620.670.txt)");
     /*BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band3.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
@@ -265,19 +274,19 @@ int main() {
 
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
-        Point(-20, -20, -1),
-        Point(20, 20, 30)
+        Point(-60, -60, -1),
+        Point(60, 60, 30*1.732)
     );
 
     field.newClosedObject()
             .setOBJPath(objPaths.at(0))
             .setMTLPath(mtlPaths.at(0))
-            .setCenter({0, 0, 0})
-            .setScaleFactor({1, 1, 1})
+            .setCenter({0, 0, 1})
+            .setScaleFactor({2, 2, 1})
             .setForwardAxis(6)
             .setUpAxis(2)
-            .setInnerPoints({{-1, -1, -1},
-                             {1,  1,  1},
+            .setInnerPoints({{-0.1, -0.1, -0.1},
+                             {0.1,  0.1,  0.1},
                              {0,  0,  0}})
             .readFromOBJ()
             .readFromMTL()
@@ -296,7 +305,7 @@ int main() {
             .setForwardAxis(6)
             .setUpAxis(2)
             .setCenter({0, 0, 0})
-            .setScaleFactor({200, 200, 1})
+            .setScaleFactor({4000, 4000, 1})
             .setThatCorrectFaceVertices({598, 0, 1})
             .setThatCorrectFaceIndex(0)
             .readFromOBJ()
@@ -560,6 +569,9 @@ int main() {
         std::cout << "trying to deref a nullptr in main() from camera.shootRays() call\a" << std::endl;
         return 8;
     }
+    for (int i = 0; i < rays->size(); i++) {
+        //std::cout << "ray #" << i << " ori:" << rays->at(i).getOrigin() << " direTail:" << rays->at(i).getDirection().getTail() << std::endl;
+    }
 
     Ray tmp;
     //tmp.setOrigin({0, 0, 3}).setDirection(Vec({0, 0, -1})).setIntensity_p(camera.sunlightSpectrum).setAncestor({0, 0, 3}).setScatteredLevel(1).setSourcePixel(static_cast<void*>(&camera.getPixel2D()->at(camera.getPixel2D()->size()/2).at(camera.getPixel2D()->size()/2)));
@@ -587,7 +599,7 @@ int main() {
     }
     cnt = 0;
 
-    void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, const std::vector<Ray> *rays,
+    void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, std::vector<Ray> *rays,
                  const std::pair<int, int> &constSubVec,
                  int idx, wrappedRays *ret);
 #ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS
@@ -655,37 +667,88 @@ int main() {
 #endif
 #ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
     auto ret = new wrappedRays();
-    for (auto &ray: *rays) {
+    //for (auto &ray: *rays) {
         checker(field, node_ptrs, rays, std::make_pair(0, rays->size()), 0, ret);
-    }
-    auto *goodRays_t = &ret->rays;
+    //}
+    auto *goodRays_t = std::move(&ret->rays);
+    delete ret;
 
 #endif
 #ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
     std::vector<std::thread> threads;
     std::vector<std::pair<int, int> > subVectors;
     auto threadAmount = std::max(1u, std::thread::hardware_concurrency());
-    int chunkSize = static_cast<int>(rays->size() / threadAmount);
+    int chunkSize = static_cast<int>(rays->size() / threadAmount) + 1;
     auto rets = new std::vector<wrappedRays>();
     for (int i = 0; i < rays->size(); i += chunkSize) {
         // [left_idx, right_idx)
-        if (i >= rays->size()) { subVectors.emplace_back(-1, -1); } else if (i + chunkSize >= rays->size()) {
+        if (i >= rays->size()) {
+            subVectors.emplace_back(-1, -1);
+        } else if (i + chunkSize >= rays->size()) {
             subVectors.emplace_back(i, rays->size());
-        } else { subVectors.emplace_back(i, i + chunkSize); }
+        } else {
+            subVectors.emplace_back(i, i + chunkSize);
+        }
         rets->emplace_back();
     }
     int i_ = 0;
     for (const auto &sub: subVectors) {
-        threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0, &rets->at(i_));
+        threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0, &rets->at(i_++));
     }
     for (auto &thread: threads) {
-        thread.join();
+        try {
+            thread.join();
+        } catch (const std::exception& e) {
+            coutLogger->writeErrorEntry("Exception caught when at threads.join() in main(): " + std::string(e.what()));
+        } catch (...) {
+            coutLogger->writeErrorEntry("threads.join() in main() encountered unknown exception");
+        }
     }
+
+    auto goodRays_tt = new std::vector<Ray>;
+    for (auto &[rays, done]: *rets) {
+        if (done) goodRays_tt->insert(goodRays_tt->end(), rays.begin(), rays.end());
+    }
+    delete rets;
+    subVectors.clear();
+    threads.clear();
+
+    // again--------------------------------------------
+    chunkSize = static_cast<int>(goodRays_tt->size() / threadAmount)+1;
+    rets = new std::vector<wrappedRays>();
+    for (int i = 0; i < goodRays_tt->size(); i += chunkSize) {
+        // [left_idx, right_idx)
+        if (i >= goodRays_tt->size()) {
+            subVectors.emplace_back(-1, -1);
+        } else if (i + chunkSize >= goodRays_tt->size()) {
+            subVectors.emplace_back(i, goodRays_tt->size());
+        } else {
+            subVectors.emplace_back(i, i + chunkSize);
+        }
+        rets->emplace_back();
+    }
+    i_ = 0;
+    for (const auto &sub: subVectors) {
+        threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), goodRays_tt, std::ref(sub), 0, &rets->at(i_++));
+    }
+    for (auto &thread: threads) {
+        try {
+            thread.join();
+        } catch (const std::exception& e) {
+            coutLogger->writeErrorEntry("Exception caught when at threads.join() in main(): " + std::string(e.what()));
+        } catch (...) {
+            coutLogger->writeErrorEntry("threads.join() in main() encountered unknown exception");
+        }
+    }
+
     auto goodRays_t = new std::vector<Ray>;
     for (auto &[rays, done]: *rets) {
         if (done) goodRays_t->insert(goodRays_t->end(), rays.begin(), rays.end());
     }
     delete rets;
+    delete goodRays_tt;
+    subVectors.clear();
+    threads.clear();
 #endif
 
     // clean up rays that have no spectrum response
@@ -694,7 +757,7 @@ int main() {
     for (auto &ray: *goodRays_t) {
         bool flaga = false;
         for (auto &spectrumResp: ray.getIntensity_p()) {
-            if (spectrumResp > 1e-10) {
+            if (std::abs(spectrumResp) > 1e-10) {
                 flaga = true;
             }
         }
@@ -726,14 +789,17 @@ int main() {
     {
         int i = 0;
         for (auto &ray: *goodRays) {
-            std::cout << "goodRays[" << i++ << "]"; //<< std::endl;
-            //for (auto &r: ray) {
+            /*std::cout << "goodRays[" << i++ << "]"; //<< std::endl;
             std::cout << std::setprecision(4) << ray.getOrigin() << " " << ray.getAncestor() << " " << ray.
                     getSourcePixelPosInGnd() << "\n";
-            //}
+*/
             //std::cout << std::endl;
             // calc the ray's spectrum response
             camera.addSingleRaySpectralRespToPixel(ray);
+        }
+        if (goodRays->size() > 2) {
+            if (goodRays->at(0).getSourcePixel() == goodRays->at(1).getSourcePixel())
+                coutLogger->writeErrorEntry("The first and second rays are the same pixel.");
         }
     }
 
@@ -744,7 +810,7 @@ int main() {
 
 
     // show the camera's spectrum response by every pixel
-    for (int i = 0; i < spectralBands; i += 20) {
+    /*for (int i = 0; i < spectralBands; i += 20) {
         std::cout << "For every pixel, spectrum response at " << i << "th band:" << std::endl;
         for (auto &row: *camera.getPixel2D()) {
             for (auto &col: row) {
@@ -752,7 +818,7 @@ int main() {
             }
             std::cout << std::endl;
         }
-    }
+    }*/
 
 
     // save the camera's spectrum response to a bitmap
@@ -781,15 +847,15 @@ int main() {
             //}
 
             //testOutput.setPixel(i, j, grayscaleToRGB(static_cast<std::uint8_t>(std::round((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp * 255))));
-                const auto val = static_cast<std::uint8_t>(std::round(
-                                                     (*camera.getPixel2D())[i/MUL][j/MUL].getPixelSpectralResp()[20] / maxResp *
-                                                     255));
+            const auto val = static_cast<std::uint8_t>(std::round(
+                (*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[20] / maxResp *
+                0xff));
 
             for (int ii = i; ii < i + MUL; ii++)
                 for (int jj = j; jj < j + MUL; jj++)
-                    testOutput.setPixelByChannel(ii, jj, val, val, val);
-                //testOutput.getMutImage().set(i, j, bmp::Pixel{val, val, val});
-
+                    testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
+                    //testOutput.setPixelByChannel(ii, jj, val & static_cast<std::uint8_t>(0xff0000), val & static_cast<std::uint8_t>(0x00ff00), val & static_cast<std::uint8_t>(0x0000ff));
+            //testOutput.getMutImage().set(i, j, bmp::Pixel{val, val, val});
         }
     }
     auto outp = testOutput.saveToTmpDir("", "band20");

@@ -81,7 +81,7 @@ Ray &Ray::setDirection(const Vec &d_t) noexcept {
     return *this;
 }
 
-double Ray::getScatteredLevel() const noexcept {
+int Ray::getScatteredLevel() const noexcept {
     return scatteredLevel;
 }
 
@@ -237,7 +237,7 @@ inline double reflectanceCorrection(const double x) {
     return (1 - sigma) + std::exp(-0.5 * a * a) / (sigma * std::sqrt(2.0 * std::numbers::pi));
 }
 
-// scatter the ray with a give triangle(needs its normal vector) and intersection point
+// scatter the ray with a given triangle(needs its normal vector) and intersection point
 // returns a Ray object
 // ior means index of refraction, for materials that non-transparent we set ior = 1.0
 std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point &intersection,
@@ -246,13 +246,12 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         //std::cout << "...scattered level: " << scatteredLevel << ", scatter aborted." << std::endl;
         return {std::array<Ray, SCATTER_RAYS + 1>{}};
     }
-    // debug only
-    for (auto &intensity_: getIntensity_p())
-        if (intensity_ < 0) {
-            std::ostringstream ss;
-            ss << "this->getIntensity() is negative " << std::setprecision(4) << intensity_;
-            coutLogger->writeErrorEntry(ss.view());
-        }
+    bool allPositive = true;
+    for (auto &intensity_: getIntensity_p()) {
+        if (intensity_ < 0) allPositive = false;
+    }
+    if (!allPositive)
+        return {std::array<Ray, SCATTER_RAYS + 1>{}};
     /* refletance is a value between 0 and 1
      * 1.0: total mirror reflection
      * 0.0: total scatter, direction is random
@@ -418,9 +417,10 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                         ->lookUpBRDF(dynamic_cast<ClosedBRDF *>(itemBRDF)->filename.c_str(), theta_in, phi_in, theta_out, phi_out));
             } else {
                 reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
-            }*/
+            }
+            */
             // for debug-stage acceleration only, plz remove the one line below and uncomment code above
-            reflectedIntensity[j] = intensity_p[j] * (1.0 - rand01() * rand01());
+            reflectedIntensity[j] = intensity_p[j] ;//* (1.0 - rand01() * rand01() * rand01());
 
             // debug only
             for (auto &intensity_: reflectedIntensity)
@@ -446,9 +446,9 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     auto &totalScatteredIntensity = *totalScatteredIntensity_p;
 
     for (int j = 0; j < reflectedIntensity.size(); j++) {
-        if (intensity_p[j] - reflectedIntensity[j] < 0) {
+        if (intensity_p[j] - reflectedIntensity[j] < -1e-10) {
             std::ostringstream ss;
-            ss << "Negative ray intensity generated " << std::setprecision(4) << intensity_p[j] << " " <<
+            ss << "Negative ray intensity generated " << std::setprecision(8) << intensity_p[j] << " " <<
                     reflectedIntensity[j];
             coutLogger->writeErrorEntry(ss.view());
         }
@@ -457,7 +457,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
 
     // create scattered rays
     for (int i = 1; i <= SCATTER_RAYS; i++) {
-        Vec scatteredDirection = uniformHemisphereDirection(normal);
+        Vec scatteredDirection = uniformHemisphereDirectionWithCenterOfMonteCarloSpace(normal, reflectedDirection);
         for (int j = 0; j < totalScatteredIntensity.size(); j++) {
             scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS;
         }
@@ -470,7 +470,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         //}
     }
 
-    // set a ponter to source pixel
+    // set a pointer to source pixel
     if (sourcePixel_p != nullptr) {
         for (auto &ray: theRays) {
             ray.setSourcePixel(sourcePixel_p);

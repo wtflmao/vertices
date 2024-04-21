@@ -39,13 +39,13 @@ const Logger fsLogger = std::make_shared<FilesystemLogger>();
 
 
 // VERTICES_RAY_H
-constexpr int SCATTER_RAYS = 1;
+constexpr int SCATTER_RAYS = 4;
 constexpr double STOP_LENGTH = 9999;
 
 
 // VERTICES_NODE_H
-constexpr std::size_t BVH_NODE_CHILDREN = 6;
-constexpr std::size_t MAX_FACES_PER_BOX = 32;
+constexpr std::size_t BVH_NODE_CHILDREN = 4;
+constexpr std::size_t MAX_FACES_PER_BOX = 8;
 constexpr std::size_t MAX_DEPTH = 12;
 constexpr std::size_t SAMPLINGS = 64;
 
@@ -70,11 +70,11 @@ constexpr double pixelSize = 6.9;
 constexpr double gsd = 0.12;
 // focalLength in millimeter
 constexpr double focalLength = 20;
-constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 1;
+constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 0;
 // FOVx
 constexpr double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
-constexpr double FOVy = 11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVy = FOVx; //11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
 
 
@@ -90,8 +90,8 @@ const double IMG_ZOOM_FACTOR =
 
 // VERTICES_FIELD_H
 // in meters
-constexpr double FIELD_LENGTH_X = 20 * 1.618;
-constexpr double FIELD_LENGTH_Y = 20 * 1.618;
+constexpr double FIELD_LENGTH_X = 60 * 1.618;
+constexpr double FIELD_LENGTH_Y = 60 * 1.618;
 
 // VERTICES_TOBITMAP_H
 // according to sRGB IEC61966-2.1 standard, returns an integer in range of [0, 255]
@@ -101,7 +101,8 @@ inline std::uint8_t RGBToGrayscale(const std::uint8_t r, const std::uint8_t g, c
 
 // accepts an integer in range [0, 255], returns an integer in range of [0x0, 0xffffff]
 inline auto grayscaleToRGB_int(const std::uint8_t gray) {
-    return static_cast<std::int32_t>(gray << 16 | gray << 8 | gray);
+    return static_cast<std::int32_t>(static_cast<std::int32_t>(gray) << 16 | static_cast<std::int32_t>(gray) << 8 |
+                                     static_cast<std::int32_t>(gray));
 }
 
 // accepts an integer in range [0, 255], returns an array of integer that its elements are in range of [0, 255]

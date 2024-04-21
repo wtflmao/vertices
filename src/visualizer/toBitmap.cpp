@@ -37,7 +37,8 @@ ToBitmap::ToBitmap(const std::size_t resolutionX, const std::size_t resolutionY)
 void ToBitmap::setPixel(const int x, const int y, const std::int32_t color) const noexcept {
     image->set(x, y, bmp::Pixel{color});
 }
-void ToBitmap::setPixelByChannel(const int x, const int y, const std::uint8_t r, const std::uint8_t g, const std::uint8_t b) const noexcept {
+void ToBitmap::setPixelByChannel(const int x, const int y, const std::uint8_t r, const std::uint8_t g,
+                                 const std::uint8_t b) const noexcept {
     image->set(x, y, bmp::Pixel{r, g, b});
 }
 

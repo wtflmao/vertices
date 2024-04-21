@@ -127,6 +127,39 @@ Vec uniformHemisphereDirection(const Vec &normal) {
     return tangent * dir.getTail().getX() + bitangent * dir.getTail().getY() + normal * dir.getTail().getZ();
 }
 
+Vec uniformHemisphereDirectionWithCenterOfMonteCarloSpace(const Vec &normal, const Vec& reflectionDirection) {
+    while (true) {
+        // generate two random numbers stored as u and v
+        const double u = rand01();
+        const double v = rand01();
+
+        // this is a random angle theta, from 0 to pi/2.
+        //double theta = std::acos(std::sqrt(1.0 - v));
+        const double fovRatio_x = rand01() < 0.95 ? 5.0 / 90.0 : FOVx / 90.0;
+        const double theta = std::acos(std::sqrt(1.0 - v * fovRatio_x));
+
+        // this is a random angle phi, ranges from 0 to 2*pi
+        //double phi = 2.0 * std::numbers::pi * u;
+        const double phi = (rand01() > 0.95 ? 5.0 : FOVy) * u * std::numbers::pi / 180.0;
+
+        // get random xyz
+        const double x = std::cos(phi) * std::sin(theta);
+        const double y = std::sin(phi) * std::sin(theta);
+        const double z = std::cos(theta);
+
+        // construct a random direction
+        const auto dir = Vec(Point(x, y, z));
+
+        // rotate the normal vector to the upper hemisphere
+        auto tangent = Vec(BigO), bitangent = Vec(BigO);
+        computeCoordinateSystem(reflectionDirection, tangent, bitangent);
+        // check if the generated direction is in the normal vec's upper hemisphere
+        Vec a = tangent * dir.getTail().getX() + bitangent * dir.getTail().getY() + normal * dir.getTail().getZ();
+        if (a.dot(normal) > 0)
+            return a;
+    }
+}
+
 Ray Pixel::shootRayFromPixel(const Vec &directionVec,
                              const std::array<double, spectralBands> &sunlightSpectrum) const noexcept {
     const auto posInGnd = coordTransform->camToGnd(posInCam);
@@ -148,7 +181,8 @@ Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
                                          Pixel *pixel_p) const noexcept {
     auto ray = Ray{};
     // posInGnd's unit is meter but is like xxx*10^-6, we need to multiply it with 10^6 (only for X and Y)
-    const auto posInGndAmplified = Point(posInGnd.getX() * 1e6, posInGnd.getY() * 1e6, posInGnd.getZ());
+    const auto posInGndAmplified = Point(posInGnd.getX() * 1e6, posInGnd.getY() * 1e6, (posInGnd.getZ() - CAMERA_HEIGHT) * 1e6 + CAMERA_HEIGHT - CAM_IMG_DISTANCE);
+    //const auto posInGndAmplified = Point(posInGnd.getX() * 1e6, posInGnd.getY() * 1e6, posInGnd.getZ());
 
     // build up the current ray
     ray.setOrigin(posInGndAmplified)
