@@ -127,7 +127,7 @@ Eigen::Vector3d TransForms::Mat2EulerAngle(Eigen::Matrix3d mat)
 #if VERTICES_CONFIG_CXX_STANDARD >= 20
     rot = rot / std::numbers::pi * 180;
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
-    rot = rot / M_PI * 180;
+  rot = rot / M_PI * 180;
 #endif
   return rot;
 }

@@ -98,8 +98,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
                         auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
-                                                                  face->faceBRDF), ray.getSourcePixel());
-                        for ( const auto &ray_sp: scatteredRays) {
+                                                             face->faceBRDF), ray.getSourcePixel());
+                        for (const auto &ray_sp: scatteredRays) {
                             //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
                             // config all scattered rays' sourcePixelInGnd
                             for (auto &r: scatteredRays) {
@@ -303,8 +303,12 @@ int main() {
                                            field.getObjects().back().getVertices().size()));
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
     coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
-    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getFaces().size()) + " faces");
-    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getVertices().size()) + " vertices");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getVertices().size()) + " vertices");
 #endif
 
     field.newOpenObject()
@@ -328,8 +332,12 @@ int main() {
                                            field.getObjects().back().getVertices().size()));
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
     coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
-    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getFaces().size()) + " faces");
-    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getVertices().size()) + " vertices");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getVertices().size()) + " vertices");
 #endif
 
 
@@ -537,7 +545,7 @@ int main() {
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
                         const auto scatteredRays = ray.scatter(*face, intersection,
-                            field.brdfList.at(face->faceBRDF), ray.getSourcePixel());
+                                                               field.brdfList.at(face->faceBRDF), ray.getSourcePixel());
                         for (const auto &ray_sp : scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;

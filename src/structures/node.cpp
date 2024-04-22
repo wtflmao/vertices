@@ -128,7 +128,7 @@ void Node::split() {
                         generator);
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
     std::sample(boxedFaces.begin(), boxedFaces.end(), std::back_inserter(samples),
-                        std::min(SAMPLINGS, boxedFaces.size()), generator);
+                std::min(SAMPLINGS, boxedFaces.size()), generator);
 #endif
     std::array<double, 3> stdevs = {
         computeStdev(samples, 0),
@@ -152,9 +152,10 @@ void Node::split() {
         return a->centroid[splitAxis] < b->centroid[splitAxis];
     });
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
-    std::sort(boxedFaces.begin(), boxedFaces.end(), [splitAxis](const std::shared_ptr<Triangle> &a, const std::shared_ptr<Triangle> &b) {
-        return a->centroid[splitAxis] < b->centroid[splitAxis];
-    });
+    std::sort(boxedFaces.begin(), boxedFaces.end(),
+              [splitAxis](const std::shared_ptr<Triangle> &a, const std::shared_ptr<Triangle> &b) {
+                  return a->centroid[splitAxis] < b->centroid[splitAxis];
+              });
 #endif
 
     // split the box
