@@ -234,7 +234,11 @@ inline double reflectanceCorrection(const double x) {
     constexpr double mu = UPPER_WAVELENGTH;
     constexpr double sigma = 0.03;
     const double a = (x - mu) / sigma;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     return (1 - sigma) + std::exp(-0.5 * a * a) / (sigma * std::sqrt(2.0 * std::numbers::pi));
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    return (1 - sigma) + std::exp(-0.5 * a * a) / (sigma * std::sqrt(2.0 * M_PI));
+#endif
 }
 
 // scatter the ray with a given triangle(needs its normal vector) and intersection point
@@ -314,12 +318,16 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                 if (intensity_ < 0) {
                     std::ostringstream ss;
                     ss << "OpenBRDF negative ray intensity generated " << std::setprecision(4) << intensity_;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
                     coutLogger->writeErrorEntry(ss.view());
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+                    coutLogger->writeErrorEntry(ss.str());
+#endif
                 }
         } else if (itemBRDF->type == BRDFType::Closed) {
             // here's closed mesh's BRDF
             // todo: rotate the coordinate system to compute phi_in
-            // here's two dummy in_angles
+            /*// here's two dummy in_angles
             double theta_in = std::abs(
                 std::acos(
                     this->dotVec(tri.getNormal()) / this->getDirection().getLength() / tri.getNormal().getLength()) -
@@ -327,7 +335,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             // we use random out_angles that resides in upper hemisphere
             double theta_out = std::numbers::pi / 2.0 * rand01(), phi_out =
                     std::numbers::pi * 2.0 * rand01() - std::numbers::pi;
-
+                    */
             /*
             auto theta_in_s = static_cast<short>(std::round(theta_in * 1e4));
             auto phi_in_s = static_cast<short>(std::round(phi_in * 1e4));
@@ -427,7 +435,11 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                 if (intensity_ < 0) {
                     std::ostringstream ss;
                     ss << "ClosedBRDF negative ray intensity generated " << std::setprecision(4) << intensity_;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
                     coutLogger->writeErrorEntry(ss.view());
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+                    coutLogger->writeErrorEntry(ss.str());
+#endif
                 }
         } else {
             std::cerr << "[Error] no implementation for BRDFType::Default typed BRDF\a" << std::endl;
@@ -450,7 +462,11 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             std::ostringstream ss;
             ss << "Negative ray intensity generated " << std::setprecision(8) << intensity_p[j] << " " <<
                     reflectedIntensity[j];
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
             coutLogger->writeErrorEntry(ss.view());
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+            coutLogger->writeErrorEntry(ss.str());
+#endif
         }
         totalScatteredIntensity[j] = std::max(intensity_p[j] - reflectedIntensity[j], 0.0);
     }

@@ -11,14 +11,13 @@
 #ifndef SRC_COMMON_H
 #define SRC_COMMON_H
 
+#include "compatibility.h"
 #include "logger/coutLogger.h"
 #include "logger/stdoutLogger.h"
 #include "logger/filesystemLogger.h"
 #include <random>
-#include <numbers>
 #include <array>
 #include <memory>
-#include <format>
 #include <cstdint>
 
 inline std::random_device rd;
@@ -47,7 +46,7 @@ constexpr double STOP_LENGTH = 9999;
 constexpr std::size_t BVH_NODE_CHILDREN = 4;
 constexpr std::size_t MAX_FACES_PER_BOX = 8;
 constexpr std::size_t MAX_DEPTH = 12;
-constexpr std::size_t SAMPLINGS = 64;
+constexpr std::size_t SAMPLINGS = 32;
 
 
 // VERTICES_PIXEL_H
@@ -72,7 +71,7 @@ constexpr double gsd = 0.12;
 constexpr double focalLength = 20;
 constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 0;
 // FOVx
-constexpr double FOVx = 15.714381;//2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVx = 2.5 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
 constexpr double FOVy = FOVx; //11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
@@ -82,8 +81,13 @@ constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
 // camera @ image
 // distance in meters
 constexpr double CAM_IMG_DISTANCE = CAMERA_HEIGHT / 60.0;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
 const double picElemX = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVx * std::numbers::pi / 180.0) / 2.0);
 const double picElemY = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVy * std::numbers::pi / 180.0) / 2.0);
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+const double picElemX = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVx * M_PI / 180.0) / 2.0);
+const double picElemY = 2.0 * CAM_IMG_DISTANCE * std::tan((FOVy * M_PI / 180.0) / 2.0);
+#endif
 const double IMG_ZOOM_FACTOR =
         2e+9 / CAMERA_HEIGHT / static_cast<double>(resolutionX) / static_cast<double>(resolutionY);
 
@@ -109,5 +113,14 @@ inline auto grayscaleToRGB_int(const std::uint8_t gray) {
 inline auto grayscaleToRGB_3array(const std::uint8_t gray) {
     return std::array{gray, gray, gray};
 }
+
+
+// VERTICES_MAIN_H
+#ifndef VERTICES_CONFIG_
+#define VERTICES_CONFIG_
+//#define VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
+#define VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
+#endif
+
 
 #endif //SRC_COMMON_H

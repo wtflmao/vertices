@@ -21,11 +21,11 @@ private:
     Point planeCenter = {0, 0, CAMERA_HEIGHT - CAM_IMG_DISTANCE};
 
     // this vec indicates which is the positive X axis of the image plane
-    Vec OX = Vec(Point{1, 0, 0}).getNormalized();
+    Vec OX = Vec(Point{1, 0, 0.2}).getNormalized();
 
     // this vec indicates which is the positive Y axis of the image plane
     //Vec OY = Vec(Point{0, 1.732, -1}).getNormalized();
-    Vec OY = Vec(Point{0, 1, 0}).getNormalized();
+    Vec OY = Vec(Point{0, 1, 0.2}).getNormalized();
 
     // we want the normal of the image plane points to the ground, not the sky
     Vec planeNormal = OX.cross(OY).getTail().getZ() < 0 ? OX.cross(OY).getNormalized() : OY.cross(OX).getNormalized();

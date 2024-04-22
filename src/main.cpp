@@ -1,4 +1,4 @@
-// Using C++23 standard
+// Using C++17 standard, not C++20 due to HPC related issues.
 //
 // Created by root on 2024/3/13.
 //
@@ -8,14 +8,6 @@
  * Distributed under MIT license.
  * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
  */
-
-#ifndef VERTICES_CONFIG_
-#define VERTICES_CONFIG_
-
-//#define VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
-#define VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
-
-#endif
 
 #include "main.h"
 
@@ -33,7 +25,11 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     std::ostringstream s_;
     s_ << "checker thread " << std::this_thread::get_id() << " started ANd " << rays->size() << " " << constSubVec.first
             << " " << constSubVec.second;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(s_.view());
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry(s_.str());
+#endif
 
     for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
         //std::cout<<"it "<<it<<std::endl;
@@ -101,10 +97,9 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
 
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
-                        for (auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
-                                                                  face->faceBRDF),
-                                                              ray.getSourcePixel()); const auto &ray_sp:
-                             scatteredRays) {
+                        auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
+                                                                  face->faceBRDF), ray.getSourcePixel());
+                        for ( const auto &ray_sp: scatteredRays) {
                             //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
                             // config all scattered rays' sourcePixelInGnd
                             for (auto &r: scatteredRays) {
@@ -186,7 +181,11 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     ret->done = true;
     std::ostringstream s;
     s << "checker thread " << std::this_thread::get_id() << " done with " << ret->rays.size() << " rays." << constSubVec.first << " " << constSubVec.second << std::endl;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(s.view());
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry(s.str());
+#endif
 }
 
 int main() {
@@ -246,11 +245,11 @@ int main() {
     std::vector<std::pair<std::array<int, 2>, std::string>> BRDFPaths;
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
-                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band3.459.479.txt)");
+                           R"(C:\Users\root\Downloads\debug.mini.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
-                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band4.545.565.txt)");
+                           R"(C:\Users\root\Downloads\debug.mini.545.565.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{RED_UPPER, RED_LOWER},
-                           R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band1.620.670.txt)");
+                           R"(C:\Users\root\Downloads\debug.mini.620.670.txt)");
     /*BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(C:\Users\root\Downloads\MCD43A4.A2024074.h26v04.061.2024085221829.band3.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
@@ -283,10 +282,11 @@ int main() {
     field.newClosedObject()
             .setOBJPath(objPaths.at(0))
             .setMTLPath(mtlPaths.at(0))
-            .setCenter({0, 0, 1})
-            .setScaleFactor({2, 2, 1})
+            .setCenter({0, -3, 2})
+            .setScaleFactor({3, 3, 1})
             .setForwardAxis(6)
             .setUpAxis(2)
+            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
             .setInnerPoints({
                 {-0.1, -0.1, -0.1},
                 {0.1, 0.1, 0.1},
@@ -295,12 +295,17 @@ int main() {
             .readFromMTL()
             .inspectNormalVecForAllFaces();
 
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
                                            field.getObjects().back().getFaces().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
-
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getVertices().size()) + " vertices");
+#endif
 
     field.newOpenObject()
             .setOBJPath(objPaths.at(1))
@@ -308,18 +313,24 @@ int main() {
             .setForwardAxis(6)
             .setUpAxis(2)
             .setCenter({0, 0, 0})
-            .setScaleFactor({4000, 4000, 1})
+            .setScaleFactor({2200, 2200, 1})
             .setThatCorrectFaceVertices({598, 0, 1})
             .setThatCorrectFaceIndex(0)
             .readFromOBJ()
             .readFromMTL()
             .inspectNormalVecForAllFaces();
 
-    coutLogger->writeInfoEntry(std::format("Object #{}  has been loaded", field.getObjects().size()));
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
                                            field.getObjects().back().getFaces().size()));
     coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
                                            field.getObjects().back().getVertices().size()));
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(field.getObjects().back().getVertices().size()) + " vertices");
+#endif
 
 
     /*field.insertObject(
@@ -488,7 +499,11 @@ int main() {
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     std::cout << "Time taken: " << duration << "." << std::endl;
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    std::cout << "Time taken: " << duration.count() << "." << std::endl;
+#endif
     std::cout << "Ray count: " << rays->size() << "." << std::endl;
 
 
@@ -521,12 +536,9 @@ int main() {
                         ray.setRayStopPoint(intersection);
                         std::cout << "The ray " << rayIndex + 1 << " intersects the face #" << faceIndex + 1 << " at "
                                 << intersection << std::endl;
-                        for (const auto scatteredRays = ray.scatter(*face,
-                                                                    intersection,
-                                                                    field.brdfList.at(face->faceBRDF),
-                                                                    ray.getSourcePixel());
-                             const auto &ray_sp:
-                             scatteredRays) {
+                        const auto scatteredRays = ray.scatter(*face, intersection,
+                            field.brdfList.at(face->faceBRDF), ray.getSourcePixel());
+                        for (const auto &ray_sp : scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
@@ -545,7 +557,11 @@ int main() {
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     std::cout << "Time taken: " << duration << "." << std::endl;
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    std::cout << "Time taken: " << duration.count() << "." << std::endl;
+#endif
     std::cout << "Ray count: " << rays->size() << "." << std::endl;
 
 
@@ -709,6 +725,7 @@ int main() {
     }
 
     auto goodRays_tt = new std::vector<Ray>;
+    // actually after .join(), all rets should be done==true
     for (auto &[rays, done]: *rets) {
         if (done) goodRays_tt->insert(goodRays_tt->end(), rays.begin(), rays.end());
     }
@@ -774,14 +791,12 @@ int main() {
     end = std::chrono::high_resolution_clock::now();
     std::cout << "GoodRays " << goodRays->size() << " " << goodRays->capacity() << std::endl;
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     std::cout << "Time taken: " << duration << "." << std::endl;
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    std::cout << "Time taken: " << duration.count() << "." << std::endl;
+#endif
     std::cout << "Ray count: " << rays->size() << "." << std::endl;
-
-
-
-    for (int i = 0; auto &ray: *goodRays) {
-        //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray.intensity_p.at(0), ray.intensity_p.at(std::round(0.2*spectralBands)), ray.intensity_p.at(std::round(0.75*spectralBands)), ray.scatteredLevel);
-    }
 
     // a "good ray" is a ray that successfully intersects with a face that
     // without any other face obstructing its path to the source point

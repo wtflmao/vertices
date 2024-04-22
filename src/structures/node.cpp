@@ -58,9 +58,16 @@ void Node::updateBox() {
 // Stdev means standard deviation
 double computeStdev(const std::vector<std::shared_ptr<Triangle> > &samples, int axis) {
     std::vector<double> positions(samples.size());
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     std::ranges::transform(samples, positions.begin(), [axis](const std::shared_ptr<Triangle> &face) {
         return face->centroid[axis];
     });
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    std::transform(samples.begin(), samples.end(), positions.begin(), [axis](const std::shared_ptr<Triangle> &face) {
+        return face->centroid[axis];
+    });
+#endif
+
     double mean = std::accumulate(positions.begin(), positions.end(), 0.0, std::plus<>()) / positions.size();
     const double variance = std::transform_reduce(positions.begin(), positions.end(), 0.0, std::plus<>(),
                                                   [mean](double x) { return (x - mean) * (x - mean); });
@@ -116,8 +123,13 @@ void Node::split() {
     std::vector<std::shared_ptr<Triangle> > samples;
     // maximum of 1024 sampling triangular faces per box
     samples.reserve(std::min(SAMPLINGS, boxedFaces.size()));
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     std::ranges::sample(boxedFaces, std::back_inserter(samples), std::min(SAMPLINGS, boxedFaces.size()),
-                        std::mt19937(rd()));
+                        generator);
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    std::sample(boxedFaces.begin(), boxedFaces.end(), std::back_inserter(samples),
+                        std::min(SAMPLINGS, boxedFaces.size()), generator);
+#endif
     std::array<double, 3> stdevs = {
         computeStdev(samples, 0),
         computeStdev(samples, 1),
@@ -127,13 +139,23 @@ void Node::split() {
     //std::cout << "333 HERE NORMAL" << std::endl;
 
     // choose the axis with the largest standard deviation
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     int splitAxis = std::distance(stdevs.begin(), std::ranges::max_element(stdevs));
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    int splitAxis = std::distance(stdevs.begin(), std::max_element(stdevs.begin(), stdevs.end()));
+#endif
     children_axis = splitAxis;
 
     // sort the faces along the chosen axis
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     std::ranges::sort(boxedFaces, [splitAxis](const std::shared_ptr<Triangle> &a, const std::shared_ptr<Triangle> &b) {
         return a->centroid[splitAxis] < b->centroid[splitAxis];
     });
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    std::sort(boxedFaces.begin(), boxedFaces.end(), [splitAxis](const std::shared_ptr<Triangle> &a, const std::shared_ptr<Triangle> &b) {
+        return a->centroid[splitAxis] < b->centroid[splitAxis];
+    });
+#endif
 
     // split the box
     const std::size_t steps = std::ceil(boxedFaces.size() / BVH_NODE_CHILDREN);

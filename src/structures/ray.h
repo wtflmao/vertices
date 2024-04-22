@@ -17,7 +17,6 @@
 #include "triangle.h"
 #include "box.h"
 #include "../basic/BRDF.h"
-#include <numbers>
 
 //constexpr int SCATTER_RAYS = 8;
 

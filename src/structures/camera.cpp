@@ -434,53 +434,68 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
             }
         }
     */
-    dp::thread_pool pool(std::max(std::thread::hardware_concurrency(), 1u));
-    auto results = new std::vector<std::future<std::vector<Ray> *> >;
-    //auto arrayOfRays = new std::vector<std::vector<Ray>*>;
-    //arrayOfRays->reserve(pixel2D->size());
-    //for (auto &item: *arrayOfRays)
-    //    item = new std::vector<Ray>;
-
-    //std::vector<std::jthread> threads;
-
+#ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS
+#error "[ abort ] VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS is deserted, say, it's discontinued and deprecated.\n          Please use VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND instead."
+#endif
+#ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
     for (int n = 0; n < multiplier; n++) {
         for (int i = 0; i < pixel2D->size(); i++) {
-            /*threads.emplace_back([&, i]() {
-                for (auto &pixel: pixel2D->at(i)) {
-                    arrayOfRays->at(i)->push_back(pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
-                }
-            });*/
-            results->emplace_back(pool.enqueue([&](int j) {
-                auto raysForThisThread = new std::vector<Ray>;
-                for (auto &pixel: pixel2D->at(j)) {
-                    raysForThisThread->push_back(
-                        pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
-                }
-                return raysForThisThread;
-            }, i));
+            for (auto &pixel: pixel2D->at(i)) {
+                rays->push_back(pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+            }
+        }
+    }
+#endif
+#ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
+    auto threadAmount = std::max(std::thread::hardware_concurrency(), 1u);
+    auto rets = new std::vector<wrappedRays>();
+    std::vector<std::thread> threads;
+
+    std::atomic_int activeThreads(0);
+    for (int n = 0; n < multiplier; n++) {
+        for (int i = 0; i < pixel2D->size(); i++) {
+            if (activeThreads.load() <= threadAmount) {
+                rets->emplace_back();
+                // we place ++activeThreads AFTER a thread is created cuz it easily exceeds the limit A LOT, so it's faster than not to do so
+                threads.emplace_back([&](int j) {
+                    ++activeThreads;
+                    auto raysForThisThread = new std::vector<Ray>;
+                    for (auto &pixel: pixel2D->at(j)) {
+                        raysForThisThread->push_back(
+                            pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+                    }
+                    //coutLogger->writeInfoEntry("raysForThisThread size is " + std::to_string(raysForThisThread->size()) + " " + std::to_string(activeThreads.load()));
+                    rets->at(j).rays = std::move(*raysForThisThread);
+                    rets->at(j).done = true;
+                    --activeThreads;
+                    return;
+                }, i);
+            } else {
+                i--;
+                std::this_thread::sleep_for(std::chrono::milliseconds(randab(4, 49)));
+            }
+        }
+    }
+    for (auto &thread: threads) {
+        try {
+            thread.join();
+        } catch (const std::exception &e) {
+            coutLogger->writeErrorEntry(
+                "Exception caught when at threads.join() in Camera::shootRays(): " + std::string(e.what()));
+        } catch (...) {
+            coutLogger->writeErrorEntry("threads.join() in Camera::shootRays() encountered unknown exception");
         }
     }
 
-    //coutLogger->writeInfoEntry("Camera::shootRays() created " + std::to_string(threads.size()) + " threads");
-    coutLogger->writeInfoEntry("Camera::shootRays() created " + std::to_string(pool.size()) + " threads");
-
+    //coutLogger->writeInfoEntry("Camera::shootRays() created " + std::to_string(threadAmount) + " threads");
     // now we await for all the threads to exit
-    for (auto &result: *results) {
-        auto data = result.get();
-        rays->insert(rays->end(), data->begin(), data->end());
-        delete data;
+    for (auto &[rays_t, done]: *rets) {
+        if (done) rays->insert(rays->end(), rays_t.begin(), rays_t.end());
     }
-    /*for (auto& thread : threads) {
-        thread.join();
-    }*/
-
-    /*for (auto & rayVec: *arrayOfRays) {
-        for (auto &ray: *rayVec)
-            rays->push_back(ray);
-        delete rayVec;
-    }*/
-    //delete arrayOfRays;
-
+    delete rets;
+    threads.clear();
+    //coutLogger->writeInfoEntry("Camera::shootRays() finished with rays of " + std::to_string(rays->size()));
+#endif
     return rays;
 }
 

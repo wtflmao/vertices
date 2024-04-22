@@ -111,8 +111,11 @@ Vec uniformHemisphereDirection(const Vec &normal) {
 
     // this is a random angle phi, ranges from 0 to 2*pi
     //double phi = 2.0 * std::numbers::pi * u;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     const double phi = FOVy * u * std::numbers::pi / 180.0;
-
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    const double phi = FOVy * u * M_PI / 180.0;
+#endif
     // get random xyz
     const double x = std::cos(phi) * std::sin(theta);
     const double y = std::sin(phi) * std::sin(theta);
@@ -135,12 +138,16 @@ Vec uniformHemisphereDirectionWithCenterOfMonteCarloSpace(const Vec &normal, con
 
         // this is a random angle theta, from 0 to pi/2.
         //double theta = std::acos(std::sqrt(1.0 - v));
-        const double fovRatio_x = rand01() < 0.95 ? 5.0 / 90.0 : FOVx / 90.0;
+        const double fovRatio_x = rand01() < 0.9 ? 5.0 / 90.0 : FOVx / 90.0;
         const double theta = std::acos(std::sqrt(1.0 - v * fovRatio_x));
 
         // this is a random angle phi, ranges from 0 to 2*pi
         //double phi = 2.0 * std::numbers::pi * u;
-        const double phi = (rand01() > 0.95 ? 5.0 : FOVy) * u * std::numbers::pi / 180.0;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+        const double phi = (rand01() > 0.9 ? 5.0 : FOVy) * u * std::numbers::pi / 180.0;
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+        const double phi = (rand01() > 0.9 ? 5.0 : FOVy) * u * M_PI / 180.0;
+#endif
 
         // get random xyz
         const double x = std::cos(phi) * std::sin(theta);

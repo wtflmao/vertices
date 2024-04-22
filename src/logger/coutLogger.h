@@ -13,7 +13,13 @@
 
 #include "loggingFacility.h"
 #include <iostream>
+#include <vector>
+
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
 #include <ranges>
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+#include <numeric>
+#endif
 
 class CoutLogger : public LoggingFacility {
 public:

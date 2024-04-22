@@ -40,7 +40,12 @@ std::string getAPathToNewTempFile() {
 void FilesystemLogger::writeInfoEntry(std::string_view entry, short level) noexcept {
     out << "[  INFO ] ";
     if (level >= 1 && level <= 10) {
-        const auto view = std::ranges::iota_view{1, level + 1};
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+        auto view = std::ranges::iota_view{1, level + 1};
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+        std::vector<int> view(level);
+        std::iota(view.begin(), view.end(), 1);
+#endif
         for (auto i: view) {
             out << "  ";
         }
@@ -51,7 +56,12 @@ void FilesystemLogger::writeInfoEntry(std::string_view entry, short level) noexc
 void FilesystemLogger::writeWarnEntry(std::string_view entry, short level) noexcept {
     out << "[  WARN ] ";
     if (level >= 1 && level <= 10) {
-        const auto view = std::ranges::iota_view{1, level + 1};
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+        auto view = std::ranges::iota_view{1, level + 1};
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+        std::vector<int> view(level);
+        std::iota(view.begin(), view.end(), 1);
+#endif
         for (auto i: view) {
             out << "  ";
         }
@@ -62,7 +72,12 @@ void FilesystemLogger::writeWarnEntry(std::string_view entry, short level) noexc
 void FilesystemLogger::writeErrorEntry(std::string_view entry, short level) noexcept {
     out << "[ ERROR ] ";
     if (level >= 1 && level <= 10) {
-        const auto view = std::ranges::iota_view{1, level + 1};
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+        auto view = std::ranges::iota_view{1, level + 1};
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+        std::vector<int> view(level);
+        std::iota(view.begin(), view.end(), 1);
+#endif
         for (auto i: view) {
             out << "  ";
         }

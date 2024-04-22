@@ -19,8 +19,14 @@
 #include <iomanip>
 #include <chrono>
 #include <ctime>
-#include <ranges>
 #include <cstdlib>
+
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+#include <ranges>
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+#include <numeric>
+#include <vector>
+#endif
 
 class FilesystemLogger : public LoggingFacility {
 private:

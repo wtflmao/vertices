@@ -231,7 +231,11 @@ void std_coords_to_half_diff_coords(double theta_in, double fi_in, double theta_
 inline int theta_half_index(double theta_half) {
     if (theta_half <= 0.0)
         return 0;
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     double theta_half_deg = ((theta_half / (std::numbers::pi / 2.0)) * BRDF_SAMPLING_RES_THETA_H);
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    double theta_half_deg = ((theta_half / (M_PI / 2.0)) * BRDF_SAMPLING_RES_THETA_H);
+#endif
     double temp = theta_half_deg * BRDF_SAMPLING_RES_THETA_H;
     temp = std::sqrt(temp);
     int ret_val = (int) temp;
@@ -246,7 +250,11 @@ inline int theta_half_index(double theta_half) {
 // In:  [0 .. pi/2]
 // Out: [0 .. 89]
 inline int theta_diff_index(double theta_diff) {
-    int tmp = int(theta_diff / (std::numbers::pi * 0.5) * BRDF_SAMPLING_RES_THETA_D);
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+    int tmp = static_cast<int>(theta_diff / (std::numbers::pi * 0.5) * BRDF_SAMPLING_RES_THETA_D);
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    int tmp = static_cast<int>(theta_diff / (M_PI * 0.5) * BRDF_SAMPLING_RES_THETA_D);
+#endif
     if (tmp < 0)
         return 0;
     else if (tmp < BRDF_SAMPLING_RES_THETA_D - 1)
@@ -261,11 +269,19 @@ inline int phi_diff_index(double phi_diff) {
     // Because of reciprocity, the BRDF is unchanged under
     // phi_diff -> phi_diff + std::numbers::pi
     if (phi_diff < 0.0)
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
         phi_diff += std::numbers::pi;
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+        phi_diff += M_PI;
+#endif
 
     // In: phi_diff in [0 .. pi]
     // Out: tmp in [0 .. 179]
-    int tmp = int(phi_diff / std::numbers::pi * BRDF_SAMPLING_RES_PHI_D / 2);
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+    int tmp = static_cast<int>(phi_diff / std::numbers::pi * BRDF_SAMPLING_RES_PHI_D / 2);
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    int tmp = static_cast<int>(phi_diff / M_PI * BRDF_SAMPLING_RES_PHI_D / 2);
+#endif
     if (tmp < 0)
         return 0;
     else if (tmp < BRDF_SAMPLING_RES_PHI_D / 2 - 1)

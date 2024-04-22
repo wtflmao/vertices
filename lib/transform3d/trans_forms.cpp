@@ -12,14 +12,22 @@
  * @param {double} angle 角度值
  * @return 返回对应弧度值,一般在-3.14~3.14之间
  */
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
 double TransForms::Degrees(double angle) { return angle / 180 * std::numbers::pi; }
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+double TransForms::Degrees(double angle) { return angle / 180 * M_PI; }
+#endif
 
 /**
  * @brief: 弧度转为角度
  * @param {double} degrees 弧度值
  * @return 返回对应的角度值，一般在-180~180之间
  */
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
 double TransForms::Angle(double degrees) { return degrees / std::numbers::pi * 180; }
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+double TransForms::Angle(double degrees) { return degrees / M_PI * 180; }
+#endif
 
 /*---------------------------------------欧拉角部分---------------------------*/
 /**
@@ -116,7 +124,11 @@ Eigen::Matrix3d TransForms::EulerAngle2Mat(Eigen::Vector3d eular)
 Eigen::Vector3d TransForms::Mat2EulerAngle(Eigen::Matrix3d mat)
 {
   Eigen::Vector3d rot = mat.eulerAngles(2, 1, 0);
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
     rot = rot / std::numbers::pi * 180;
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    rot = rot / M_PI * 180;
+#endif
   return rot;
 }
 

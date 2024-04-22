@@ -229,7 +229,8 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
             if (fwvr[i][0] >= vertexAdjList.size() ||
                 fwvr[i][1] >= vertexAdjList.size() ||
                 fwvr[i][2] >= vertexAdjList.size()) {
-                throw std::out_of_range("Index out of range in vertexAdjList");
+                coutLogger->writeErrorEntry("Index out of range in vertexAdjList");
+                exit(765);
             } else {
                 vertexAdjList[fwvr[i][0]].push_back(i);
                 vertexAdjList[fwvr[i][1]].push_back(i);
@@ -262,6 +263,7 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
         while (!verticesOfUncheckedFaces.empty()) {
             const int i = verticesOfUncheckedFaces.front();
             for (auto j: vertexAdjList[i]) {
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
                 if (!checkedFaces.contains(j)) {
                     // not found, inspect the face
                     // find the neighboring face that is correct
@@ -286,6 +288,32 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
                 } else {
                     // face found, the normal vec is correct
                 }
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+                if (checkedFaces.find(j) == checkedFaces.end()) {
+                    // not found, inspect the face
+                    // find the neighboring face that is correct
+                    for (int k = 0; k < vertexAdjList[i].size(); k++) {
+                        if (checkedFaces.find(k) != checkedFaces.end()) {
+                            if (faces[k].getNormal().dot(faces[j].getNormal()) < 0) {
+                                // j's normal is wrong, revise it
+                                faces[j].setNormalVec(Vec(faces[j].getNormal()) *= -1);
+                            }
+                            checkedFaces.insert(j);
+                            // find face j's all vertices
+                            for (auto l: fwvr[j]) {
+                                if (verticesOfUncheckedFacesSet.find(l) == verticesOfUncheckedFacesSet.end()) {
+                                    verticesOfUncheckedFaces.push(l);
+                                    verticesOfUncheckedFacesSet.insert(l);
+                                }
+                            }
+                        } else {
+                            // not found, what the duck???
+                        }
+                    }
+                } else {
+                    // face found, the normal vec is correct
+                }
+#endif
             }
             verticesOfUncheckedFaces.pop();
             // do not remove the element from the set, it is for non-duplicate pushing back
@@ -304,7 +332,10 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
             double sumCorrect = 0.0;
             double sumWrong = 0.0;
             // traverse every inner point
-            for (auto &point: innerPoints) {
+            for (auto point: innerPoints) {
+                point.setX(point.getX() * scaleFactor[0] + center.getX());
+                point.setY(point.getY() * scaleFactor[1] + center.getY());
+                point.setZ(point.getZ() * scaleFactor[2] + center.getZ());
                 if (face.getNormal().dot(Vec(point, face.getCentroid())) < 0) {
                     sumWrong += votingPower(std::abs(point.getX() - face.getCentroid().getX()),
                                             std::abs(point.getY() - face.getCentroid().getY()),

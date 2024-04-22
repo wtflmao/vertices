@@ -27,14 +27,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-#include <future>
 #include <iomanip>
-
-struct wrappedRays {
-    std::vector<Ray> rays;
-    bool done = false;
-};
-
 
 const Point NO_INTERSECT = Point(DBL_MAX, DBL_MAX, DBL_MAX);
 

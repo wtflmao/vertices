@@ -11,6 +11,7 @@
 #ifndef VERTICES_POINT_H
 #define VERTICES_POINT_H
 
+#include "../compatibility.h"
 #include <cfloat>
 #include <ostream>
 #include <valarray>
@@ -69,6 +70,12 @@ public:
         constexpr double epsilon = 1e-10;
         return std::abs(this->x - otherPoint.x) < epsilon && std::abs(this->y - otherPoint.y) < epsilon && std::abs(this->z - otherPoint.z) < epsilon;
     }
+#if VERTICES_CONFIG_CXX_STANDARD <= 17
+    bool operator!=(const Point& otherPoint) const noexcept {
+        constexpr double epsilon = 1e-10;
+        return !(std::abs(this->x - otherPoint.x) < epsilon && std::abs(this->y - otherPoint.y) < epsilon && std::abs(this->z - otherPoint.z) < epsilon);
+    }
+#endif
 
     Point &operator=(const Point &point) {
         if (&point == this)

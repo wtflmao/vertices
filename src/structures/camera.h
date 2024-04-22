@@ -19,11 +19,12 @@
 #include <array>
 #include <cstdio>
 #include <map>
-#include <ranges>
 #include <algorithm>
 #include <thread>
+#include <atomic>
+#include <chrono>
 #include "../basic/coordTransform.h"
-#include "../../lib/thread_pool/thread_pool.h"
+//#include "../../lib/thread_pool/thread_pool.h"
 
 constexpr double FACTOR = 1.0;
 
@@ -77,5 +78,9 @@ public:
     //[[nodiscard]] Point findTheClosestPixel(const Point &source) const noexcept;
 };
 
+struct wrappedRays {
+    std::vector<Ray> rays;
+    bool done = false;
+};
 
 #endif //VERTICES_CAMERA_H

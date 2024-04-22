@@ -48,7 +48,29 @@ public:
     void split();
 
     //static std::unique_ptr<Box> computeBox(const std::vector<Triangle *> &faces);
-};
 
+#if VERTICES_CONFIG_CXX_STANDARD <= 17
+    template<typename Iter>
+    [[nodiscard]] static std::vector<typename Iter::value_type> sample(Iter begin, Iter end, std::size_t num_random_samples)
+    {
+        std::size_t size = std::distance(begin, end);
+        if (num_random_samples > size)
+            num_random_samples = size;
+
+        std::vector<typename Iter::value_type> res;
+        res.reserve(num_random_samples);
+
+        while(num_random_samples--)
+        {
+            std::uniform_int_distribution<> dis(0, --size);
+            std::advance(begin, dis(generator));
+            res.push_back(*begin);
+            begin = end;    //reset iterator
+        }
+        return res;
+    }
+
+#endif
+};
 
 #endif //VERTICES_NODE_H

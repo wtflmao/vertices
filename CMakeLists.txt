@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.27)
 project(vertices)
 
-set(CMAKE_CXX_STANDARD 20)
+# remember to edit src/compatibility.h if you want to change the C++ standard
+set(CMAKE_CXX_STANDARD 17)
 
 add_executable(vertices src/main.cpp
         src/structures/ray.cpp
@@ -62,6 +63,7 @@ add_executable(vertices src/main.cpp
         lib/BitmapPlusPlus/BitmapPlusPlus.hpp
         src/visualizer/toBitmap.cpp
         src/visualizer/toBitmap.h
+        src/compatibility.h
 )
 
 
