@@ -37,6 +37,7 @@ void processFace(const char* line, Item& p) {
         }
     }
 
+#ifdef _WIN32
     if (count == 6) {
         sscanf_s(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     } else if (count == 3) {
@@ -44,6 +45,15 @@ void processFace(const char* line, Item& p) {
     } else {
         sscanf_s(line, "f %d %d %d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     }
+#else
+    if (count == 6) {
+        sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+    } else if (count == 3) {
+        sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+    } else {
+        sscanf(line, "f %d %d %d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+    }
+#endif
     v_i.at(0)--;
     v_i.at(1)--;
     v_i.at(2)--;

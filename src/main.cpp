@@ -228,21 +228,23 @@ int main() {
 
     //std::cout << Triangle(Point(-0.5, 0.173092, 0.5), Point(-0.498325, 0.173198, 0.5), Point(-0.5, 0.173218, 0.498325)).
     //        getNormal().tail << std::endl;
+
+    std::vector<std::string> objPaths;
+    std::vector<std::string> mtlPaths;
+    std::vector<std::pair<std::array<int, 2>, std::string> > BRDFPaths;
 #ifdef _WIN32
     std::cout << "win32" << std::endl;
 
-    std::vector<std::string> objPaths;
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)");
 
-    std::vector<std::string> mtlPaths;
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
 
     // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
-    std::vector<std::pair<std::array<int, 2>, std::string>> BRDFPaths;
+
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(C:\Users\root\Downloads\debug.mini.459.479.txt)");
@@ -268,6 +270,17 @@ int main() {
 
     std::vector<std::string> mtlPaths;
     mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.mtl)");
+
+    // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
+    // and blue should always be the first, then green, then red, then shortwave infrared if possible
+
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
+                           R"(/home/20009100240/3dmodel/BRDF/debug.mini.459.479.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
+                           R"(/home/20009100240/3dmodel/BRDF/debug.mini.545.565.txt)");
+    BRDFPaths.emplace_back(std::array<int, 2>{RED_UPPER, RED_LOWER},
+                           R"(/home/20009100240/3dmodel/BRDF/debug.mini.620.670.txt)");
 #else
     std::cout << "other system, quitting" << std::endl;
     exit(0);
