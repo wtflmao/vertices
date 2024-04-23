@@ -6,6 +6,7 @@
 #define VERTICES_TOBITMAP_H
 
 #include "../../lib/BitmapPlusPlus/BitmapPlusPlus.hpp"
+#include "../io/infoAppender.h"
 #include "../common.h"
 #include <string>
 #include <chrono>
@@ -15,6 +16,7 @@ private:
     bmp::Bitmap *image = nullptr;
     int resX;
     int resY;
+    InfoAppender *infoAppender;
 
 public:
     ToBitmap(int resolutionX, int resolutionY) noexcept;
@@ -42,7 +44,7 @@ public:
     ToBitmap &fillWithAColor(std::int32_t color) noexcept;
 
     [[nodiscard]] std::string saveToTmpDir(const std::string &timeStr,
-                                           const std::string &additionalInfo) const noexcept;
+                                           const std::string &additionalInfo) noexcept;
 
     [[nodiscard]] const bmp::Bitmap &getImage() const noexcept;
 

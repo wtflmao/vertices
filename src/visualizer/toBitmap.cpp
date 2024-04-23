@@ -26,12 +26,14 @@ ToBitmap::ToBitmap(const int resolutionX, const int resolutionY) noexcept {
     resX = resolutionX;
     resY = resolutionY;
     image = new bmp::Bitmap(resolutionX, resolutionY);
+    infoAppender = nullptr;
 }
 
 ToBitmap::ToBitmap(const std::size_t resolutionX, const std::size_t resolutionY) noexcept {
     resX = static_cast<int>(resolutionX);
     resY = static_cast<int>(resolutionY);
     image = new bmp::Bitmap(resX, resY);
+    infoAppender = nullptr;
 }
 
 void ToBitmap::setPixel(const int x, const int y, const std::int32_t color) const noexcept {
@@ -103,10 +105,12 @@ std::string getAPathToNewTempFile2(const std::string &suffixWithDot, const std::
     return pathPrefix;
 }
 
-std::string ToBitmap::saveToTmpDir(const std::string &timeStr, const std::string &additionalInfo = "") const noexcept {
+std::string ToBitmap::saveToTmpDir(const std::string &timeStr, const std::string &additionalInfo = "") noexcept {
     try {
         auto filepath = getAPathToNewTempFile2(".bmp", timeStr.empty() ? "auto-gen" : timeStr, additionalInfo);
         image->save(filepath);
+        infoAppender = new InfoAppender(filepath);
+        //infoAppender->tryAppend();
         return filepath;
     } catch (const bmp::Exception &e) {
         coutLogger->writeErrorEntry(e.what(), 1);

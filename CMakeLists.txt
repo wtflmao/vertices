@@ -66,6 +66,8 @@ add_executable(vertices src/main.cpp
         src/compatibility.h
         src/io/infoAppender.cpp
         src/io/infoAppender.h
+        lib/JSON/json.hpp
+        lib/JSON/json_fwd.hpp
 )
 
 if (UNIX AND NOT APPLE)
