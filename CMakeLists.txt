@@ -64,6 +64,8 @@ add_executable(vertices src/main.cpp
         src/visualizer/toBitmap.cpp
         src/visualizer/toBitmap.h
         src/compatibility.h
+        src/io/infoAppender.cpp
+        src/io/infoAppender.h
 )
 
 if (UNIX AND NOT APPLE)

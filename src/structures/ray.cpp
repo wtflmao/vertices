@@ -281,8 +281,9 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
         if (itemBRDF->type == BRDFType::Open) {
             // here's open mesh's BRDF
             auto w = UPPER_WAVELENGTH + j * WAVELENGTH_STEP;
-            if (w <= UPPER_WAVELENGTH || w >= LOWER_WAVELENGTH) {
+            if (w < UPPER_WAVELENGTH || w > LOWER_WAVELENGTH) {
                 reflectedIntensity[j] = intensity_p[j] * 0.0;
+                coutLogger->writeWarnEntry("Encountered out-of-range wavelength: " + std::to_string(w));
             } else if (w >= BLUE_UPPER && w < BLUE_LOWER) {
                 reflectedIntensity[j] =
                         intensity_p[j] * dynamic_cast<OpenBRDF *>(itemBRDF)->valMap->at({BLUE_UPPER, BLUE_LOWER}).at(
@@ -428,7 +429,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             }
             */
             // for debug-stage acceleration only, plz remove the one line below and uncomment code above
-            reflectedIntensity[j] = intensity_p[j]; //* (1.0 - rand01() * rand01() * rand01());
+            reflectedIntensity[j] = intensity_p[j] * (1.0 - rand01() * rand01());
 
             // debug only
             for (auto &intensity_: reflectedIntensity)

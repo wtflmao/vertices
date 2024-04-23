@@ -330,6 +330,7 @@ void Camera::buildSunlightSpectrum() {
     }
 #endif
 
+    fclose(fp);  // close
     for (int i = UPPER_WAVELENGTH; i <= LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
         if (sunlightSpectrumMap_t[i] > maximumTotRad) {
             maximumTotRad = sunlightSpectrumMap_t[i];
@@ -461,7 +462,7 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
     }
 #endif
 #ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
-    auto threadAmount = std::max(std::thread::hardware_concurrency(), 1u);
+    auto threadAmount = HARDWARE_CONCURRENCY;
     auto rets = new std::vector<wrappedRays>();
     std::vector<std::thread> threads;
 

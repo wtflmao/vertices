@@ -19,6 +19,7 @@
 #include <array>
 #include <memory>
 #include <cstdint>
+#include <thread>
 
 inline std::random_device rd;
 inline std::mt19937 generator(rd());
@@ -71,7 +72,7 @@ constexpr double gsd = 0.12;
 constexpr double focalLength = 20;
 constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 0;
 // FOVx
-constexpr double FOVx = 2.5 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVx = 1 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
 constexpr double FOVy = FOVx; //11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
@@ -120,7 +121,15 @@ inline auto grayscaleToRGB_3array(const std::uint8_t gray) {
 #define VERTICES_CONFIG_
 //#define VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
 #define VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND
+const unsigned int HARDWARE_CONCURRENCY_RAW = std::max(std::thread::hardware_concurrency(), 1u);
+const unsigned int HARDWARE_CONCURRENCY = 60;
 #endif
+
+constexpr double mixRatio = 0.04;
+constexpr double mixRatioL = mixRatio;
+constexpr double mixRatioR = mixRatio;
+constexpr double mixRatioU = mixRatio;
+constexpr double mixRatioD = mixRatio;
 
 
 #endif //SRC_COMMON_H

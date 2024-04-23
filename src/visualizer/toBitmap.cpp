@@ -91,7 +91,7 @@ std::string getAPathToNewTempFile2(const std::string &suffixWithDot, const std::
         pathPrefix = R"(C:\Windows\temp\)";
     }
 #else
-    pathPrefix = "/tmp/";
+    pathPrefix = "/home/20009100240/tmp_vertices/";
 #endif
     std::ostringstream timeBuf;
     if (timeStr == "auto-gen")
