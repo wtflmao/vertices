@@ -330,7 +330,7 @@ void Camera::buildSunlightSpectrum() {
     }
 #endif
 
-    fclose(fp);  // close
+    fclose(fp); // close
     for (int i = UPPER_WAVELENGTH; i <= LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
         if (sunlightSpectrumMap_t[i] > maximumTotRad) {
             maximumTotRad = sunlightSpectrumMap_t[i];

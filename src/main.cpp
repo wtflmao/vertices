@@ -181,7 +181,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     ret->done = true;
     std::ostringstream s;
     s << "checker thread " << std::this_thread::get_id() << " done with " << ret->rays.size() << " rays." <<
-        constSubVec.first << " " << constSubVec.second;
+            constSubVec.first << " " << constSubVec.second;
 #if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(s.view());
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
@@ -189,7 +189,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
 #endif
 }
 
-void mixer(const int left, const int right, Camera &camera, const std::shared_ptr<std::vector<std::vector<Pixel>>> &camPixelsBackup) {
+void mixer(const int left, const int right, Camera &camera,
+           const std::shared_ptr<std::vector<std::vector<Pixel> > > &camPixelsBackup) {
     if (left >= right) {
         return;
     }
@@ -208,76 +209,89 @@ void mixer(const int left, const int right, Camera &camera, const std::shared_pt
     for (int i = 0; i < camera.getPixel2D()->size(); i++) {
         for (int j = 0; j < camera.getPixel2D()->at(0).size(); j++) {
             for (int k = left; k < right; k++) {
-                if (i != 0 && i != camera.getPixel2D()->size() - 1 && j != 0 && j != camera.getPixel2D()->at(0).size() - 1) {
-                    (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioU
-                                                                            + (*camPixelsBackup)[i + 1][j    ].getPixelSpectralResp()[k] * mixRatioD
-                                                                            + (*camPixelsBackup)[i    ][j - 1].getPixelSpectralResp()[k] * mixRatioL
-                                                                            + (*camPixelsBackup)[i    ][j + 1].getPixelSpectralResp()[k] * mixRatioR
-                                                                            );
+                if (i != 0 && i != camera.getPixel2D()->size() - 1 && j != 0 && j != camera.getPixel2D()->at(0).size() -
+                    1) {
+                    (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                        (*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioU
+                        + (*camPixelsBackup)[i + 1][j].getPixelSpectralResp()[k] * mixRatioD
+                        + (*camPixelsBackup)[i][j - 1].getPixelSpectralResp()[k] * mixRatioL
+                        + (*camPixelsBackup)[i][j + 1].getPixelSpectralResp()[k] * mixRatioR
+                    );
 
-                    (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioU
-                                                                            + (*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioD
-                                                                            + (*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioR * mixRatioU
-                                                                            + (*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioR * mixRatioD
-                                                                            );
+                    (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                        (*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioU
+                        + (*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioD
+                        + (*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioR * mixRatioU
+                        + (*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioR * mixRatioD
+                    );
                 } else {
                     if (i == 0 && j == 0)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioD * mixRatioR
-                                                                                + (*camPixelsBackup)[i + 1][j    ].getPixelSpectralResp()[k] * mixRatioD
-                                                                                + (*camPixelsBackup)[i    ][j + 1].getPixelSpectralResp()[k] * mixRatioR
-                                                                                );
-                    else if (i == camera.getPixel2D()->size()-1 && j == camera.getPixel2D()->at(0).size()-1)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioL
-                                                                                + (*camPixelsBackup)[i - 1][j    ].getPixelSpectralResp()[k] * mixRatioU
-                                                                                + (*camPixelsBackup)[i    ][j - 1].getPixelSpectralResp()[k] * mixRatioL
-                                                                                );
-                    else if (i == 0 && j == camera.getPixel2D()->at(0).size()-1)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioD * mixRatioL
-                                                                                + (*camPixelsBackup)[i + 1][j    ].getPixelSpectralResp()[k] * mixRatioD
-                                                                                + (*camPixelsBackup)[i    ][j - 1].getPixelSpectralResp()[k] * mixRatioL
-                                                                                );
-                    else if (i == camera.getPixel2D()->size()-1 && j == 0)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioR
-                                                                                + (*camPixelsBackup)[i - 1][j    ].getPixelSpectralResp()[k] * mixRatioU
-                                                                                + (*camPixelsBackup)[i    ][j + 1].getPixelSpectralResp()[k] * mixRatioR
-                                                                                );
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioD * mixRatioR
+                            + (*camPixelsBackup)[i + 1][j].getPixelSpectralResp()[k] * mixRatioD
+                            + (*camPixelsBackup)[i][j + 1].getPixelSpectralResp()[k] * mixRatioR
+                        );
+                    else if (i == camera.getPixel2D()->size() - 1 && j == camera.getPixel2D()->at(0).size() - 1)
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioL
+                            + (*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioU
+                            + (*camPixelsBackup)[i][j - 1].getPixelSpectralResp()[k] * mixRatioL
+                        );
+                    else if (i == 0 && j == camera.getPixel2D()->at(0).size() - 1)
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioD * mixRatioL
+                            + (*camPixelsBackup)[i + 1][j].getPixelSpectralResp()[k] * mixRatioD
+                            + (*camPixelsBackup)[i][j - 1].getPixelSpectralResp()[k] * mixRatioL
+                        );
+                    else if (i == camera.getPixel2D()->size() - 1 && j == 0)
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioR
+                            + (*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioU
+                            + (*camPixelsBackup)[i][j + 1].getPixelSpectralResp()[k] * mixRatioR
+                        );
                     else if (i == 0 && j != 0)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioR
-                                                                                + (*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioL
-                                                                                + (*camPixelsBackup)[i + 1][j    ].getPixelSpectralResp()[k] * mixRatioU
-                                                                                + (*camPixelsBackup)[i    ][j + 1].getPixelSpectralResp()[k] * mixRatioR
-                                                                                + (*camPixelsBackup)[i    ][j - 1].getPixelSpectralResp()[k] * mixRatioL
-                                                                                );
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioR
+                            + (*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioL
+                            + (*camPixelsBackup)[i + 1][j].getPixelSpectralResp()[k] * mixRatioU
+                            + (*camPixelsBackup)[i][j + 1].getPixelSpectralResp()[k] * mixRatioR
+                            + (*camPixelsBackup)[i][j - 1].getPixelSpectralResp()[k] * mixRatioL
+                        );
                     else if (i != 0 && j == 0)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioD * mixRatioR
-                                                                                + (*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioR
-                                                                                + (*camPixelsBackup)[i    ][j + 1].getPixelSpectralResp()[k] * mixRatioR
-                                                                                + (*camPixelsBackup)[i + 1][j    ].getPixelSpectralResp()[k] * mixRatioD
-                                                                                + (*camPixelsBackup)[i - 1][j    ].getPixelSpectralResp()[k] * mixRatioU
-                                                                                );
-                    else if (i == camera.getPixel2D()->size()-1 && j != camera.getPixel2D()->at(0).size()-1)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioU
-                                                                                + (*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioR * mixRatioU
-                                                                                + (*camPixelsBackup)[i - 1][j    ].getPixelSpectralResp()[k] * mixRatioU
-                                                                                + (*camPixelsBackup)[i    ][j + 1].getPixelSpectralResp()[k] * mixRatioR
-                                                                                + (*camPixelsBackup)[i    ][j - 1].getPixelSpectralResp()[k] * mixRatioL
-                                                                                );
-                    else if (i != camera.getPixel2D()->size()-1 && j == camera.getPixel2D()->at(0).size()-1)
-                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioU
-                                                                                + (*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioD
-                                                                                + (*camPixelsBackup)[i    ][j - 1].getPixelSpectralResp()[k] * mixRatioD
-                                                                                + (*camPixelsBackup)[i + 1][j    ].getPixelSpectralResp()[k] * mixRatioU
-                                                                                + (*camPixelsBackup)[i - 1][j    ].getPixelSpectralResp()[k] * mixRatioL
-                                                                                );
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i + 1][j + 1].getPixelSpectralResp()[k] * mixRatioD * mixRatioR
+                            + (*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioU * mixRatioR
+                            + (*camPixelsBackup)[i][j + 1].getPixelSpectralResp()[k] * mixRatioR
+                            + (*camPixelsBackup)[i + 1][j].getPixelSpectralResp()[k] * mixRatioD
+                            + (*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioU
+                        );
+                    else if (i == camera.getPixel2D()->size() - 1 && j != camera.getPixel2D()->at(0).size() - 1)
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i - 1][j + 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioU
+                            + (*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioR * mixRatioU
+                            + (*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioU
+                            + (*camPixelsBackup)[i][j + 1].getPixelSpectralResp()[k] * mixRatioR
+                            + (*camPixelsBackup)[i][j - 1].getPixelSpectralResp()[k] * mixRatioL
+                        );
+                    else if (i != camera.getPixel2D()->size() - 1 && j == camera.getPixel2D()->at(0).size() - 1)
+                        (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                            (*camPixelsBackup)[i + 1][j - 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioU
+                            + (*camPixelsBackup)[i - 1][j - 1].getPixelSpectralResp()[k] * mixRatioL * mixRatioD
+                            + (*camPixelsBackup)[i][j - 1].getPixelSpectralResp()[k] * mixRatioD
+                            + (*camPixelsBackup)[i + 1][j].getPixelSpectralResp()[k] * mixRatioU
+                            + (*camPixelsBackup)[i - 1][j].getPixelSpectralResp()[k] * mixRatioL
+                        );
                     else coutLogger->writeErrorEntry("Unknown case in main() at summing up, unbelievable");
                 }
 
-                if (i >= 2 && j >= 2 && i <= camera.getPixel2D()->size()-3 && j <= camera.getPixel2D()->at(0).size()-3)
-                    (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += ((*camPixelsBackup)[i - 2][j    ].getPixelSpectralResp()[k] * mixRatioU * mixRatioU
-                                                                            + (*camPixelsBackup)[i + 2][j    ].getPixelSpectralResp()[k] * mixRatioD * mixRatioD
-                                                                            + (*camPixelsBackup)[i    ][j - 2].getPixelSpectralResp()[k] * mixRatioL * mixRatioL
-                                                                            + (*camPixelsBackup)[i    ][j + 2].getPixelSpectralResp()[k] * mixRatioR * mixRatioR
-                                                                            );
+                if (i >= 2 && j >= 2 && i <= camera.getPixel2D()->size() - 3 && j <= camera.getPixel2D()->at(0).size() -
+                    3)
+                    (*camera.getPixel2D())[i][j].getMutPixelSpectralResp()[k] += (
+                        (*camPixelsBackup)[i - 2][j].getPixelSpectralResp()[k] * mixRatioU * mixRatioU
+                        + (*camPixelsBackup)[i + 2][j].getPixelSpectralResp()[k] * mixRatioD * mixRatioD
+                        + (*camPixelsBackup)[i][j - 2].getPixelSpectralResp()[k] * mixRatioL * mixRatioL
+                        + (*camPixelsBackup)[i][j + 2].getPixelSpectralResp()[k] * mixRatioR * mixRatioR
+                    );
             }
         }
     }
@@ -319,8 +333,10 @@ int main() {
     x = y;
     coordTransform->imgToCam(x, y);
     std::cout << y << std::endl;
-    x = {CENTER_OF_CAMERA_IN_GND.at(0) + pixelSize * 1e-6 * resolutionX,
-         CENTER_OF_CAMERA_IN_GND.at(1) + pixelSize * 1e-6 * resolutionY, 0.1};
+    x = {
+        CENTER_OF_CAMERA_IN_GND.at(0) + pixelSize * 1e-6 * resolutionX,
+        CENTER_OF_CAMERA_IN_GND.at(1) + pixelSize * 1e-6 * resolutionY, 0.1
+    };
     coordTransform->camToImg(x, y);
     std::cout << y << std::endl;
     x = y;
@@ -389,7 +405,7 @@ int main() {
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
         Point(-60, -60, -1),
-        Point(60, 60, 30*1.732)
+        Point(60, 60, 30 * 1.732)
     );
 
     field.newClosedObject()
@@ -403,7 +419,8 @@ int main() {
             .setInnerPoints({
                 {-0.1, -0.1, -0.1},
                 {0.1, 0.1, 0.1},
-                {0,  0,  0}})
+                {0, 0, 0}
+            })
             .readFromOBJ()
             .readFromMTL()
             .inspectNormalVecForAllFaces();
@@ -564,9 +581,7 @@ int main() {
         }
     }
 
-    field.buildBVHTree();
-
-    {
+    field.buildBVHTree(); {
         const std::vector<std::shared_ptr<Node> > node_ptrs = field.generateNodeList();
         for (int nodeIndex = 0; nodeIndex < field.nodeCount; nodeIndex++) {
             auto &node = node_ptrs.at(nodeIndex);
@@ -574,7 +589,7 @@ int main() {
                 auto &face = node->boxedFaces.at(faceIndex);
                 if (face->faceBRDF == -1)
                     std::cerr << "[Error] face #" << faceIndex << " of node #" << nodeIndex
-                              << " has no brdfIdx in main()" << std::endl;
+                            << " has no brdfIdx in main()" << std::endl;
             }
         }
     }
@@ -597,12 +612,13 @@ int main() {
         for (int objIndex = 0; objIndex < field.getObjects().size(); objIndex++) {
             auto &obj = field.getObjects().at(objIndex);
             // Iterate over all faces of each object
-            for (int faceIndex=0; faceIndex < obj.getFaces().size(); faceIndex++) {
+            for (int faceIndex = 0; faceIndex < obj.getFaces().size(); faceIndex++) {
                 auto &face = obj.getFaces().at(faceIndex);
                 auto intersection = ray.mollerTrumboreIntersection(face);
                 if (NO_INTERSECT != intersection) {
                     ray.setRayStopPoint(intersection);
-                    std::cout << "The ray " << rayIndex+1 << " intersects the face " << faceIndex+1 << " of object " << objIndex+1 << " at " << intersection << std::endl;
+                    std::cout << "The ray " << rayIndex + 1 << " intersects the face " << faceIndex + 1 << " of object "
+                            << objIndex + 1 << " at " << intersection << std::endl;
                     const auto scatteredRays = ray.scatter(face, intersection, field.brdfList.at(obj.brdfIdx),
                                                            ray.getSourcePixel());
                     for (int j = 0; j < scatteredRays.size(); j++) {
@@ -659,7 +675,7 @@ int main() {
                                 << intersection << std::endl;
                         const auto scatteredRays = ray.scatter(*face, intersection,
                                                                field.brdfList.at(face->faceBRDF), ray.getSourcePixel());
-                        for (const auto &ray_sp : scatteredRays) {
+                        for (const auto &ray_sp: scatteredRays) {
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag = false;
                                 for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
@@ -946,7 +962,7 @@ int main() {
     {
         std::vector<std::thread> threads;
         int threadAmount = HARDWARE_CONCURRENCY;
-        std::vector<std::pair<int, int>> subVectors;
+        std::vector<std::pair<int, int> > subVectors;
         int chunkSize = spectralBands / threadAmount;
         for (int i = 0; i < spectralBands; i += chunkSize) {
             // [left_idx, right_idx)
@@ -961,21 +977,25 @@ int main() {
         coutLogger->writeInfoEntry("Here's normal");
         // here we make a copy of the original pixel vectors as we want to mix them up
         //threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), goodRays_tt, std::ref(sub), 0, &rets->at(i_++));
-        auto camPixelsBackup = std::make_shared<std::vector<std::vector<Pixel>>>(*camera.getPixel2D());
+        auto camPixelsBackup = std::make_shared<std::vector<std::vector<Pixel> > >(*camera.getPixel2D());
         for (const auto &[fst, snd]: subVectors) {
             try {
                 threads.emplace_back(mixer, fst, snd, std::ref(camera), std::ref(camPixelsBackup));
             } catch (std::exception &e) {
-                coutLogger->writeErrorEntry("Exception caught when at threads.emplace_back() in main() at summing up: " + std::string(e.what()));
+                coutLogger->writeErrorEntry(
+                    "Exception caught when at threads.emplace_back() in main() at summing up: " + std::string(
+                        e.what()));
             } catch (...) {
-                coutLogger->writeErrorEntry("threads.emplace_back() in main() at summing up encountered unknown exception");
+                coutLogger->writeErrorEntry(
+                    "threads.emplace_back() in main() at summing up encountered unknown exception");
             }
         }
         for (auto &thread: threads) {
             try {
                 thread.join();
             } catch (const std::exception &e) {
-                coutLogger->writeErrorEntry("Exception caught when at threads.join() in main() at summing up: " + std::string(e.what()));
+                coutLogger->writeErrorEntry(
+                    "Exception caught when at threads.join() in main() at summing up: " + std::string(e.what()));
             } catch (...) {
                 coutLogger->writeErrorEntry("threads.join() in main() at summing up encountered unknown exception");
             }
