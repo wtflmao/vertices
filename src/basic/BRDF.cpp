@@ -48,11 +48,19 @@ void OpenBRDF::OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band
     auto &val = valMap->at(band);
     val.reserve(MODIS_HDF_DATA_DIM_X);
     FILE *fp = nullptr;
-    errno_t err = fopen_s(&fp, pathToDataset, "rt");
-    if (err != 0) {
+
+#ifdef _WIN32
+    if (fopen_s(&fp, pathToDataset, "rt") != 0) {
         fprintf(stderr, "Cannot open %s\a\n", pathToDataset);
         exit(4);
     }
+#else
+    fp = fopen(pathToDataset, "rt");
+    if (fp == nullptr) {
+        fprintf(stderr, "Cannot open %s\a\n", pathToDataset);
+        exit(4);
+    }
+#endif
 
     fprintf(stdout, "BRDF file size: %zu bytes\n", getFileSize(std::make_shared<FILE *>(fp)));
     fseek(fp, 0, SEEK_SET);
@@ -66,6 +74,7 @@ void OpenBRDF::OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band
         int j_t = 0, n = 1;
         temp.reserve(MODIS_HDF_DATA_DIM_Y);
         line_p = line;
+#ifdef _WIN32
         while (sscanf_s(line_p, "%hd%n", &t, &n) == 1) {
             if (n == 0) {
                 break;
@@ -75,6 +84,17 @@ void OpenBRDF::OpenBRDFInsert(const char *pathToDataset, std::array<int, 2> band
             line_p += n;
             j_t++;
         }
+#else
+        while (sscanf(line_p, "%hd%n", &t, &n) == 1) {
+            if (n == 0) {
+                break;
+            }
+            temp.push_back(t);
+            // move the line pointer to after the first found digit
+            line_p += n;
+            j_t++;
+        }
+#endif
         if (j_t < j_min) j_min = j_t;
         i++;
         if (i > i_max) i_max = i;

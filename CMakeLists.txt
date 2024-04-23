@@ -66,4 +66,7 @@ add_executable(vertices src/main.cpp
         src/compatibility.h
 )
 
-
+if (UNIX AND NOT APPLE)
+    find_package(Threads REQUIRED)
+    target_link_libraries(vertices PRIVATE Threads::Threads)
+endif ()

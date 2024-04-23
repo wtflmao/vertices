@@ -262,13 +262,11 @@ int main() {
 #elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
     std::cout << "unix-like" << std::endl;
 
-    std::vector<std::string> objPaths;
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/snow_apls_low_poly_obj/source/Mesher_-z_y.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/F22_blender/F22.obj)");
 
-    std::vector<std::string> mtlPaths;
     mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.mtl)");
 
     // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!

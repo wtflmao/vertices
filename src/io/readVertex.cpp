@@ -21,8 +21,11 @@ void processVertex(const char* line, Item& p) {
     p_v.emplace_back();
     Point& p_vv = p_v.back();
     auto v_i = std::array<double, 3>({0.0});
+#ifdef _WIN32
     sscanf_s(line, "v %lf %lf %lf", &v_i.at(0), &v_i.at(1), &v_i.at(2));
-
+#else
+    sscanf(line, "v %lf %lf %lf", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+#endif
     auto transformedVertices = std::array<double, 4>({0.0});
     if (p.forwardAxis == 2 && p.upAxis == 3) {
         transformedVertices = matrix4x4DotVector4(MAT23to23, Vec4{v_i.at(0), v_i.at(1), v_i.at(2), 1.0});

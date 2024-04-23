@@ -302,19 +302,33 @@ void Camera::buildSunlightSpectrum() {
     // source: MODTRAN
     // final_height = 0.0, observer height: 0.2, observer zenith angle: 0
     // sun zenith angle: 30, day of year: 173, aztmuth observer to sun: 180
-    FILE *fp = fopen(R"(C:\Users\root\CLionProjects\vertices\data\sunlight.csv)", "rt");
+#ifdef _WIN32
+    FILE *fp = fopen(R"(..\data\sunlight.csv)", "rt");
     if (fp == nullptr) {
-        fprintf(stderr, "Cannot open %s\a\n", R"(C:\Users\root\CLionProjects\vertices\data\sunlight.csv)");
+        fprintf(stderr, "Cannot open %s\a\n", R"(..\data\sunlight.csv)");
         exit(2);
     }
+#else
+    FILE *fp = fopen(R"(./data/sunlight.csv)", "rt");
+    if (fp == nullptr) {
+        fprintf(stderr, "Cannot open %s\a\n", R"(./data/sunlight.csv)");
+        exit(2);
+    }
+#endif
     int waveLength_t = 0;
     double totalRadiance_t = 0.0;
     double maximumTotRad = 0.0;
 
     std::map<int, double> sunlightSpectrumMap_t;
+#ifdef _WIN32
     while (fscanf_s(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
         sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t;
     }
+#else
+    while (fscanf(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
+        sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t;
+    }
+#endif
 
     for (int i = UPPER_WAVELENGTH; i <= LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
         if (sunlightSpectrumMap_t[i] > maximumTotRad) {
