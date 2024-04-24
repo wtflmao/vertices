@@ -77,7 +77,11 @@ public:
 
     //[[nodiscard]] Point findTheClosestPixel(const Point &source) const noexcept;
 
-    [[nodiscard]] Point getImagePlaneCenter() const noexcept;
+    [[nodiscard]] const Point& getImagePlaneCenter() const noexcept;
+
+    [[nodiscard]] const Vec& getImagePlaneOX() const noexcept;
+
+    [[nodiscard]] const Vec& getImagePlaneOY() const noexcept;
 };
 
 struct wrappedRays {

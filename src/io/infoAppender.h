@@ -24,15 +24,16 @@ const std::string startTag = "[VERTICES_OUTPUT_INFO_START]";
 const std::string endTag = "[VERTICES_OUTPUT_INFO_END]";
 
 constexpr int INT_INFO_START = 0;
-constexpr int INT_INFO_COUNT = 12;
+constexpr int INT_INFO_COUNT = 13;
 constexpr int UINT64_INFO_START = INT_INFO_START + INT_INFO_COUNT;
 constexpr int UINT64_INFO_COUNT = 2;
 constexpr int DOUBLE_INFO_START = UINT64_INFO_START + UINT64_INFO_COUNT;
-constexpr int DOUBLE_INFO_COUNT = 16;
+constexpr int DOUBLE_INFO_COUNT = 23;
 
 enum InfoType {
     INT_VERSION,
     INT_SUBVERSION,
+    INT_THIS_BAND,
     INT_BAND_COUNT,
     INT_BAND_OVERLAPPING,
     INT_COUNT_X,
@@ -62,6 +63,12 @@ enum InfoType {
     DOUBLE_FIELD_BOX_MAX_X,
     DOUBLE_FIELD_BOX_MAX_Y,
     DOUBLE_FIELD_BOX_MAX_Z,
+    DOUBLE_CAM_OX_X,
+    DOUBLE_CAM_OX_Y,
+    DOUBLE_CAM_OX_Z,
+    DOUBLE_CAM_OY_X,
+    DOUBLE_CAM_OY_Y,
+    DOUBLE_CAM_OY_Z,
 };
 
 class InfoAppender {
@@ -73,7 +80,7 @@ private:
 
 public:
     // u need to first tryRead() to see if it exists, then use getXXXInfo() to obtain inf
-    void tryRead() noexcept;
+    void tryRead(std::string* ret);
 
     // u need to fisrt setXXXInfo(), then tryAppend() to write info into the file (only one chance tp append)
     void tryAppend() const noexcept;

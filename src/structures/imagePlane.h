@@ -30,6 +30,10 @@ private:
     // we want the normal of the image plane points to the ground, not the sky
     Vec planeNormal = OX.cross(OY).getTail().getZ() < 0 ? OX.cross(OY).getNormalized() : OY.cross(OX).getNormalized();
 
+    // this is the angle between planeNormal and Vec(0, 0, -1), should be less than 90 degrees
+    // i know the length of it must be 1.0, but i like to write its complete form
+    double angleToZ = std::acos(planeNormal.getTail().getZ() / planeNormal.getLength());
+
     // sample points are where ORIGINAL rays are started
     // they all haven't initialized
     std::vector<std::vector<Point>> samplePoints;
@@ -54,6 +58,8 @@ public:
 
     [[nodiscard]] int getCountY() const noexcept;
 
+    [[nodiscard]] double getAngleToZ() const noexcept;
+
     ImagePlane &setPlaneCenter(const Point &p) noexcept;
 
     ImagePlane &setPlaneNormal(const Vec &v) noexcept;
@@ -61,6 +67,10 @@ public:
     ImagePlane &setOX(const Vec &v) noexcept;
 
     ImagePlane &setOY(const Vec &v) noexcept;
+
+    ImagePlane &setAngleToZ(double angleToZ) noexcept;
+
+    ImagePlane &updateNormalAndAngleToZ() noexcept;
 
     explicit ImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a);
 

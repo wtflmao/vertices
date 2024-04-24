@@ -43,6 +43,10 @@ int ImagePlane::getCountY() const noexcept {
     return countY;
 }
 
+double ImagePlane::getAngleToZ() const noexcept {
+    return angleToZ;
+}
+
 ImagePlane &ImagePlane::setPlaneCenter(const Point &p) noexcept {
     planeCenter = p;
     return *this;
@@ -50,16 +54,29 @@ ImagePlane &ImagePlane::setPlaneCenter(const Point &p) noexcept {
 
 ImagePlane &ImagePlane::setPlaneNormal(const Vec &v) noexcept {
     planeNormal = v;
+    setAngleToZ(std::acos(planeNormal.getTail().getZ() / planeNormal.getLength()));
     return *this;
 }
 
 ImagePlane &ImagePlane::setOX(const Vec &v) noexcept {
     OX = v;
+    updateNormalAndAngleToZ();
     return *this;
 }
 
 ImagePlane &ImagePlane::setOY(const Vec &v) noexcept {
     OY = v;
+    updateNormalAndAngleToZ();
+    return *this;
+}
+
+ImagePlane &ImagePlane::setAngleToZ(const double angleToZ_) noexcept {
+    angleToZ = angleToZ_;
+    return *this;
+}
+
+ImagePlane &ImagePlane::updateNormalAndAngleToZ() noexcept {
+    setPlaneNormal(OX.cross(OY).getTail().getZ() < 0 ? OX.cross(OY).getNormalized() : OY.cross(OX).getNormalized());
     return *this;
 }
 
@@ -102,6 +119,8 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
             //coutLogger->writeInfoEntry(s.view());
         }
     }
+    coutLogger->writeInfoEntry("1st  point: " + std::to_string(samplePoints.at(0).at(0).getX()) + " " + std::to_string(samplePoints.at(0).at(0).getY()) + " " + std::to_string(samplePoints.at(0).at(0).getZ()));
+    coutLogger->writeInfoEntry("last point: " + std::to_string(samplePoints.at(samplePoints.size() - 1).at(samplePoints.at(samplePoints.size() - 1).size() - 1).getX()) + " " + std::to_string(samplePoints.at(samplePoints.size() - 1).at(samplePoints.at(samplePoints.size() - 1).size() - 1).getY()) + " " + std::to_string(samplePoints.at(samplePoints.size() - 1).at(samplePoints.at(samplePoints.size() - 1).size() - 1).getZ()));
     countX = static_cast<int>(samplePoints.size());
     countY = static_cast<int>(samplePoints.front().size());
     coutLogger->writeInfoEntry("Done imageplane building");

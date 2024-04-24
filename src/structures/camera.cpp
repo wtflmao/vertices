@@ -279,10 +279,11 @@ Camera::Camera() {
             auto sourcePoint = imgPlane.getSamplePoints()[i][j];
             // TODO: use real X and Y, insteal of wrong X and Y;  Z is correct btw.
             // TODO: edit: Now X and Y should be OK
-            sourcePoint.setZ((sourcePoint.getZ() + CAM_IMG_DISTANCE - CAMERA_HEIGHT) * 1e-6 + CAMERA_HEIGHT)
-                    //sourcePoint.setZ(sourcePoint.getZ() + CAM_IMG_DISTANCE)
-                    .setX(sourcePoint.getX() * 1e-6)
-                    .setY(sourcePoint.getY() * 1e-6);
+            sourcePoint.setZ((sourcePoint.getZ() + CAM_IMG_DISTANCE * std::cos(imgPlane_u->getAngleToZ()) -
+                           CAMERA_HEIGHT) * 1e-6 + CAMERA_HEIGHT)
+                       //sourcePoint.setZ(sourcePoint.getZ() + CAM_IMG_DISTANCE)
+                       .setX(sourcePoint.getX() * 1e-6)
+                       .setY(sourcePoint.getY() * 1e-6);
             //coutLogger->writeInfoEntry("normal here222");
             if (sourcePoint.getZ() < 0)
                 coutLogger->writeWarnEntry(
@@ -477,7 +478,8 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
                     auto raysForThisThread = new std::vector<Ray>;
                     for (auto &pixel: pixel2D->at(j)) {
                         raysForThisThread->push_back(
-                            pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+                            pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel,
+                                                                imgPlane_u->getAngleToZ()));
                     }
                     //coutLogger->writeInfoEntry("raysForThisThread size is " + std::to_string(raysForThisThread->size()) + " " + std::to_string(activeThreads.load()));
                     rets->at(j).rays = std::move(*raysForThisThread);
@@ -519,12 +521,19 @@ Camera &Camera::addSingleRaySpectralRespToPixel(Ray &ray) noexcept {
     return *this;
 }
 
-std::shared_ptr<std::vector<std::vector<Pixel> > > &Camera::getPixel2D() noexcept {
+std::shared_ptr<std::vector<std::vector<Pixel>>>& Camera::getPixel2D() noexcept {
     return pixel2D;
 }
 
-Point Camera::getImagePlaneCenter() const noexcept
-{
+const Point& Camera::getImagePlaneCenter() const noexcept {
     return imgPlane_u->getPlaneCenter();
+}
+
+const Vec& Camera::getImagePlaneOX() const noexcept {
+    return imgPlane_u->getOX();
+}
+
+const Vec& Camera::getImagePlaneOY() const noexcept {
+    return imgPlane_u->getOY();
 }
 

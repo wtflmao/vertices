@@ -76,15 +76,26 @@ void InfoAppender::tryAppend() const noexcept {
     JSONObj["double"] = doubleJSONObj;
 
     std::stringstream data;
-    data << std::endl << JSONObj.dump(-1) << std::endl << std::endl;
-    file.write(startTag.c_str(), sizeof(char) * std::strlen(startTag.c_str()));
+    std::string newLine;
+#ifdef _WIN32
+    newLine = "\r\n";
+#elif __unix__ || __unix ||  __linux__
+    newLine = "\n";
+#else  //__APPLE__ || __MACH__
+    newLine = "\r";
+#endif
+    data << std::endl << JSONObj.dump(-1) << std::endl;
+    file << std::endl;
+    file.write((startTag).c_str(), sizeof(char) * std::strlen((startTag).c_str()));
     // JSON data should be only in one single line
     file.write(data.str().c_str(), sizeof(char) * std::strlen(data.str().c_str()));
-    file.write(endTag.c_str(), sizeof(char) * std::strlen(endTag.c_str()));
+    file.write((endTag).c_str(), sizeof(char) * std::strlen((endTag).c_str()));
+    file << std::endl;
     file.close();
+    std::cout << JSONObj.dump(-1) << std::endl;
 }
 
-void InfoAppender::tryRead() noexcept {
+void InfoAppender::tryRead(std::string *ret) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         coutLogger->writeErrorEntry("Failed to open file by read|binary at InfoAppender::tryRead(): " + filename);
@@ -101,29 +112,35 @@ void InfoAppender::tryRead() noexcept {
             data.push_back(line);
         }
 
+
         // now data SHOULD have 3 lines (startTag, JSONdata, endTag)
         if (data.size() == 2) {
             // how come?!! no appended data but have two tags available
             coutLogger->writeWarnEntry("Tag found, but no appended data is available.");
         } else if (data.size() == 3) {
-            if (data.at(0) == startTag && data.at(2) == endTag) {
-                // read JSON data
-                nlohmann::json JSONObj = nlohmann::json::parse(data.at(1));
-                nlohmann::json intJSONObj = JSONObj["int"];
-                nlohmann::json uint64JSONObj = JSONObj["uint64"];
-                nlohmann::json doubleJSONObj = JSONObj["double"];
+            if (data.at(0) == startTag && data.at(data.size() - 1) == endTag) {
+                int idx = 1;
+                while (data.at(idx) != "" && data.at(idx) != endTag) {
+                    // read JSON data
+                    nlohmann::json JSONObj = nlohmann::json::parse(data.at(idx));
+                    nlohmann::json intJSONObj = JSONObj["int"];
+                    nlohmann::json uint64JSONObj = JSONObj["uint64"];
+                    nlohmann::json doubleJSONObj = JSONObj["double"];
 
-                for (int i = 0; i < INT_INFO_COUNT; i++) {
-                    intInfo[i].first = intJSONObj[i][0].get<int>();
-                    intInfo[i].second = intJSONObj[i][1].get<bool>();
-                }
-                for (int i = 0; i < UINT64_INFO_COUNT; i++) {
-                    uint64Info[i].first = uint64JSONObj[i][0].get<std::uint64_t>();
-                    uint64Info[i].second = uint64JSONObj[i][1].get<bool>();
-                }
-                for (int i = 0; i < DOUBLE_INFO_COUNT; i++) {
-                    doubleInfo[i].first = doubleJSONObj[i][0].get<double>();
-                    doubleInfo[i].second = doubleJSONObj[i][1].get<bool>();
+                    for (int i = 0; i < INT_INFO_COUNT; i++) {
+                        intInfo[i].first = intJSONObj[i][0].get<int>();
+                        intInfo[i].second = intJSONObj[i][1].get<bool>();
+                    }
+                    for (int i = 0; i < UINT64_INFO_COUNT; i++) {
+                        uint64Info[i].first = uint64JSONObj[i][0].get<std::uint64_t>();
+                        uint64Info[i].second = uint64JSONObj[i][1].get<bool>();
+                    }
+                    for (int i = 0; i < DOUBLE_INFO_COUNT; i++) {
+                        doubleInfo[i].first = doubleJSONObj[i][0].get<double>();
+                        doubleInfo[i].second = doubleJSONObj[i][1].get<bool>();
+                    }
+                    *ret = JSONObj.dump(2);
+                    break;
                 }
             } else {
                 coutLogger->writeErrorEntry("Unexpected tag and data at InfoAppender::tryRead(): " + filename);

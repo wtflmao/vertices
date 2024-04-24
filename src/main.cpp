@@ -304,7 +304,31 @@ void mixer(const int left, const int right, Camera &camera,
 #endif
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc == 2) {
+        std::ifstream file(argv[1]);
+        if (!file.is_open()) {
+            coutLogger->writeErrorEntry("The file u provided in the argument list cannot be opened: " + std::to_string(*argv[1]));
+            return (26);
+        }
+        file.close();
+
+        // now pass the filepath to the InfoAppender to read and print info
+        auto infoAppender = InfoAppender(argv[1]);
+        std::string data;
+        try {
+            infoAppender.tryRead(&data);
+        } catch (std::exception &e) {
+            coutLogger->writeErrorEntry("Error occurred in main() when tryRead(): " + std::to_string(*e.what()));
+            return 27;
+        } catch (...) {
+            coutLogger->writeErrorEntry("Unknown error occurred in main() when tryRead()");
+            return 28;
+        }
+        std::cout << data << std::endl;
+        return 0;
+    }
+
     // ===== debug only start =====
     coutLogger->writeInfoEntry("Hello there!");
 
@@ -404,8 +428,8 @@ int main() {
 
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
-        Point(-60, -60, -1),
-        Point(60, 60, 30 * 1.732)
+        Point(-120, -120, -2),
+        Point(120, 120, 50 * 1.732)
     );
 
     field.newClosedObject()
@@ -1025,82 +1049,87 @@ int main() {
 
 
     // save the camera's spectrum response to a bitmap
-    double maxResp = -1.0f;
+    //double maxResp = -1.0f;
     constexpr int MUL = 8;
-    auto testOutput = ToBitmap{camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(0).size() * MUL};
-    //coutLogger->writeInfoEntry(testOutput.fillWithRandom().saveToTmpDir("", "random"));
-    //coutLogger->writeInfoEntry(testOutput.fillWithZebra().saveToTmpDir("", "black_and_white"));
-    //coutLogger->writeInfoEntry(testOutput.fillWithGray().saveToTmpDir("", "grayscale"));
-    //coutLogger->writeInfoEntry(testOutput.fillWithAColor(0x5865f2).saveToTmpDir("", "blurple"));
 
-    for (int i = 0; i < camera.getPixel2D()->size(); i++) {
-        for (const auto &j: (*camera.getPixel2D())[i]) {
-            if (j.getPixelSpectralResp()[20] > maxResp) {
-                maxResp = j.getPixelSpectralResp()[20];
+    auto outputs = new std::vector<ToBitmap>;
+    auto maxRespPerBand = std::vector<double>();
+
+    constexpr int bandLength = 19;
+    for (int band = 0; band <= spectralBands; band += bandLength) {
+        outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(band).size() * MUL);
+        maxRespPerBand.emplace_back(-1.0f);
+        for (int i = 0; i < camera.getPixel2D()->size(); i++) {
+            for (const auto &j: (*camera.getPixel2D())[i]) {
+                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band/bandLength]) {
+                    maxRespPerBand[band/bandLength] = j.getPixelSpectralResp()[band];
+                }
             }
         }
+        coutLogger->writeInfoEntry("Max resp at band[" + std::to_string(band) + "] :" + std::to_string(maxRespPerBand[band/bandLength]));
     }
-    coutLogger->writeInfoEntry("Max resp: " + std::to_string(maxResp));
-    for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
-        for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
-            //if ((*camera.getPixel2D())[i][j].getPixelSpectralResp()[20] > 1e-6) {
 
-            //coutLogger->writeInfoEntry("val is: " + std::to_string((*camera.getPixel2D())[i][j].getPixelSpectralResp()[20]/maxResp) + " i,j " + std::to_string(i) + "," + std::to_string(j));
+    for (auto &testOutput: *outputs) {
+        for (int k = 0; k < spectralBands; k += bandLength) {
+            for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
+                for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
+                    const auto val = static_cast<std::uint8_t>(std::round(
+                        (*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k] / maxRespPerBand[k/bandLength] * 0xff));
+                    for (int ii = i; ii < i + MUL; ii++)
+                        for (int jj = j; jj < j + MUL; jj++)
+                            testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
+                }
+            }
+            auto outpath = testOutput.saveToTmpDir("", "band" + std::to_string(k));
+            // after the saveToTmpDir(), we obtained a path to newly generated file
+            // we need to gather more info so we can attach to it
 
-            //}
+            coutLogger->writeInfoEntry(outpath);
+            testOutput.infoAppender->setIntInfo(InfoType::INT_BAND_COUNT, spectralBands)
+                    .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
+                    .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
+                    .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
+                    .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
+                    .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
+                    .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
+                    .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
+                    .setDoubleInfo(InfoType::DOUBLE_FOV_X, FOVx)
+                    .setDoubleInfo(InfoType::DOUBLE_FOV_Y, FOVy)
+                    .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
+                    .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
+                    .setIntInfo(InfoType::INT_THIS_BAND, k)
+                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
+                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
+                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
+                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
+                    .setDoubleInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
+                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
+                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
+                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
+                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
+                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
+                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_OX_X, camera.getImagePlaneOX().getTail().getX())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Y, camera.getImagePlaneOX().getTail().getY())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Z, camera.getImagePlaneOX().getTail().getZ())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_OY_X, camera.getImagePlaneOY().getTail().getX())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Y, camera.getImagePlaneOY().getTail().getY())
+                    .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Z, camera.getImagePlaneOY().getTail().getZ())
+                    .tryAppend();
 
-            //testOutput.setPixel(i, j, grayscaleToRGB(static_cast<std::uint8_t>(std::round((*camera.getPixel2D())[i][j].getPixelSpectralResp()[19] / maxResp * 255))));
-            const auto val = static_cast<std::uint8_t>(std::round(
-                (*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[20] / maxResp *
-                0xff));
-
-            for (int ii = i; ii < i + MUL; ii++)
-                for (int jj = j; jj < j + MUL; jj++)
-                    testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
-            //testOutput.setPixelByChannel(ii, jj, val & static_cast<std::uint8_t>(0xff0000), val & static_cast<std::uint8_t>(0x00ff00), val & static_cast<std::uint8_t>(0x0000ff));
-            //testOutput.getMutImage().set(i, j, bmp::Pixel{val, val, val});
+            std::thread([](const std::string &p) {
+#ifdef _WIN32
+                system(("start " + p).c_str());
+#else
+                    system(("xdg-open " + p).c_str());
+#endif
+    }, outpath).detach();
         }
     }
-    auto outp = testOutput.saveToTmpDir("", "band20");
-    // after the saveToTmpDir(), we obtained a path to newly generated file
-    // we need to gather more info so we can attach to it
-    testOutput.infoAppender->setIntInfo(InfoType::INT_BAND_COUNT, spectralBands)
-              .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
-              .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
-              .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
-              .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
-              .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
-              .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
-              .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
-              .setIntInfo(InfoType::DOUBLE_FOV_X, FOVx)
-              .setIntInfo(InfoType::DOUBLE_FOV_Y, FOVy)
-              .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
-              .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
-              .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
-              .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
-              .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
-              .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
-              .setIntInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
-              .setIntInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
-              .setIntInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
-              .setIntInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
-              .setIntInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
-              .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
-              .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
-              .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
-              .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
-              .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
-              .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
-              .tryAppend();
-
-    coutLogger->writeInfoEntry(outp);
-    std::thread([](const std::string &p) {
-#ifdef _WIN32
-        system(("start " + p).c_str());
-#else
-        system(("xdg-open " + p).c_str());
-#endif
-    }, outp).detach();
 
     coutLogger->writeInfoEntry("Goodbye!");
 
