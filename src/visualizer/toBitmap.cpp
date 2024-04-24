@@ -125,9 +125,9 @@ std::string ToBitmap::saveToTmpDir(const std::string &timeStr, const std::string
 
         infoAppender = new InfoAppender(filepath);
         infoAppender->setIntInfo(INT_VERSION, 1)
-                .setIntInfo(INT_SUBVERSION, 0)
-                .setUInt64Info(UINT64_LOCAL_TIMESTAMP, timestampInSec)
-                .setUInt64Info(UINT64_LOCAL_TIMESTAMP, timestampInSec);
+                    .setIntInfo(INT_SUBVERSION, 0)
+                    .setUInt64Info(UINT64_LOCAL_TIMESTAMP, timestampInSec)
+                    .setUInt64Info(UINT64_LOCAL_TIMESTAMP, timestampInSec);
         // info not enough for now, so we can't append now
         return filepath;
     } catch (const bmp::Exception &e) {

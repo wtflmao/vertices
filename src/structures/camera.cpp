@@ -523,7 +523,8 @@ std::shared_ptr<std::vector<std::vector<Pixel> > > &Camera::getPixel2D() noexcep
     return pixel2D;
 }
 
-Point Camera::getImagePlaneCenter() const noexcept {
+Point Camera::getImagePlaneCenter() const noexcept
+{
     return imgPlane_u->getPlaneCenter();
 }
 

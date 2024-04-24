@@ -24,7 +24,7 @@ private:
     int resY;
 
 public:
-    InfoAppender *infoAppender;
+    InfoAppender* infoAppender;
 
     ToBitmap(int resolutionX, int resolutionY) noexcept;
 

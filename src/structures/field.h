@@ -62,9 +62,9 @@ public:
 
     [[nodiscard]] int getAllFacesSize() const noexcept;
 
-    [[nodiscard]] const Point &getBoundsMin() const noexcept;
+    [[nodiscard]] const Point& getBoundsMin() const noexcept;
 
-    [[nodiscard]] const Point &getBoundsMax() const noexcept;
+    [[nodiscard]] const Point& getBoundsMax() const noexcept;
 };
 
 #endif //VERTICES_FIELD_H
