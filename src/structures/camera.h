@@ -76,6 +76,8 @@ public:
     [[nodiscard]] std::shared_ptr<std::vector<std::vector<Pixel> > > &getPixel2D() noexcept;
 
     //[[nodiscard]] Point findTheClosestPixel(const Point &source) const noexcept;
+
+    [[nodiscard]] Point getImagePlaneCenter() const noexcept;
 };
 
 struct wrappedRays {

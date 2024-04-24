@@ -2,6 +2,12 @@
 // Created by root on 24-4-19.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #ifndef VERTICES_TOBITMAP_H
 #define VERTICES_TOBITMAP_H
 
@@ -16,9 +22,10 @@ private:
     bmp::Bitmap *image = nullptr;
     int resX;
     int resY;
-    InfoAppender *infoAppender;
 
 public:
+    InfoAppender *infoAppender;
+
     ToBitmap(int resolutionX, int resolutionY) noexcept;
 
     ToBitmap(std::size_t resolutionX, std::size_t resolutionY) noexcept;

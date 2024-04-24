@@ -118,9 +118,22 @@ Item &Field::newClosedObject() noexcept {
     return objects.back();
 }
 
+// this "allFaces" is the vector of all faces IN THE BOUNDRY
+int Field::getAllFacesSize() const noexcept {
+    return allFaces.size();
+}
+
+const Point &Field::getBoundsMin() const noexcept {
+    return bounds[0];
+}
+
+const Point &Field::getBoundsMax() const noexcept {
+    return bounds[1];
+}
+
 [[deprecated]] bool Field::insertObject(const std::string &objPath, const std::string &mtlPath,
-                         const std::array<double, 3> &scaleFactor, Point center, std::array<int, 3> correctFaceVertices,
-                         int tCFI, std::vector<Point> innerPoints, bool isOpenMesh, int forwardAxis, int upAxis) {
+                                        const std::array<double, 3> &scaleFactor, Point center, std::array<int, 3> correctFaceVertices,
+                                        int tCFI, std::vector<Point> innerPoints, bool isOpenMesh, int forwardAxis, int upAxis) {
     objects.emplace_back();
     Item& object = objects.back();
     object.setScaleFactor(scaleFactor);

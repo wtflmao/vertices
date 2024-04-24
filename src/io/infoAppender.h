@@ -2,6 +2,12 @@
 // Created by root on 24-4-23.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #ifndef VERTICES_INFOAPPENDER_H
 #define VERTICES_INFOAPPENDER_H
 
@@ -18,11 +24,11 @@ const std::string startTag = "[VERTICES_OUTPUT_INFO_START]";
 const std::string endTag = "[VERTICES_OUTPUT_INFO_END]";
 
 constexpr int INT_INFO_START = 0;
-constexpr int INT_INFO_COUNT = 10;
+constexpr int INT_INFO_COUNT = 12;
 constexpr int UINT64_INFO_START = INT_INFO_START + INT_INFO_COUNT;
 constexpr int UINT64_INFO_COUNT = 2;
 constexpr int DOUBLE_INFO_START = UINT64_INFO_START + UINT64_INFO_COUNT;
-constexpr int DOUBLE_INFO_COUNT = 17;
+constexpr int DOUBLE_INFO_COUNT = 16;
 
 enum InfoType {
     INT_VERSION,
@@ -35,17 +41,18 @@ enum InfoType {
     INT_GOODRAYS_COUNT,
     INT_FACES_IN_FIELD_COUNT,
     INT_MULTITHREAD_COUNT,
+    INT_WAVELENGTH_LOW,
+    INT_WAVELENGTH_HIGH,
     UINT64_LOCAL_TIMESTAMP,
     UINT64_UTC_TIMESTAMP,
     DOUBLE_FOV_X,
     DOUBLE_FOV_Y,
-    DOUBLE_WAVELENGTH_LOW,
-    DOUBLE_WAVELENGTH_HIGH,
     DOUBLE_MIXER_RATIO_U,
     DOUBLE_MIXER_RATIO_D,
     DOUBLE_MIXER_RATIO_L,
     DOUBLE_MIXER_RATIO_R,
     DOUBLE_CAMERA_HEIGHT,
+    DOUBLE_CAM_PLATE_HEIGHT,
     DOUBLE_CAM_PLATE_CENTER_X,
     DOUBLE_CAM_PLATE_CENTER_Y,
     DOUBLE_CAM_PLATE_CENTER_Z,
@@ -64,13 +71,13 @@ private:
     std::vector<std::pair<std::uint64_t, bool> > uint64Info;
     std::vector<std::pair<double, bool> > doubleInfo;
 
+public:
     // u need to first tryRead() to see if it exists, then use getXXXInfo() to obtain inf
     void tryRead() noexcept;
 
     // u need to fisrt setXXXInfo(), then tryAppend() to write info into the file (only one chance tp append)
     void tryAppend() const noexcept;
 
-public:
     const std::string &getFilename() const noexcept { return filename; }
 
     InfoAppender() = delete;

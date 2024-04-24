@@ -2,6 +2,12 @@
 // Created by root on 24-4-23.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #include "infoAppender.h"
 
 // function that reads from end of the file looking for startTag and endTag
@@ -72,6 +78,7 @@ void InfoAppender::tryAppend() const noexcept {
     std::stringstream data;
     data << std::endl << JSONObj.dump(-1) << std::endl << std::endl;
     file.write(startTag.c_str(), sizeof(char) * std::strlen(startTag.c_str()));
+    // JSON data should be only in one single line
     file.write(data.str().c_str(), sizeof(char) * std::strlen(data.str().c_str()));
     file.write(endTag.c_str(), sizeof(char) * std::strlen(endTag.c_str()));
     file.close();

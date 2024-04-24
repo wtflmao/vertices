@@ -2,6 +2,12 @@
 // Created by root on 24-4-19.
 //
 
+/* Copyright 2024 wtflmao. All Rights Reserved.
+ *
+ * Distributed under MIT license.
+ * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
+ */
+
 #include "toBitmap.h"
 
 int ToBitmap::getResolutionX() const noexcept {
@@ -109,8 +115,20 @@ std::string ToBitmap::saveToTmpDir(const std::string &timeStr, const std::string
     try {
         auto filepath = getAPathToNewTempFile2(".bmp", timeStr.empty() ? "auto-gen" : timeStr, additionalInfo);
         image->save(filepath);
+        // get a timestamp to save to info
+        auto now = std::chrono::system_clock::now();
+        auto nowInSec = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+
+        // get a timestamp in second using cast and count()
+        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+        auto timestampInSec = nowInSec.count();
+
         infoAppender = new InfoAppender(filepath);
-        //infoAppender->tryAppend();
+        infoAppender->setIntInfo(INT_VERSION, 1)
+                .setIntInfo(INT_SUBVERSION, 0)
+                .setUInt64Info(UINT64_LOCAL_TIMESTAMP, timestampInSec)
+                .setUInt64Info(UINT64_LOCAL_TIMESTAMP, timestampInSec);
+        // info not enough for now, so we can't append now
         return filepath;
     } catch (const bmp::Exception &e) {
         coutLogger->writeErrorEntry(e.what(), 1);

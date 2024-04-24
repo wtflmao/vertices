@@ -1062,6 +1062,37 @@ int main() {
         }
     }
     auto outp = testOutput.saveToTmpDir("", "band20");
+    // after the saveToTmpDir(), we obtained a path to newly generated file
+    // we need to gather more info so we can attach to it
+    testOutput.infoAppender->setIntInfo(InfoType::INT_BAND_COUNT, spectralBands)
+                            .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
+                            .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
+                            .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
+                            .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
+                            .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
+                            .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
+                            .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
+                            .setIntInfo(InfoType::DOUBLE_FOV_X, FOVx)
+                            .setIntInfo(InfoType::DOUBLE_FOV_Y, FOVy)
+                            .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
+                            .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
+                            .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
+                            .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
+                            .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
+                            .setIntInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
+                            .setIntInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
+                            .setIntInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
+                            .setIntInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
+                            .setIntInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
+                            .setIntInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
+                            .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
+                            .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
+                            .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
+                            .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
+                            .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
+                            .setIntInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
+                            .tryAppend();
+
     coutLogger->writeInfoEntry(outp);
     std::thread([](const std::string &p) {
 #ifdef _WIN32

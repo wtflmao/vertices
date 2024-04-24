@@ -26,9 +26,9 @@ private:
     std::shared_ptr<Node> tree;
     std::vector<std::shared_ptr<Triangle> > allFaces;
     std::vector<Item> objects;
+    std::array<Point, 2> bounds;
 
 public:
-    std::array<Point, 2> bounds;
     std::size_t nodeCount = 0;
     std::size_t maxDepth = 0;
     const Vec sunlightDirectionToGround = Vec(Point(-1, 0, -std::sqrt(3)));
@@ -59,6 +59,12 @@ public:
     Item &newOpenObject() noexcept;
 
     Item &newClosedObject() noexcept;
+
+    [[nodiscard]] int getAllFacesSize() const noexcept;
+
+    [[nodiscard]] const Point &getBoundsMin() const noexcept;
+
+    [[nodiscard]] const Point &getBoundsMax() const noexcept;
 };
 
 #endif //VERTICES_FIELD_H
