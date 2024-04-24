@@ -68,9 +68,9 @@ public:
 
     ImagePlane &setOY(const Vec &v) noexcept;
 
-    ImagePlane &setAngleToZ(double angleToZ) noexcept;
+    ImagePlane& setAngleToZ(double angleToZ) noexcept;
 
-    ImagePlane &updateNormalAndAngleToZ() noexcept;
+    ImagePlane& updateNormalAndAngleToZ() noexcept;
 
     explicit ImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a);
 

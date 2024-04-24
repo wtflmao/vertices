@@ -308,7 +308,8 @@ int main(int argc, char* argv[]) {
     if (argc == 2) {
         std::ifstream file(argv[1]);
         if (!file.is_open()) {
-            coutLogger->writeErrorEntry("The file u provided in the argument list cannot be opened: " + std::to_string(*argv[1]));
+            coutLogger->writeErrorEntry(
+                "The file u provided in the argument list cannot be opened: " + std::to_string(*argv[1]));
             return (26);
         }
         file.close();
@@ -318,7 +319,8 @@ int main(int argc, char* argv[]) {
         std::string data;
         try {
             infoAppender.tryRead(&data);
-        } catch (std::exception &e) {
+        }
+        catch (std::exception& e) {
             coutLogger->writeErrorEntry("Error occurred in main() when tryRead(): " + std::to_string(*e.what()));
             return 27;
         } catch (...) {
@@ -1060,21 +1062,23 @@ int main(int argc, char* argv[]) {
         outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(band).size() * MUL);
         maxRespPerBand.emplace_back(-1.0f);
         for (int i = 0; i < camera.getPixel2D()->size(); i++) {
-            for (const auto &j: (*camera.getPixel2D())[i]) {
-                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band/bandLength]) {
-                    maxRespPerBand[band/bandLength] = j.getPixelSpectralResp()[band];
+            for (const auto& j : (*camera.getPixel2D())[i]) {
+                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band / bandLength]) {
+                    maxRespPerBand[band / bandLength] = j.getPixelSpectralResp()[band];
                 }
             }
         }
-        coutLogger->writeInfoEntry("Max resp at band[" + std::to_string(band) + "] :" + std::to_string(maxRespPerBand[band/bandLength]));
+        coutLogger->writeInfoEntry("Max resp at band[" + std::to_string(band) + "] :" + std::to_string(maxRespPerBand[
+            band / bandLength]));
     }
 
-    for (auto &testOutput: *outputs) {
+    for (auto& testOutput : *outputs) {
         for (int k = 0; k < spectralBands; k += bandLength) {
             for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
                 for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
                     const auto val = static_cast<std::uint8_t>(std::round(
-                        (*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k] / maxRespPerBand[k/bandLength] * 0xff));
+                        (*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k] / maxRespPerBand[k /
+                            bandLength] * 0xff));
                     for (int ii = i; ii < i + MUL; ii++)
                         for (int jj = j; jj < j + MUL; jj++)
                             testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
@@ -1086,48 +1090,48 @@ int main(int argc, char* argv[]) {
 
             coutLogger->writeInfoEntry(outpath);
             testOutput.infoAppender->setIntInfo(InfoType::INT_BAND_COUNT, spectralBands)
-                    .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
-                    .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
-                    .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
-                    .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
-                    .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
-                    .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
-                    .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
-                    .setDoubleInfo(InfoType::DOUBLE_FOV_X, FOVx)
-                    .setDoubleInfo(InfoType::DOUBLE_FOV_Y, FOVy)
-                    .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
-                    .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
-                    .setIntInfo(InfoType::INT_THIS_BAND, k)
-                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
-                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
-                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
-                    .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
-                    .setDoubleInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
-                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
-                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
-                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
-                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
-                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
-                    .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_OX_X, camera.getImagePlaneOX().getTail().getX())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Y, camera.getImagePlaneOX().getTail().getY())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Z, camera.getImagePlaneOX().getTail().getZ())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_OY_X, camera.getImagePlaneOY().getTail().getX())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Y, camera.getImagePlaneOY().getTail().getY())
-                    .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Z, camera.getImagePlaneOY().getTail().getZ())
-                    .tryAppend();
+                      .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
+                      .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
+                      .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
+                      .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
+                      .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
+                      .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
+                      .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
+                      .setDoubleInfo(InfoType::DOUBLE_FOV_X, FOVx)
+                      .setDoubleInfo(InfoType::DOUBLE_FOV_Y, FOVy)
+                      .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
+                      .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
+                      .setIntInfo(InfoType::INT_THIS_BAND, k)
+                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
+                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
+                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
+                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
+                      .setDoubleInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
+                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
+                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
+                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
+                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
+                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
+                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_OX_X, camera.getImagePlaneOX().getTail().getX())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Y, camera.getImagePlaneOX().getTail().getY())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Z, camera.getImagePlaneOX().getTail().getZ())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_OY_X, camera.getImagePlaneOY().getTail().getX())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Y, camera.getImagePlaneOY().getTail().getY())
+                      .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Z, camera.getImagePlaneOY().getTail().getZ())
+                      .tryAppend();
 
-            std::thread([](const std::string &p) {
+            std::thread([](const std::string& p) {
 #ifdef _WIN32
                 system(("start " + p).c_str());
 #else
                     system(("xdg-open " + p).c_str());
 #endif
-    }, outpath).detach();
+            }, outpath).detach();
         }
     }
 

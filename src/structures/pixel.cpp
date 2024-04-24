@@ -185,11 +185,12 @@ Ray Pixel::shootRayFromPixel(const Vec &directionVec,
 
 Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
                                          const std::array<double, spectralBands> &sunlightSpectrum,
-                                         Pixel *pixel_p, const double angleToZ) const noexcept {
+                                         Pixel* pixel_p, const double angleToZ) const noexcept {
     auto ray = Ray{};
     // posInGnd's unit is meter but is like xxx*10^-6, we need to multiply it with 10^6 (only for X and Y)
     const auto posInGndAmplified = Point(posInGnd.getX() * 1e6, posInGnd.getY() * 1e6,
-                                         (posInGnd.getZ() - CAMERA_HEIGHT) * 1e6 + CAMERA_HEIGHT - CAM_IMG_DISTANCE * std::cos(angleToZ));
+                                         (posInGnd.getZ() - CAMERA_HEIGHT) * 1e6 + CAMERA_HEIGHT - CAM_IMG_DISTANCE *
+                                         std::cos(angleToZ));
     //const auto posInGndAmplified = Point(posInGnd.getX() * 1e6, posInGnd.getY() * 1e6, posInGnd.getZ());
 
     // build up the current ray

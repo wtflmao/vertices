@@ -95,7 +95,7 @@ void InfoAppender::tryAppend() const noexcept {
     std::cout << JSONObj.dump(-1) << std::endl;
 }
 
-void InfoAppender::tryRead(std::string *ret) {
+void InfoAppender::tryRead(std::string* ret) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         coutLogger->writeErrorEntry("Failed to open file by read|binary at InfoAppender::tryRead(): " + filename);
