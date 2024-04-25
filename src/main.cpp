@@ -93,13 +93,14 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         if (!validity) {
                             continue;
                         }
-                        //goodRays_per_thread->push_back(ray);
+                        goodRays_per_thread->push_back(ray);
+
 
                         // here we handle the scattered rays
                         // the intensity for every scattered rays should be determined by BRDF(....)
                         auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
                                                              face->faceBRDF), ray.getSourcePixel());
-                        for (const auto &ray_sp: scatteredRays) {
+                        //for (const auto &ray_sp: scatteredRays) {
                             //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
                             // config all scattered rays' sourcePixelInGnd
                             for (auto &r: scatteredRays) {
@@ -112,7 +113,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                             // debug test only
                             goodRays_per_thread->insert(goodRays_per_thread->end(), scatteredRays.begin(),
                                                         scatteredRays.end());
-                            continue;
+                            break;
+                            //continue;
 
                             for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
@@ -122,9 +124,11 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //rays->push_back(scatteredRays[j]);
                                     // for 2+ scattered rays, the source of them is not THE SUN but the original ray
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
-                                    auto ray_tt = scatteredRays.at(j);
-                                    ray_tt.setAncestor(ray_t.getAncestor());
+                                    auto &ray_tt = scatteredRays.at(j);
+                                    //ray_tt.setAncestor(ray_t.getAncestor());
+                                    ray_tt.setAncestor(ray.getAncestor());
                                     bool validity_tt = false;
+                                    auto scatteredRays2 = std::array<Ray, SCATTER_RAYS + 1>{};
                                     for (int nodeIndex_tt = 0;
                                          nodeIndex_tt < field.nodeCount && !validity_tt; nodeIndex_tt++) {
                                         auto &node_tt = node_ptrs.at(nodeIndex_tt);
@@ -141,6 +145,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                                     intersection_tt != intersection)) {
                                                     // good, scatter ray has intersection
                                                     validity_tt = true;
+                                                    scatteredRays2 = ray_tt.scatter(*face_tt, intersection_tt, field.brdfList.at(
+                                                             face_tt->faceBRDF), ray_tt.getSourcePixel());
                                                     break;
                                                 }
                                             }
@@ -151,7 +157,11 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     }
                                     //std::cout << "(";
                                     if (validity_tt) {
-                                        goodRays_per_thread->push_back(std::move(ray_tt));
+                                        //goodRays_per_thread->push_back(std::move(ray_tt));
+                                        for (auto &r: scatteredRays2)
+                                            goodRays_per_thread->push_back(std::move(r));
+
+
                                         //printf("Good ray intensity [0]%lf, [20%%]%lf, [75%%]%lf, level%d\n", ray_tt.getIntensity_p().at(0), ray_tt.getIntensity_p().at(std::round(0.2*spectralBands)), ray_tt.getIntensity_p().at(0.75*spectralBands), ray_tt.getScatteredLevel());
                                         //std::cout << goodCnt++;
                                     } else {
@@ -166,7 +176,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //std::cout << std::endl;
                                 }
                             }
-                        }
+                        //}
                     }
                 }
             } else {
@@ -390,6 +400,9 @@ int main(int argc, char* argv[]) {
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(C:\Users\root\Downloads\debug.mini.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
@@ -417,6 +430,9 @@ int main(int argc, char* argv[]) {
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(/home/20009100240/3dmodel/BRDF/debug.mini.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
@@ -430,15 +446,111 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
-        Point(-120, -120, -2),
-        Point(120, 120, 50 * 1.732)
+        Point(-FIELD_LENGTH_X/2.0, -FIELD_LENGTH_Y/2.0, -2),
+        Point(FIELD_LENGTH_X/2.0, FIELD_LENGTH_Y/2.0, CAMERA_HEIGHT * 1.732)
     );
-
+    // cube #1
     field.newClosedObject()
             .setOBJPath(objPaths.at(0))
             .setMTLPath(mtlPaths.at(0))
-            .setCenter({0, -3, 2})
-            .setScaleFactor({3, 2, 2.5})
+            .setCenter({-9, 9, 4})
+            .setScaleFactor({3, 2, 4})
+            .setForwardAxis(6)
+            .setUpAxis(2)
+            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+            .setInnerPoints({
+                {-0.1, -0.1, -0.1},
+                {0.1, 0.1, 0.1},
+                {0, 0, 0}
+            })
+            .readFromOBJ()
+            .readFromMTL()
+            .inspectNormalVecForAllFaces();
+
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
+                                           field.getObjects().back().getFaces().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
+                                           field.getObjects().back().getVertices().size()));
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getVertices().size()) + " vertices");
+#endif    // cube #2
+    field.newClosedObject()
+            .setOBJPath(objPaths.at(0))
+            .setMTLPath(mtlPaths.at(0))
+            .setCenter({9, -9, 4})
+            .setScaleFactor({3, 2, 4})
+            .setForwardAxis(6)
+            .setUpAxis(2)
+            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+            .setInnerPoints({
+                {-0.1, -0.1, -0.1},
+                {0.1, 0.1, 0.1},
+                {0, 0, 0}
+            })
+            .readFromOBJ()
+            .readFromMTL()
+            .inspectNormalVecForAllFaces();
+
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
+                                           field.getObjects().back().getFaces().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
+                                           field.getObjects().back().getVertices().size()));
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getVertices().size()) + " vertices");
+#endif    // cube #3
+    field.newClosedObject()
+            .setOBJPath(objPaths.at(0))
+            .setMTLPath(mtlPaths.at(0))
+            .setCenter({9, 9, 4})
+            .setScaleFactor({2, 3, 4})
+            .setForwardAxis(6)
+            .setUpAxis(2)
+            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+            .setInnerPoints({
+                {-0.1, -0.1, -0.1},
+                {0.1, 0.1, 0.1},
+                {0, 0, 0}
+            })
+            .readFromOBJ()
+            .readFromMTL()
+            .inspectNormalVecForAllFaces();
+
+#if VERTICES_CONFIG_CXX_STANDARD >= 20
+    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
+                                           field.getObjects().back().getFaces().size()));
+    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
+                                           field.getObjects().back().getVertices().size()));
+#elif VERTICES_CONFIG_CXX_STANDARD <= 17
+    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getFaces().size()) + " faces");
+    coutLogger->writeInfoEntry(
+        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
+            field.getObjects().back().getVertices().size()) + " vertices");
+#endif    // cube #4
+    field.newClosedObject()
+            .setOBJPath(objPaths.at(0))
+            .setMTLPath(mtlPaths.at(0))
+            .setCenter({-9, -9, 4})
+            .setScaleFactor({2, 3, 4})
             .setForwardAxis(6)
             .setUpAxis(2)
             // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
@@ -473,7 +585,7 @@ int main(int argc, char* argv[]) {
             .setForwardAxis(6)
             .setUpAxis(2)
             .setCenter({0, 0, 0})
-            .setScaleFactor({800, 800, 1})
+            .setScaleFactor({200, 200, 1})
             .setThatCorrectFaceVertices({598, 0, 1})
             .setThatCorrectFaceIndex(0)
             .readFromOBJ()
@@ -540,7 +652,8 @@ int main(int argc, char* argv[]) {
                                                                  BRDFPaths.at(brdf_cnt_t).first);
                 brdf_cnt_t++;
             } else {
-                fprintf(stderr, "Error when initializing BRDFs. Reason: not enough open BRDFs in the list.\a\n");
+                fprintf(stderr, "Error when initializing BRDFs. Reason: not enough open BRDFs in the list.\n\
+                                        Required [%d][%d][%d], but BRDFPaths.size() is %llu\a\n", brdf_cnt_t+1, brdf_cnt_t+2, brdf_cnt_t+3, BRDFPaths.size());
                 return 66;
             }
             std::cout << "Handling a set of open BRDF done" << std::endl;
@@ -757,7 +870,7 @@ int main(int argc, char* argv[]) {
 
     Ray tmp;
     //tmp.setOrigin({0, 0, 3}).setDirection(Vec({0, 0, -1})).setIntensity_p(camera.sunlightSpectrum).setAncestor({0, 0, 3}).setScatteredLevel(1).setSourcePixel(static_cast<void*>(&camera.getPixel2D()->at(camera.getPixel2D()->size()/2).at(camera.getPixel2D()->size()/2)));
-    tmp.setOrigin({0, 0, 3}).setDirection(Vec({0, 0, -1})).setIntensity_p(camera.sunlightSpectrum).
+    tmp.setOrigin({0, 0, 3}).setDirection(Vec{0, 0, -1}).setIntensity_p(camera.sunlightSpectrum).
             setAncestor({0, 0, 3}).setScatteredLevel(1).
             setSourcePixel(static_cast<void *>(&camera.getPixel2D()->at(0).at(0))).setSourcePixelPosInGnd(
                 static_cast<Pixel *>(tmp.getSourcePixel())->getPosInGnd());
@@ -785,6 +898,7 @@ int main(int argc, char* argv[]) {
                  const std::pair<int, int> &constSubVec,
                  int idx, wrappedRays *ret);
 #ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS
+#error "Multi-threading is not deprecated and discontinued, plz use VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND instead"
     //dp::thread_pool pool(std::max(std::thread::hardware_concurrency(), 1u));
     ThreadPool pool;
     //auto results = new std::vector<std::future<std::vector<Ray>*>>;
@@ -976,9 +1090,39 @@ int main(int argc, char* argv[]) {
         if (goodRays->at(0).getSourcePixel() == goodRays->at(1).getSourcePixel())
             coutLogger->writeErrorEntry("The first and second rays are the same pixel.");
     }
-#ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
+
     // here we make a copy of the original pixel vectors as we want to mix them up
     auto camPixelsBackup = std::make_shared<std::vector<std::vector<Pixel>>>(*camera.getPixel2D());
+    // fetch max response per band
+    // to save time, we only handle the bands we wanna output, the other bands just ignore, as we dont care bout their output
+    constexpr int bandLength = 19;
+    auto maxRespPerBand = std::vector<double>();
+    double maxRespOfAll = -1.0f;
+    for (int band = 0; band <= spectralBands; band += bandLength) {
+        //outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(band).size() * MUL);
+        maxRespPerBand.emplace_back(-1.0f);
+        for (int i = 0; i < camera.getPixel2D()->size(); i++)
+            for (const auto& j : (*camera.getPixel2D())[i]) {
+                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band / bandLength])
+                    maxRespPerBand[band / bandLength] = j.getPixelSpectralResp()[band];
+                if (j.getPixelSpectralResp()[band] > maxRespOfAll)
+                    maxRespOfAll = j.getPixelSpectralResp()[band];
+            }
+        coutLogger->writeInfoEntry("Max resp at band[" + std::to_string(band) + "] :" + std::to_string(maxRespPerBand[
+            band / bandLength]));
+    }
+    // and add some "initial background light intensity" to every pixel
+    constexpr double baseIntensityPercentage = 0.1;
+    for (auto &pixelRow: *camPixelsBackup)
+        for (auto &pixel: pixelRow)
+            for (int band = 0; band < spectralBands; band += bandLength)
+                pixel.getMutPixelSpectralResp()[band] += baseIntensityPercentage * maxRespPerBand[band / bandLength];
+    //for (auto &val: maxRespPerBand)
+    //    val += baseIntensityPercentage * maxRespOfAll;
+    //maxRespOfAll *= (1.0 + baseIntensityPercentage);
+
+#ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
+    // here we make a copy of the original pixel vectors as we want to mix them up
     // then mix up neighboring pixel's intensity
     void mixer(const int left, const int right, Camera &camera, const std::shared_ptr<std::vector<std::vector<Pixel>>> &camPixelsBackup);
     mixer(0, spectralBands, camera, camPixelsBackup);
@@ -1001,9 +1145,7 @@ int main(int argc, char* argv[]) {
             }
         }
         coutLogger->writeInfoEntry("Here's normal");
-        // here we make a copy of the original pixel vectors as we want to mix them up
         //threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), goodRays_tt, std::ref(sub), 0, &rets->at(i_++));
-        auto camPixelsBackup = std::make_shared<std::vector<std::vector<Pixel> > >(*camera.getPixel2D());
         for (const auto &[fst, snd]: subVectors) {
             try {
                 threads.emplace_back(mixer, fst, snd, std::ref(camera), std::ref(camPixelsBackup));
@@ -1051,88 +1193,74 @@ int main(int argc, char* argv[]) {
 
 
     // save the camera's spectrum response to a bitmap
-    //double maxResp = -1.0f;
-    constexpr int MUL = 8;
-
+    constexpr int MUL = 4;
     auto outputs = new std::vector<ToBitmap>;
-    auto maxRespPerBand = std::vector<double>();
 
-    constexpr int bandLength = 19;
-    for (int band = 0; band <= spectralBands; band += bandLength) {
-        outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(band).size() * MUL);
-        maxRespPerBand.emplace_back(-1.0f);
-        for (int i = 0; i < camera.getPixel2D()->size(); i++) {
-            for (const auto& j : (*camera.getPixel2D())[i]) {
-                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band / bandLength]) {
-                    maxRespPerBand[band / bandLength] = j.getPixelSpectralResp()[band];
-                }
+    for (int band = 0; band < spectralBands; band += bandLength)
+        outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(0).size() * MUL);
+
+
+    const double newMaxRespOfAll = (1.0 + baseIntensityPercentage) * maxRespOfAll;
+    for (int k = 0; k < spectralBands; k += bandLength) {
+        auto testOutput = (*outputs)[k / bandLength];
+        for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
+            for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
+                const auto val = static_cast<std::uint8_t>(std::round(
+                ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k] /*+ maxRespOfAll * baseIntensityPercentage*/)
+                        / ((1.0 + baseIntensityPercentage) * maxRespPerBand[k / bandLength]) * 0xff));
+                for (int ii = i; ii < i + MUL; ii++)
+                    for (int jj = j; jj < j + MUL; jj++)
+                        testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
             }
         }
-        coutLogger->writeInfoEntry("Max resp at band[" + std::to_string(band) + "] :" + std::to_string(maxRespPerBand[
-            band / bandLength]));
-    }
+        auto outpath = testOutput.saveToTmpDir("", "band" + std::to_string(k));
+        // after the saveToTmpDir(), we obtained a path to newly generated file
+        // we need to gather more info so we can attach to it
 
-    for (auto& testOutput : *outputs) {
-        for (int k = 0; k < spectralBands; k += bandLength) {
-            for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
-                for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
-                    const auto val = static_cast<std::uint8_t>(std::round(
-                        (*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k] / maxRespPerBand[k /
-                            bandLength] * 0xff));
-                    for (int ii = i; ii < i + MUL; ii++)
-                        for (int jj = j; jj < j + MUL; jj++)
-                            testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
-                }
-            }
-            auto outpath = testOutput.saveToTmpDir("", "band" + std::to_string(k));
-            // after the saveToTmpDir(), we obtained a path to newly generated file
-            // we need to gather more info so we can attach to it
+        coutLogger->writeInfoEntry(outpath);
+        testOutput.infoAppender->setIntInfo(InfoType::INT_BAND_COUNT, spectralBands)
+                  .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
+                  .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
+                  .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
+                  .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
+                  .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
+                  .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
+                  .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
+                  .setDoubleInfo(InfoType::DOUBLE_FOV_X, FOVx)
+                  .setDoubleInfo(InfoType::DOUBLE_FOV_Y, FOVy)
+                  .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
+                  .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
+                  .setIntInfo(InfoType::INT_THIS_BAND, k)
+                  .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
+                  .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
+                  .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
+                  .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
+                  .setDoubleInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
+                  .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
+                  .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
+                  .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
+                  .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
+                  .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
+                  .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_OX_X, camera.getImagePlaneOX().getTail().getX())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Y, camera.getImagePlaneOX().getTail().getY())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Z, camera.getImagePlaneOX().getTail().getZ())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_OY_X, camera.getImagePlaneOY().getTail().getX())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Y, camera.getImagePlaneOY().getTail().getY())
+                  .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Z, camera.getImagePlaneOY().getTail().getZ())
+                  .tryAppend();
 
-            coutLogger->writeInfoEntry(outpath);
-            testOutput.infoAppender->setIntInfo(InfoType::INT_BAND_COUNT, spectralBands)
-                      .setIntInfo(InfoType::INT_BAND_OVERLAPPING, 0)
-                      .setIntInfo(InfoType::INT_COUNT_X, camera.getPixel2D()->size())
-                      .setIntInfo(InfoType::INT_COUNT_Y, camera.getPixel2D()->at(0).size())
-                      .setIntInfo(InfoType::INT_FIELD_ITEM_COUNT, field.getObjects().size())
-                      .setIntInfo(InfoType::INT_GOODRAYS_COUNT, goodRays->size())
-                      .setIntInfo(InfoType::INT_FACES_IN_FIELD_COUNT, field.getAllFacesSize())
-                      .setIntInfo(InfoType::INT_MULTITHREAD_COUNT, HARDWARE_CONCURRENCY)
-                      .setDoubleInfo(InfoType::DOUBLE_FOV_X, FOVx)
-                      .setDoubleInfo(InfoType::DOUBLE_FOV_Y, FOVy)
-                      .setIntInfo(InfoType::INT_WAVELENGTH_LOW, UPPER_WAVELENGTH)
-                      .setIntInfo(InfoType::INT_WAVELENGTH_HIGH, LOWER_WAVELENGTH)
-                      .setIntInfo(InfoType::INT_THIS_BAND, k)
-                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_U, mixRatioU)
-                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_D, mixRatioD)
-                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_L, mixRatioL)
-                      .setDoubleInfo(InfoType::DOUBLE_MIXER_RATIO_R, mixRatioR)
-                      .setDoubleInfo(InfoType::DOUBLE_CAMERA_HEIGHT, CAMERA_HEIGHT)
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_HEIGHT, CAMERA_HEIGHT - CAM_IMG_DISTANCE)
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_X, camera.getImagePlaneCenter().getX())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Y, camera.getImagePlaneCenter().getY())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_PLATE_CENTER_Z, camera.getImagePlaneCenter().getZ())
-                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_X, field.getBoundsMin().getX())
-                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Y, field.getBoundsMin().getY())
-                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MIN_Z, field.getBoundsMin().getZ())
-                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_X, field.getBoundsMax().getX())
-                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Y, field.getBoundsMax().getY())
-                      .setDoubleInfo(InfoType::DOUBLE_FIELD_BOX_MAX_Z, field.getBoundsMax().getZ())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_OX_X, camera.getImagePlaneOX().getTail().getX())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Y, camera.getImagePlaneOX().getTail().getY())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_OX_Z, camera.getImagePlaneOX().getTail().getZ())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_OY_X, camera.getImagePlaneOY().getTail().getX())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Y, camera.getImagePlaneOY().getTail().getY())
-                      .setDoubleInfo(InfoType::DOUBLE_CAM_OY_Z, camera.getImagePlaneOY().getTail().getZ())
-                      .tryAppend();
-
-            std::thread([](const std::string& p) {
+        std::thread([](const std::string& p) {
 #ifdef _WIN32
-                system(("start " + p).c_str());
+            system(("start " + p).c_str());
 #else
-                    system(("xdg-open " + p).c_str());
+                system(("xdg-open " + p).c_str());
 #endif
-            }, outpath).detach();
-        }
+        }, outpath).detach();
     }
 
     coutLogger->writeInfoEntry("Goodbye!");

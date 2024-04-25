@@ -21,11 +21,11 @@ private:
     Point planeCenter = {0, 0, CAMERA_HEIGHT - CAM_IMG_DISTANCE};
 
     // this vec indicates which is the positive X axis of the image plane
-    Vec OX = Vec(Point{1, 0, 0.2}).getNormalized();
+    Vec OX = Vec(Point{1, 0, 1.0/1.732}).getNormalized();
 
     // this vec indicates which is the positive Y axis of the image plane
     //Vec OY = Vec(Point{0, 1.732, -1}).getNormalized();
-    Vec OY = Vec(Point{0, 1, 0.2}).getNormalized();
+    Vec OY = Vec(Point{0, 1, 1.0/3.0}).getNormalized();
 
     // we want the normal of the image plane points to the ground, not the sky
     Vec planeNormal = OX.cross(OY).getTail().getZ() < 0 ? OX.cross(OY).getNormalized() : OY.cross(OX).getNormalized();
@@ -40,6 +40,8 @@ private:
     std::vector<std::vector<Pixel *> > toPixel_p;
 
     int countX = 0, countY = 0;
+
+    Point firstPoint, lastPoint;
 
 public:
     [[nodiscard]] std::vector<std::vector<Point> > &getSamplePoints() noexcept;
@@ -60,6 +62,10 @@ public:
 
     [[nodiscard]] double getAngleToZ() const noexcept;
 
+    [[nodiscard]] const Point& getFirstPoint() const noexcept;
+
+    [[nodiscard]] const Point& getLastPoint() const noexcept;
+
     ImagePlane &setPlaneCenter(const Point &p) noexcept;
 
     ImagePlane &setPlaneNormal(const Vec &v) noexcept;
@@ -70,7 +76,13 @@ public:
 
     ImagePlane& setAngleToZ(double angleToZ) noexcept;
 
+    ImagePlane& setFirstPoint(const Point &p) noexcept;
+
+    ImagePlane& setLastPoint(const Point &p) noexcept;
+
     ImagePlane& updateNormalAndAngleToZ() noexcept;
+
+    ImagePlane& updateFirstAndLastPoint() noexcept;
 
     explicit ImagePlane(const std::shared_ptr<std::vector<std::vector<Pixel> > > &a);
 

@@ -28,6 +28,8 @@ public:
     [[maybe_unused]] Vec(const Point &, double) noexcept;
     Vec(const Point &origin, const Point &direction) noexcept;
 
+    Vec(double tailX, double tailY, double tailZ) noexcept;
+
     explicit Vec(const Point &) noexcept;
 
     //explicit Vec(Ray &ray);

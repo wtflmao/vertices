@@ -17,9 +17,8 @@ free -m
 nproc
 
 cmake -DCMAKE_BUILD_TYPE=Release "-DCMAKE_MAKE_PROGRAM=ninja" -G Ninja -S $dirPath -B $dirPath/cmake-build-release
-cmake --build $dirPath/cmake-build-release --target vertices -j 80 #&& $dirPath/cmake-build-release/vertices
+cmake --build $dirPath/cmake-build-release --target vertices -j 80
 
 timestamp=$(date +'%Y%m%d%H%M%S')
 cp $dirPath/cmake-build-release/vertices $dirPath/cmake-build-release/vertices$timestamp
 $dirPath/cmake-build-release/vertices$timestamp
-vim

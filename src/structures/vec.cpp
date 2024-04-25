@@ -23,6 +23,11 @@ Vec::Vec(const Point &origin, const Point &direction) noexcept {
     updateLength();
 }
 
+Vec::Vec(const double tailX, const double tailY, const double tailZ) noexcept {
+    tail = Point{tailX, tailY, tailZ};
+    updateLength();
+}
+
 // Constructor
 Vec::Vec(const Point &direction) noexcept {
     tail = direction;
