@@ -282,8 +282,8 @@ Camera::Camera() {
             sourcePoint.setZ((sourcePoint.getZ() + CAM_IMG_DISTANCE * std::cos(imgPlane_u->getAngleToZ()) -
                            CAMERA_HEIGHT) /** 1e-6*/ + CAMERA_HEIGHT)
                        //sourcePoint.setZ(sourcePoint.getZ() + CAM_IMG_DISTANCE)
-                       .setX(sourcePoint.getX() )//* 1e-6)
-                       .setY(sourcePoint.getY() );//* 1e-6);
+                       .setX(sourcePoint.getX()) //* 1e-6)
+                       .setY(sourcePoint.getY()); //* 1e-6);
             //coutLogger->writeInfoEntry("normal here222");
             if (sourcePoint.getZ() < 0)
                 coutLogger->writeWarnEntry(

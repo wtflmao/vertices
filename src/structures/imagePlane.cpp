@@ -153,29 +153,33 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
 
     double angle;
     auto vec = BigO;
-    if (firstPoint.getX() > -FIELD_LENGTH_X/2.0) {
+    if (firstPoint.getX() > -FIELD_LENGTH_X / 2.0) {
         // we need to move the imageplane towards negative X or positive X axis for aome distance in this case
         angle = std::acos(Vec{1, 0, 0}.dot(Vec{planeNormal.getTail().getX(), 0, planeNormal.getTail().getZ()}));
         if (angle < 1.0 / 180.0 * pi && angle > -1.0 / 180.0 * pi) {
             angle = 1.0 / 180.0 * pi * (angle > 0.0 ? 1.0 : -1.0);
-        } else if (angle > 89.0 / 180.0 * pi || angle < -89.0 / 180.0 * pi) {
+        }
+        else if (angle > 89.0 / 180.0 * pi || angle < -89.0 / 180.0 * pi) {
             angle = 89.0 / 180.0 * pi * (angle > 0.0 ? 1.0 : -1.0);
         }
-        const double distance = 1.0 / std::tan(angle) * std::abs((CAMERA_HEIGHT - CAM_IMG_DISTANCE) - firstPoint.getZ());
+        const double distance = 1.0 / std::tan(angle) *
+            std::abs((CAMERA_HEIGHT - CAM_IMG_DISTANCE) - firstPoint.getZ());
         coutLogger->writeInfoEntry("distance: " + std::to_string(distance));
         //vec.setTail(vec + (firstPoint.getZ() < lastPoint.getZ() ? Vec{-distance, 0.0, 0.0} : Vec{distance, 0.0, 0.0}).getTail());
         //vec.setTail(vec.getTail().getX() + (firstPoint.getZ() < lastPoint.getZ() ? -distance : distance), vec.getTail().getY() + 0.0, vec.getTail().getZ() + 0.0);
         vec.setX(firstPoint.getZ() < lastPoint.getZ() ? -distance : distance);
     }
-    if (firstPoint.getY() > -FIELD_LENGTH_Y/2.0) {
+    if (firstPoint.getY() > -FIELD_LENGTH_Y / 2.0) {
         // we need to move the imageplane towards negative Y or positive Y axis for aome distance in this case
         angle = std::acos(Vec{0, 1, 0}.dot(Vec{0, planeNormal.getTail().getY(), planeNormal.getTail().getZ()}));
         if (angle < 1.0 / 180.0 * pi && angle > -1.0 / 180.0 * pi) {
             angle = 1.0 / 180.0 * pi * (angle > 0.0 ? 1.0 : -1.0);
-        } else if (angle > 89.0 / 180.0 * pi || angle < -89.0 / 180.0 * pi) {
+        }
+        else if (angle > 89.0 / 180.0 * pi || angle < -89.0 / 180.0 * pi) {
             angle = 89.0 / 180.0 * pi * (angle > 0.0 ? 1.0 : -1.0);
         }
-        const double distance = 1.0 / std::tan(angle) * std::abs((CAMERA_HEIGHT - CAM_IMG_DISTANCE) - firstPoint.getZ());
+        const double distance = 1.0 / std::tan(angle) *
+            std::abs((CAMERA_HEIGHT - CAM_IMG_DISTANCE) - firstPoint.getZ());
         coutLogger->writeInfoEntry("distance: " + std::to_string(distance));
         //vec.setTail(vec + (firstPoint.getZ() < lastPoint.getZ() ? Vec{-distance, 0.0, 0.0} : Vec{distance, 0.0, 0.0}).getTail());
         //vec.setTail(vec.getTail().getX() + 0.0, vec.getTail().getY() + (firstPoint.getZ() < lastPoint.getZ() ? -distance : distance), vec.getTail().getZ() + 0.0);
@@ -187,9 +191,9 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
     }
 
     setPlaneCenter(vec + getPlaneCenter());
-    for (auto &pointVec: samplePoints)
-        for (auto &point: pointVec)
-        point = vec + point;
+    for (auto& pointVec : samplePoints)
+        for (auto& point : pointVec)
+            point = vec + point;
     updateFirstAndLastPoint();
 
     coutLogger->writeInfoEntry(
@@ -197,10 +201,10 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
         std::to_string(firstPoint.getY()) + " " + std::to_string(firstPoint.getZ()));
     coutLogger->writeInfoEntry(
         "last point: " + std::to_string(lastPoint.getX()) + " " + std::to_string(lastPoint.getY())
-                + " " + std::to_string(lastPoint.getZ()));
+        + " " + std::to_string(lastPoint.getZ()));
     coutLogger->writeInfoEntry(
         "center point: " + std::to_string(planeCenter.getX()) + " " + std::to_string(planeCenter.getY())
-                + " " + std::to_string(planeCenter.getZ()));
+        + " " + std::to_string(planeCenter.getZ()));
 
 
     countX = static_cast<int>(samplePoints.size());

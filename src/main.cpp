@@ -101,7 +101,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         auto scatteredRays = ray.scatter(*face, intersection, field.brdfList.at(
                                                              face->faceBRDF), ray.getSourcePixel());
                         //for (const auto &ray_sp: scatteredRays) {
-                            //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
+                        //std::cout << "origOrigin" << ray.getOrigin() << " tail" << ray.getDirection().getTail() << " intensity[20]" << ray.getIntensity_p()[20] << " level" << ray.getScatteredLevel()<< std::endl;
                             // config all scattered rays' sourcePixelInGnd
                             for (auto &r: scatteredRays) {
                                 if (r.getSourcePixelPosInGnd() == BigO) {
@@ -113,10 +113,10 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                             // debug test only
                             goodRays_per_thread->insert(goodRays_per_thread->end(), scatteredRays.begin(),
                                                         scatteredRays.end());
-                            break;
-                            //continue;
+                        break;
+                        //continue;
 
-                            for (int j = 0; j < scatteredRays.size(); j++) {
+                        for (int j = 0; j < scatteredRays.size(); j++) {
                                 bool flag_tt = false;
                                 for (int k = 0; k < scatteredRays.at(j).getIntensity_p().size(); k++)
                                     if (scatteredRays.at(j).getIntensity_p().at(k) > 1e-10) flag_tt = true;
@@ -124,7 +124,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //rays->push_back(scatteredRays[j]);
                                     // for 2+ scattered rays, the source of them is not THE SUN but the original ray
                                     // so, eh, yeah, IDK how to write this, whatever, just see the code below
-                                    auto &ray_tt = scatteredRays.at(j);
+                                    auto& ray_tt = scatteredRays.at(j);
                                     //ray_tt.setAncestor(ray_t.getAncestor());
                                     ray_tt.setAncestor(ray.getAncestor());
                                     bool validity_tt = false;
@@ -145,8 +145,9 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                                     intersection_tt != intersection)) {
                                                     // good, scatter ray has intersection
                                                     validity_tt = true;
-                                                    scatteredRays2 = ray_tt.scatter(*face_tt, intersection_tt, field.brdfList.at(
-                                                             face_tt->faceBRDF), ray_tt.getSourcePixel());
+                                                    scatteredRays2 = ray_tt.scatter(
+                                                        *face_tt, intersection_tt, field.brdfList.at(
+                                                            face_tt->faceBRDF), ray_tt.getSourcePixel());
                                                     break;
                                                 }
                                             }
@@ -158,7 +159,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //std::cout << "(";
                                     if (validity_tt) {
                                         //goodRays_per_thread->push_back(std::move(ray_tt));
-                                        for (auto &r: scatteredRays2)
+                                        for (auto& r : scatteredRays2)
                                             goodRays_per_thread->push_back(std::move(r));
 
 
@@ -175,7 +176,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                     //std::cout << "," << totCnt++ << ")";
                                     //std::cout << std::endl;
                                 }
-                            }
+                        }
                         //}
                     }
                 }
@@ -446,8 +447,8 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Setting up field..." << std::endl;
     Field field = Field(
-        Point(-FIELD_LENGTH_X/2.0, -FIELD_LENGTH_Y/2.0, -2),
-        Point(FIELD_LENGTH_X/2.0, FIELD_LENGTH_Y/2.0, CAMERA_HEIGHT * 1.732)
+        Point(-FIELD_LENGTH_X / 2.0, -FIELD_LENGTH_Y / 2.0, -2),
+        Point(FIELD_LENGTH_X / 2.0, FIELD_LENGTH_Y / 2.0, CAMERA_HEIGHT * 1.732)
     );
     // cube #1
     field.newClosedObject()
@@ -483,21 +484,21 @@ int main(int argc, char* argv[]) {
             field.getObjects().back().getVertices().size()) + " vertices");
 #endif    // cube #2
     field.newClosedObject()
-            .setOBJPath(objPaths.at(0))
-            .setMTLPath(mtlPaths.at(0))
-            .setCenter({9, -9, 4})
-            .setScaleFactor({3, 2, 4})
-            .setForwardAxis(6)
-            .setUpAxis(2)
-            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
-            .setInnerPoints({
-                {-0.1, -0.1, -0.1},
-                {0.1, 0.1, 0.1},
-                {0, 0, 0}
-            })
-            .readFromOBJ()
-            .readFromMTL()
-            .inspectNormalVecForAllFaces();
+         .setOBJPath(objPaths.at(0))
+         .setMTLPath(mtlPaths.at(0))
+         .setCenter({9, -9, 4})
+         .setScaleFactor({3, 2, 4})
+         .setForwardAxis(6)
+         .setUpAxis(2)
+         // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+         .setInnerPoints({
+             {-0.1, -0.1, -0.1},
+             {0.1, 0.1, 0.1},
+             {0, 0, 0}
+         })
+         .readFromOBJ()
+         .readFromMTL()
+         .inspectNormalVecForAllFaces();
 
 #if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
@@ -515,21 +516,21 @@ int main(int argc, char* argv[]) {
             field.getObjects().back().getVertices().size()) + " vertices");
 #endif    // cube #3
     field.newClosedObject()
-            .setOBJPath(objPaths.at(0))
-            .setMTLPath(mtlPaths.at(0))
-            .setCenter({9, 9, 4})
-            .setScaleFactor({2, 3, 4})
-            .setForwardAxis(6)
-            .setUpAxis(2)
-            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
-            .setInnerPoints({
-                {-0.1, -0.1, -0.1},
-                {0.1, 0.1, 0.1},
-                {0, 0, 0}
-            })
-            .readFromOBJ()
-            .readFromMTL()
-            .inspectNormalVecForAllFaces();
+         .setOBJPath(objPaths.at(0))
+         .setMTLPath(mtlPaths.at(0))
+         .setCenter({9, 9, 4})
+         .setScaleFactor({2, 3, 4})
+         .setForwardAxis(6)
+         .setUpAxis(2)
+         // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+         .setInnerPoints({
+             {-0.1, -0.1, -0.1},
+             {0.1, 0.1, 0.1},
+             {0, 0, 0}
+         })
+         .readFromOBJ()
+         .readFromMTL()
+         .inspectNormalVecForAllFaces();
 
 #if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
@@ -547,21 +548,21 @@ int main(int argc, char* argv[]) {
             field.getObjects().back().getVertices().size()) + " vertices");
 #endif    // cube #4
     field.newClosedObject()
-            .setOBJPath(objPaths.at(0))
-            .setMTLPath(mtlPaths.at(0))
-            .setCenter({-9, -9, 4})
-            .setScaleFactor({2, 3, 4})
-            .setForwardAxis(6)
-            .setUpAxis(2)
-            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
-            .setInnerPoints({
-                {-0.1, -0.1, -0.1},
-                {0.1, 0.1, 0.1},
-                {0, 0, 0}
-            })
-            .readFromOBJ()
-            .readFromMTL()
-            .inspectNormalVecForAllFaces();
+         .setOBJPath(objPaths.at(0))
+         .setMTLPath(mtlPaths.at(0))
+         .setCenter({-9, -9, 4})
+         .setScaleFactor({2, 3, 4})
+         .setForwardAxis(6)
+         .setUpAxis(2)
+         // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+         .setInnerPoints({
+             {-0.1, -0.1, -0.1},
+             {0.1, 0.1, 0.1},
+             {0, 0, 0}
+         })
+         .readFromOBJ()
+         .readFromMTL()
+         .inspectNormalVecForAllFaces();
 
 #if VERTICES_CONFIG_CXX_STANDARD >= 20
     coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
@@ -653,7 +654,8 @@ int main(int argc, char* argv[]) {
                 brdf_cnt_t++;
             } else {
                 fprintf(stderr, "Error when initializing BRDFs. Reason: not enough open BRDFs in the list.\n\
-                                        Required [%d][%d][%d], but BRDFPaths.size() is %llu\a\n", brdf_cnt_t+1, brdf_cnt_t+2, brdf_cnt_t+3, BRDFPaths.size());
+                                        Required [%d][%d][%d], but BRDFPaths.size() is %llu\a\n", brdf_cnt_t + 1,
+                        brdf_cnt_t + 2, brdf_cnt_t + 3, BRDFPaths.size());
                 return 66;
             }
             std::cout << "Handling a set of open BRDF done" << std::endl;
@@ -871,8 +873,8 @@ int main(int argc, char* argv[]) {
     Ray tmp;
     //tmp.setOrigin({0, 0, 3}).setDirection(Vec({0, 0, -1})).setIntensity_p(camera.sunlightSpectrum).setAncestor({0, 0, 3}).setScatteredLevel(1).setSourcePixel(static_cast<void*>(&camera.getPixel2D()->at(camera.getPixel2D()->size()/2).at(camera.getPixel2D()->size()/2)));
     tmp.setOrigin({0, 0, 3}).setDirection(Vec{0, 0, -1}).setIntensity_p(camera.sunlightSpectrum).
-            setAncestor({0, 0, 3}).setScatteredLevel(1).
-            setSourcePixel(static_cast<void *>(&camera.getPixel2D()->at(0).at(0))).setSourcePixelPosInGnd(
+        setAncestor({0, 0, 3}).setScatteredLevel(1).
+        setSourcePixel(static_cast<void *>(&camera.getPixel2D()->at(0).at(0))).setSourcePixelPosInGnd(
                 static_cast<Pixel *>(tmp.getSourcePixel())->getPosInGnd());
     //rays->push_back(tmp);
 
@@ -1113,8 +1115,8 @@ int main(int argc, char* argv[]) {
     }
     // and add some "initial background light intensity" to every pixel
     constexpr double baseIntensityPercentage = 0.1;
-    for (auto &pixelRow: *camPixelsBackup)
-        for (auto &pixel: pixelRow)
+    for (auto& pixelRow : *camPixelsBackup)
+        for (auto& pixel : pixelRow)
             for (int band = 0; band < spectralBands; band += bandLength)
                 pixel.getMutPixelSpectralResp()[band] += baseIntensityPercentage * maxRespPerBand[band / bandLength];
     //for (auto &val: maxRespPerBand)
@@ -1206,8 +1208,9 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
             for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
                 const auto val = static_cast<std::uint8_t>(std::round(
-                ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k] /*+ maxRespOfAll * baseIntensityPercentage*/)
-                        / ((1.0 + baseIntensityPercentage) * maxRespPerBand[k / bandLength]) * 0xff));
+                    ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k]
+                        /*+ maxRespOfAll * baseIntensityPercentage*/)
+                    / ((1.0 + baseIntensityPercentage) * maxRespPerBand[k / bandLength]) * 0xff));
                 for (int ii = i; ii < i + MUL; ii++)
                     for (int jj = j; jj < j + MUL; jj++)
                         testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
