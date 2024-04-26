@@ -39,7 +39,7 @@ const Logger fsLogger = std::make_shared<FilesystemLogger>();
 
 
 // VERTICES_RAY_H
-constexpr int SCATTER_RAYS = 3;
+constexpr int SCATTER_RAYS = 7;
 constexpr double STOP_LENGTH = 9999;
 
 
@@ -72,7 +72,7 @@ constexpr double gsd = 0.12;
 constexpr double focalLength = 20;
 constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 0;
 // FOVx
-constexpr double FOVx = 1 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVx = 0.25 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
 constexpr double FOVy = FOVx; //11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};
@@ -125,7 +125,7 @@ const unsigned int HARDWARE_CONCURRENCY_RAW = std::max(std::thread::hardware_con
 const unsigned int HARDWARE_CONCURRENCY = HARDWARE_CONCURRENCY_RAW;
 #endif
 
-constexpr double mixRatio = 0.04;
+constexpr double mixRatio = 0.16;
 constexpr double mixRatioL = mixRatio;
 constexpr double mixRatioR = mixRatio;
 constexpr double mixRatioU = mixRatio;

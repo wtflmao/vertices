@@ -28,7 +28,7 @@ constexpr int INT_INFO_COUNT = 13;
 constexpr int UINT64_INFO_START = INT_INFO_START + INT_INFO_COUNT;
 constexpr int UINT64_INFO_COUNT = 2;
 constexpr int DOUBLE_INFO_START = UINT64_INFO_START + UINT64_INFO_COUNT;
-constexpr int DOUBLE_INFO_COUNT = 23;
+constexpr int DOUBLE_INFO_COUNT = 26;
 
 enum InfoType {
     INT_VERSION,
@@ -69,6 +69,9 @@ enum InfoType {
     DOUBLE_CAM_OY_X,
     DOUBLE_CAM_OY_Y,
     DOUBLE_CAM_OY_Z,
+    DOUBLE_SUNLIGHT_VEC_TO_UP_X,
+    DOUBLE_SUNLIGHT_VEC_TO_UP_Y,
+    DOUBLE_SUNLIGHT_VEC_TO_UP_Z,
 };
 
 class InfoAppender {

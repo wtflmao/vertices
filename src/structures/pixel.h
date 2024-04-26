@@ -59,7 +59,13 @@ public:
 
     [[nodiscard]] Ray shootRayFromPixelFromImgPlate(const Vec& directionVec,
                                                     const std::array<double, spectralBands>& sunlightSpectrum,
-                                                    Pixel* pixel_p, const double angleToZ) const
+                                                    Pixel* pixel_p, double angleToZ) const
+        noexcept;
+
+    [[nodiscard]] Ray shootSkyScatteredRaysFromPixelFromImgPlate(const Vec& directionVec,
+                                                                 const std::array<double, spectralBands>&
+                                                                 sunlightSpectrum,
+                                                                 Pixel* pixel_p, double angleToZ) const
         noexcept;
 
     Pixel &addRaySpectralResp(Ray &ray) noexcept;

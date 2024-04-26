@@ -34,6 +34,7 @@ private:
     std::shared_ptr<std::vector<std::vector<Pixel> > > pixel2D;
 
 public:
+    const Vec sunlightDirectionReverse = Vec{1.0, 1.0, std::sqrt(3.0)}.getNormalized();
 
     std::array<double, spectralBands> sunlightSpectrum = {};
 

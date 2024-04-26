@@ -74,3 +74,37 @@ if (UNIX AND NOT APPLE)
     find_package(Threads REQUIRED)
     target_link_libraries(vertices PRIVATE Threads::Threads)
 endif ()
+
+find_package(OpenMP)
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(vertices PUBLIC OpenMP::OpenMP_CXX)
+endif ()
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # GCC  AVX512
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi2 -mprefer-vector-width=512")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mprefer-vector-width=256")
+    # GCC  vectorization with AVX512
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    # GCC  vectorization on
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftree-vectorize -march=native -mtune=native -fstrict-aliasing -fopenmp-simd")
+    # GCC turn off sth
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-trapping-math -fno-math-errno")
+    # GCC vectorization report verbose
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-optimized -fopt-info-loop-optimized")
+
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-trap-all=none -parallel")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-ymm-usage=high")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-report=5 -qopt-report-phase=loop,vec,openmp")
+
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    # it's always enabled on MSVC
+
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstrict-aliasing -march=native -mtune=native -fopenmp-simd")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvectorize -fno-math-errno")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx256f")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize")
+endif ()

@@ -122,6 +122,8 @@ public:
     Item &readFromOBJ();
 
     Item &readFromMTL();
+
+    Item& setSelfAsBorderWall() noexcept;
 };
 
 bool readNewItem(const char *filename, Item &item);

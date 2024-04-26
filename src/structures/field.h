@@ -46,6 +46,8 @@ public:
 
     std::vector<Item> &getObjects();
 
+    const std::vector<std::shared_ptr<Triangle>>& getAllFaces() const noexcept;
+
     [[nodiscard]] std::vector<std::shared_ptr<Node> > generateNodeList() const;
 
     void initPfaces(const std::vector<std::shared_ptr<Triangle> > &p_faces_t);

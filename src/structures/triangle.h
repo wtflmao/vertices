@@ -28,6 +28,8 @@ public:
     // this is an index
     short faceBRDF = -1;
 
+    bool isBorderWall = false;
+
     [[nodiscard]] const Vec & getNormal() const noexcept;
 
     Triangle &setNormalVec(const Vec &n) noexcept;

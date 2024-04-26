@@ -183,6 +183,10 @@ std::vector<Item> &Field::getObjects() {
     return objects;
 }
 
+const std::vector<std::shared_ptr<Triangle>>& Field::getAllFaces() const noexcept {
+    return allFaces;
+}
+
 // BFS Traversal method, same as the leaf-counting function above
 std::vector<std::shared_ptr<Node> > Field::generateNodeList() const {
     // Create empty vector for bfs nodes

@@ -207,6 +207,31 @@ Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
     return ray;
 }
 
+Ray Pixel::shootSkyScatteredRaysFromPixelFromImgPlate(const Vec& directionVec,
+                                                      const std::array<double, spectralBands>& sunlightSpectrum,
+                                                      Pixel* pixel_p, const double angleToZ) const noexcept {
+    auto ray = Ray{};
+    // posInGnd's unit is meter but is like xxx*10^-6, we need to multiply it with 10^6 (only for X and Y)
+    const auto posInGndAmplified = Point(posInGnd.getX() /** 1e6*/, posInGnd.getY() /** 1e6*/,
+                                         (posInGnd.getZ() - CAMERA_HEIGHT) /** 1e6*/ + CAMERA_HEIGHT - CAM_IMG_DISTANCE
+                                         *
+                                         std::cos(angleToZ));
+    //const auto posInGndAmplified = Point(posInGnd.getX() * 1e6, posInGnd.getY() * 1e6, posInGnd.getZ());
+    auto skyScatteredSpectrum = sunlightSpectrum;
+    for (auto& val : skyScatteredSpectrum) val *= 0.2 * rand01();
+    // build up the current ray
+    ray.setOrigin(posInGndAmplified)
+       .setAncestor(posInGndAmplified)
+       .setIntensity_p(skyScatteredSpectrum)
+       .setScatteredLevel(CAMERA_RAY_STARTER_SCATTER_LEVEL)
+       .setSourcePixel(pixel_p)
+       .setSourcePixelPosInGnd(pixel_p->getPosInGnd())
+       .setDirection(directionVec);
+
+    // RVO happens here, don't worry about value-returning
+    return ray;
+}
+
 Pixel &Pixel::addRaySpectralResp(Ray &ray) noexcept {
     auto &resp = getMutPixelSpectralResp();
     for (int i = 0; i < resp.size(); i++)

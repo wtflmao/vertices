@@ -140,6 +140,12 @@ Item &Item::readFromMTL() {
     return *this;
 }
 
+Item& Item::setSelfAsBorderWall() noexcept {
+    for (auto& face : faces)
+        face.isBorderWall = true;
+    return *this;
+}
+
 // I've decided that one item only have one set of BRDF data
 // if you want to add more, please divide the item into two different parts along with the boundary of different BRDF faces
 // waveLength in namometer. i and j are normalized to 2000, belong to [0, 1]

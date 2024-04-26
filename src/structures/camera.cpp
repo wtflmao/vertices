@@ -441,15 +441,12 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
     // I should use multi-threading to accelerate
     // this takes soooooo long I can't bear it when debugging
     const auto &planeNormVec = imgPlane_u->getPlaneNormal();
+    const auto planeNormVecR = Vec{
+        planeNormVec.getTail().getX() * -1, planeNormVec.getTail().getY() * -1, planeNormVec.getTail().getZ()
+    };
     auto rays = new std::vector<Ray>;
-    /*
-    for (int i = 0; i < multiplier; i++)
-        for (auto &pixelRow: *pixel2D) {
-            for (auto &pixel: pixelRow) {
-                rays->push_back(pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
-            }
-        }
-    */
+    //auto sunlightSpectrumR = sunlightSpectrum;
+
 #ifdef VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS
 #error "[ abort ] VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS is deserted, say, it's discontinued and deprecated.\n          Please use VERTICES_CONFIG_MULTI_THREAD_FOR_CAMRAYS_WORKAROUND instead."
 #endif
@@ -458,6 +455,7 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
         for (int i = 0; i < pixel2D->size(); i++) {
             for (auto &pixel: pixel2D->at(i)) {
                 rays->push_back(pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
+                //rays->push_back(pixel.shootSkyScatteredRaysFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel));
             }
         }
     }
@@ -480,6 +478,9 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
                         raysForThisThread->push_back(
                             pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel,
                                                                 imgPlane_u->getAngleToZ()));
+                        //raysForThisThread->push_back(
+                        //    pixel.shootSkyScatteredRaysFromPixelFromImgPlate(planeNormVecR, sunlightSpectrum, &pixel,
+                        //    imgPlane_u->getAngleToZ()));
                     }
                     //coutLogger->writeInfoEntry("raysForThisThread size is " + std::to_string(raysForThisThread->size()) + " " + std::to_string(activeThreads.load()));
                     rets->at(j).rays = std::move(*raysForThisThread);
