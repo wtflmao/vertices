@@ -12,7 +12,8 @@
 #include "main.h"
 
 void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, std::vector<Ray> *rays,
-             const std::pair<int, int>& constSubVec, int idx, wrappedRays* ret, const Vec& sunlightVecR) {
+             const std::pair<int, int>& constSubVec, int idx, wrappedRays* ret, const Vec& sunlightVecR,
+             const Vec& planeNormalVec) {
     // advanced return if empty
     if (constSubVec.first >= constSubVec.second) {
         ret->rays = {};
@@ -32,36 +33,65 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     coutLogger->writeInfoEntry(s_.str());
 #endif
 
+    const auto &allFaces = field.getAllFaces();
     for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
         auto& ray = rays->at(it);
         ray.setAncestor(ray.getOrigin());
 
-        for (const auto& face : field.getAllFaces())
+        for (const auto& face : allFaces)
             if (auto intersection = ray.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
-                if (face->getNormal().dot(ray.getDirection()) < 0.0) continue;
+                //if (face->getNormal().dot(ray.getDirection()) < 0.0) continue;
                 if (face->isBorderWall) {
+                    // reset the ray's info if it hitsthe wall and let it points to the refelcted direction
                     const Vec incidentDirection = ray.getDirection().getNormalized();
                     const Vec normal = face->getNormal().getNormalized();
                     const auto reflected = Vec(incidentDirection - (normal * normal.dot(incidentDirection)) * 2.0).
                         getNormalized();
                     ray.setOrigin(intersection).setDirection(reflected);
                     for (auto& val : ray.getMutIntensity_p()) val *= 0.9;
+                    // iter back to current ray
                     --it;
                     continue;
                 }
-                ray.setRayStopPoint(intersection);
 
+                auto noOtherInTheWay = true;
+                auto theWay = Ray(intersection, planeNormalVec * -1.0);
+                for (const auto& face_3 : field.getAllFaces()) {
+                    if (face_3->isBorderWall) continue;
+                    if (auto intersection_other = theWay.mollerTrumboreIntersection(*face_3); NO_INTERSECT !=
+                        intersection_other && face_3 != face) {
+                        noOtherInTheWay = false;
+                        break;
+                        }
+                }
+                if (!noOtherInTheWay) continue;/*
+                auto theClosestFace = allFaces.at(0);
+                // (x, y, z) = (a1 + a2 * (z0 - c1) / c2, b1 + b2 * (z0 - c1) / c2, z0)
+                const auto thePointInTheSky = Point{(intersection.getX() + ())};
+                for (auto &face_3: allFaces) {
+                    if (face_3->isBorderWall) continue;
+                    if (auto intersection_other = ray.mollerTrumboreIntersection(*face_3); NO_INTERSECT !=
+                        intersection_other && face_3 != face) {
+                        theClosestFace = face_3;
+                        break;
+                    }
+                }*/
+
+                ray.setRayStopPoint(intersection);
                 auto seeable = true;
                 auto seenRay = Ray(intersection, sunlightVecR);
-                for (const auto& face_2 : field.getAllFaces()) {
+                for (const auto& face_2 : allFaces) {
                     if (face_2->isBorderWall) continue;
                     if (auto intersection_seen = seenRay.mollerTrumboreIntersection(*face_2); NO_INTERSECT !=
-                        intersection_seen && intersection_seen != intersection) {
+                        intersection_seen && face_2 != face) {
                         seeable = false;
                         break;
                     }
                 }
                 if (seeable) {
+                    goodRays_per_thread->push_back(ray);
+                } else {
+                    for (auto& val : ray.getMutIntensity_p()) val *= 0.2;
                     goodRays_per_thread->push_back(ray);
                 }
 
@@ -82,11 +112,14 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     coutLogger->
         writeInfoEntry("checker thread " + std::to_string(scatters_waiting_for_checking->size()) + " generated");
 
-    for (auto it = 0; it < scatters_waiting_for_checking->size(); ++it) {
+    int ray_iter_step = 1;
+    if (static_cast<int>(std::log10(scatters_waiting_for_checking->size())) < 4) ray_iter_step = 0;
+    else ray_iter_step = static_cast<int>(std::floor(std::log10(scatters_waiting_for_checking->size())));
+    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += (ray_iter_step + 1) * (ray_iter_step + 1) * (ray_iter_step + 1)) {
         auto& scat = scatters_waiting_for_checking->at(it);
-        for (const auto& face : field.getAllFaces())
+        for (const auto& face : allFaces)
             if (auto intersection = scat.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
-                if (face->getNormal().dot(scat.getDirection()) < 0.0) continue;
+                //if (face->getNormal().dot(scat.getDirection()) < 0.0) continue;
                 if (face->isBorderWall) {
                     const Vec incidentDirection = scat.getDirection().getNormalized();
                     const Vec normal = face->getNormal().getNormalized();
@@ -97,11 +130,24 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                     --it;
                     continue;
                 }
+
+                auto noOtherInTheWay = true;
+                auto theWay = Ray(intersection, planeNormalVec * -1.0);
+                for (const auto& face_3 : allFaces) {
+                    if (face_3->isBorderWall) continue;
+                    if (auto intersection_other = theWay.mollerTrumboreIntersection(*face_3); NO_INTERSECT !=
+                        intersection_other && face_3 != face) {
+                        noOtherInTheWay = false;
+                        break;
+                        }
+                }
+                if (!noOtherInTheWay) continue;
+
                 scat.setRayStopPoint(intersection);
 
                 auto seeable = true;
                 auto seenRay = Ray(intersection, sunlightVecR);
-                for (const auto& face_2 : field.getAllFaces()) {
+                for (const auto& face_2 : allFaces) {
                     if (face_2->isBorderWall) continue;
                     if (auto intersection_seen = seenRay.mollerTrumboreIntersection(*face_2); NO_INTERSECT !=
                         intersection_seen && intersection_seen != intersection) {
@@ -111,6 +157,10 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                 }
                 if (seeable) {
                     goodRays_per_thread->push_back(scat);
+                } else {
+                    for (auto& val : scat.getMutIntensity_p()) val *= 0.2;
+                    goodRays_per_thread->push_back(scat);
+                }
                     /*auto scatters = scat.scatter(*face, intersection, field.brdfList.at(face->faceBRDF), scat.getSourcePixel());
                     for (auto &r: scatters) {
                         if (r.getSourcePixelPosInGnd() == BigO) {
@@ -122,7 +172,6 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                     //scatters_waiting_for_checking_x2->insert(scatters_waiting_for_checking_x2->end(), scatters.begin(), scatters.end());
                     //goodRays_per_thread->insert(goodRays_per_thread->end(), scatters.begin(), scatters.end());
                     */
-                }
             }
     }
     delete scatters_waiting_for_checking;
@@ -434,7 +483,7 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
     std::cout << "win32" << std::endl;
 
-    objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)");
@@ -459,7 +508,7 @@ int main(int argc, char* argv[]) {
 #elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
     std::cout << "unix-like" << std::endl;
 
-    objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/snow_apls_low_poly_obj/source/Mesher_-z_y.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/F22_blender/F22.obj)");
@@ -811,12 +860,13 @@ int main(int argc, char* argv[]) {
     start = std::chrono::high_resolution_clock::now();
 
     void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, std::vector<Ray>* rays,
-                 const std::pair<int, int>& constSubVec, int idx, wrappedRays* ret, const Vec& sunlightVecR);
+                 const std::pair<int, int>& constSubVec, int idx, wrappedRays* ret, const Vec& sunlightVecR,
+                 const Vec& planeNormalVec);
 
 #ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
     auto ret = new wrappedRays();
     //for (auto &ray: *rays) {
-    checker(field, node_ptrs, rays, std::make_pair(0, rays->size()), 0, ret, std::ref(camera.sunlightDirectionReverse));
+    checker(field, node_ptrs, rays, std::make_pair(0, rays->size()), 0, ret, std::ref(camera.sunlightDirectionReverse), std::ref(camera.getPlaneNormal()));
     //}
     auto *goodRays_t = std::move(&ret->rays);
     delete ret;
@@ -843,7 +893,7 @@ int main(int argc, char* argv[]) {
     int i_ = 0;
     for (const auto &sub: subVectors) {
         threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0,
-                &rets->at(i_++), std::ref(camera.sunlightDirectionReverse));
+                &rets->at(i_++), std::ref(camera.sunlightDirectionReverse), std::ref(camera.getImagePlaneOZ()));
     }
     for (auto &thread: threads) {
         try {
@@ -882,7 +932,7 @@ int main(int argc, char* argv[]) {
     i_ = 0;
     for (const auto &sub: subVectors) {
         threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), goodRays_tt, std::ref(sub), 0,
-                             &rets->at(i_++), std::ref(camera.sunlightDirectionReverse));
+                             &rets->at(i_++), std::ref(camera.sunlightDirectionReverse), std::ref(camera.getImagePlaneOZ()));
     }
     for (auto &thread: threads) {
         try {

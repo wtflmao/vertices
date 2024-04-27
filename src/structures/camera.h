@@ -83,6 +83,8 @@ public:
     [[nodiscard]] const Vec& getImagePlaneOX() const noexcept;
 
     [[nodiscard]] const Vec& getImagePlaneOY() const noexcept;
+
+    [[nodiscard]] const Vec& getImagePlaneOZ() const noexcept;
 };
 
 struct wrappedRays {

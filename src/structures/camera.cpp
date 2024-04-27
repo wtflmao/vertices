@@ -538,3 +538,7 @@ const Vec& Camera::getImagePlaneOY() const noexcept {
     return imgPlane_u->getOY();
 }
 
+const Vec& Camera::getImagePlaneOZ() const noexcept {
+    return imgPlane_u->getPlaneNormal();
+}
+
