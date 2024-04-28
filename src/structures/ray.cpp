@@ -428,7 +428,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                 reflectedIntensity[j] = intensity_p[j] * reflectanceCorrection(UPPER_WAVELENGTH + j * WAVELENGTH_STEP);
             }
             */
-            // for debug-stage acceleration only, plz remove the one line below and uncomment code above
+            // since both reflected and normal direction vecs are normalized, we can use it directly without dividing by each length
             reflectedIntensity[j] = intensity_p[j] * 0.9;
 
             // debug only
@@ -474,9 +474,9 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
 
     // create scattered rays
     for (int i = 1; i <= SCATTER_RAYS; i++) {
-        Vec scatteredDirection = uniformHemisphereDirectionWithCenterOfMonteCarloSpace(normal, reflectedDirection);
+        Vec scatteredDirection = uniformHemisphereDirectionWithCenterOfMonteCarloSpace(normal, reflectedDirection).getNormalized();
         for (int j = 0; j < totalScatteredIntensity.size(); j++) {
-            scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS;
+            scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS * 0.9;
         }
         //if (i >= 1 && i < SCATTER_RAYS) {
         theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));
