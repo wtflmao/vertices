@@ -14,6 +14,7 @@
 constexpr size_t MAX_FILE_SIZE (4LL * 100LL * 1024LL * 1024LL);
 constexpr size_t MAX_LINE_LENGTH (64);
 
-void processLine(const char* line, Item& p_item);
+void processLine(const char* line, Item& p_item, const bool faceTrigger);
+void processFace(const char* line, Item& p_item, const bool faceTrigger);
 
 #endif //VERTICES_READNEWITEM_H

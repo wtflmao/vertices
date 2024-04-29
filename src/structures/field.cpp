@@ -166,14 +166,21 @@ const Point& Field::getBoundsMax() const noexcept
     }
 
     // check normal vec's directon is correct or not, if not, revise it
-    object.inspectNormalVecForAllFaces();
+    // u need to EXPLICITLY call it or ir won't be called automatically due to the tedious preparition of tCFI and innerPoints
+    //object.inspectNormalVecForAllFaces();
+
+    // get its boundry box for some reason
+    object.updateRawBoundary();
+    const auto rawBoundary = object.getRawBoundary();
 
     std::cout<<"Object #"<<objects.size()<<" has "<<object.getFaces().size()<<" faces."<<std::endl;
     std::cout<<"Object #"<<objects.size()<<" has "<<object.getVertices().size()<<" vertices."<<std::endl;
-    std::cout<<"Object #"<<objects.size()<<"'s refraction index is "<<object.Ni<<std::endl;
-    std::cout<<"Object #"<<objects.size()<<"'s Ka is "<<object.Ka[0]<<" "<<object.Ka[1]<<" "<<object.Ka[2]<<std::endl;
-    std::cout<<"Object #"<<objects.size()<<"'s Kd is "<<object.Kd[0]<<" "<<object.Kd[1]<<" "<<object.Kd[2]<<std::endl;
-    std::cout<<"Object #"<<objects.size()<<"'s Ks is "<<object.Ks[0]<<" "<<object.Ks[1]<<" "<<object.Ks[2]<<std::endl;
+    std::cout<<"Object #"<<objects.size()<<"'s minRawBound is "<<Point{rawBoundary[0], rawBoundary[1], rawBoundary[2]}<<std::endl;
+    std::cout<<"Object #"<<objects.size()<<"'s maxRawBound is "<<Point{rawBoundary[3], rawBoundary[4], rawBoundary[5]}<<std::endl;
+    //std::cout<<"Object #"<<objects.size()<<"'s refraction index is "<<object.Ni<<std::endl;
+    //std::cout<<"Object #"<<objects.size()<<"'s Ka is "<<object.Ka[0]<<" "<<object.Ka[1]<<" "<<object.Ka[2]<<std::endl;
+    //std::cout<<"Object #"<<objects.size()<<"'s Kd is "<<object.Kd[0]<<" "<<object.Kd[1]<<" "<<object.Kd[2]<<std::endl;
+    //std::cout<<"Object #"<<objects.size()<<"'s Ks is "<<object.Ks[0]<<" "<<object.Ks[1]<<" "<<object.Ks[2]<<std::endl;
     std::cout<<std::endl;
 
     return true;

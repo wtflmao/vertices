@@ -10,5 +10,6 @@
 #include "readTexture.h"
 #include "readVertex.h"
 #include "readMtl.h"
+#include "readNormal.h"
 
 #endif //VERTICES_READLINES_H

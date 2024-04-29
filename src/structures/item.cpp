@@ -146,6 +146,53 @@ Item& Item::setSelfAsBorderWall() noexcept {
     return *this;
 }
 
+// this method should ONLY be called once, after the ALL faces have been set
+// or the program will encounter serious performance issues
+Item& Item::updateRawBoundary() noexcept {
+    std::array<double, 6> rawBound = {std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(),};
+    for (auto& face : faces) {
+        if (face.getV0().getX() < rawBound[0]) rawBound[0] = face.getV0().getX();
+        if (face.getV0().getY() < rawBound[1]) rawBound[1] = face.getV0().getY();
+        if (face.getV0().getZ() < rawBound[2]) rawBound[2] = face.getV0().getZ();
+        if (face.getV0().getX() > rawBound[3]) rawBound[3] = face.getV0().getX();
+        if (face.getV0().getY() > rawBound[4]) rawBound[4] = face.getV0().getY();
+        if (face.getV0().getZ() > rawBound[5]) rawBound[5] = face.getV0().getZ();
+
+        if (face.getV1().getX() < rawBound[0]) rawBound[0] = face.getV1().getX();
+        if (face.getV1().getY() < rawBound[1]) rawBound[1] = face.getV1().getY();
+        if (face.getV1().getZ() < rawBound[2]) rawBound[2] = face.getV1().getZ();
+        if (face.getV1().getX() > rawBound[3]) rawBound[3] = face.getV1().getX();
+        if (face.getV1().getY() > rawBound[4]) rawBound[4] = face.getV1().getY();
+        if (face.getV1().getZ() > rawBound[5]) rawBound[5] = face.getV1().getZ();
+
+        if (face.getV2().getX() < rawBound[0]) rawBound[0] = face.getV2().getX();
+        if (face.getV2().getY() < rawBound[1]) rawBound[1] = face.getV2().getY();
+        if (face.getV2().getZ() < rawBound[2]) rawBound[2] = face.getV2().getZ();
+        if (face.getV2().getX() > rawBound[3]) rawBound[3] = face.getV2().getX();
+        if (face.getV2().getY() > rawBound[4]) rawBound[4] = face.getV2().getY();
+        if (face.getV2().getZ() > rawBound[5]) rawBound[5] = face.getV2().getZ();
+    }
+    setRawBoundary(rawBound);
+    return *this;
+}
+
+const std::array<double, 6>& Item::getRawBoundary() const noexcept {
+    return rawBoundary;
+}
+
+Item& Item::setRawBoundary(const std::array<double, 6>& p) noexcept {
+    rawBoundary = p;
+    return *this;
+}
+
+const std::unique_ptr<std::vector<std::pair<int, Point>>>& Item::getNormalList() const noexcept {
+    return normals;
+}
+
+std::unique_ptr<std::vector<std::pair<int, Point>>>& Item::getMutNormalList() noexcept {
+    return normals;
+}
+
 // I've decided that one item only have one set of BRDF data
 // if you want to add more, please divide the item into two different parts along with the boundary of different BRDF faces
 // waveLength in namometer. i and j are normalized to 2000, belong to [0, 1]

@@ -10,7 +10,7 @@
 
 #include "readFace.h"
 
-void processFace(const char* line, Item& p) {
+void processFace(const char* line, Item& p, const bool trigger) {
     /*
      * example:
      * f  5/1/1 3/2/1 1/3/1
@@ -28,7 +28,8 @@ void processFace(const char* line, Item& p) {
     std::vector<Triangle>& p_f = p.getMutFaces();
     p_f.emplace_back();
     Triangle& p_t = p_f.back();
-    auto v_i = std::array<int, 3>({0});
+    auto v_i = std::array<int, 3>{0};
+    auto vn_i = std::array<int, 3>{0};
 
     int count = 0;
     for (int i = 0; line[i] != '\0'; i++) {
@@ -39,7 +40,7 @@ void processFace(const char* line, Item& p) {
 
 #ifdef _WIN32
     if (count == 6) {
-        sscanf_s(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+        sscanf_s(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &v_i[0], &vn_i[0], &v_i[1], &vn_i[1], &v_i[2], &vn_i[2]);
     } else if (count == 3) {
         sscanf_s(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     } else {
@@ -47,7 +48,7 @@ void processFace(const char* line, Item& p) {
     }
 #else
     if (count == 6) {
-        sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+        sscanf(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &v_i[0], &v_i[1], &v_i[2], &vn_i[0], &vn_i[1], &vn_i[2]);
     } else if (count == 3) {
         sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     } else {
@@ -64,7 +65,25 @@ void processFace(const char* line, Item& p) {
     p_t.getMutV1().setX(newV1.getX()).setY(newV1.getY()).setZ(newV1.getZ());
     p_t.getMutV2().setX(newV2.getX()).setY(newV2.getY()).setZ(newV2.getZ());
     p_t.computeCentroid();
-    p_t.updateNormalVec();
 
+    // we don't compute these normal vec by ourselves for now, we use the normal vec from obj file
+    // actually vn_i[0] [1] [2] should be the same, but it CAN be different
+    if (p.requireNormalFromOBJ) {
+        if (!trigger) {
+            // we don't read normals cuz we haven't set minNormalIndex yet
+            if (p.minNormalIndex > vn_i[0]) p.minNormalIndex = vn_i[0];
+            if (p.minNormalIndex > vn_i[1]) p.minNormalIndex = vn_i[1];
+            if (p.minNormalIndex > vn_i[2]) p.minNormalIndex = vn_i[2];
+        } else {
+            p_t.setNormalVec(Vec{
+                p.getNormalList()->at(vn_i[0] - p.minNormalIndex).second.getX(),
+                p.getNormalList()->at(vn_i[0] - p.minNormalIndex).second.getY(),
+                p.getNormalList()->at(vn_i[0] - p.minNormalIndex).second.getZ()
+            });
+        }
+    } else {
+        // sadly, obj doesn't have normal vec at all
+        p_t.updateNormalVec();
+    }
     p.getMutFWVR().push_back({v_i.at(0), v_i.at(1), v_i.at(2)});
 }

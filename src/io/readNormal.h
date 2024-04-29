@@ -1,5 +1,5 @@
 //
-// Created by root on 2024/3/15.
+// Created by root on 24-4-29.
 //
 
 /* Copyright 2024 wtflmao. All Rights Reserved.
@@ -8,13 +8,12 @@
  * See file LICENSE/LICENSE.MIT.md or copy at https://opensource.org/license/mit
  */
 
-#ifndef VERTICES_READFACE_H
-#define VERTICES_READFACE_H
+#ifndef VERTICES_READNORMAL_H
+#define VERTICES_READNORMAL_H
 
-#include "readNewItem.h"
 #include "../structures/item.h"
 #include <array>
 
-void processFace(const char* line, Item& p, const bool trigger);
+void processNormal(const char* line, Item& p);
 
-#endif //VERTICES_READFACE_H
+#endif //VERTICES_READNORMAL_H

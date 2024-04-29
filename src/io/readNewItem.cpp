@@ -42,10 +42,17 @@ bool readNewItem(const char *filename, Item& item) {
         // replace all \r to \0 so we can no longer care about if it is CRLF or LF
         char *p = strchr(line, '\r');
         if (p) *p = '\0';
-        // pass the reference to the call, without losing the ownership to that unique_ptr
-        // sounds like something in Rust? OWNERSHIP!
-        processLine(line, item);
+        processLine(line, item, false);
         count++;
+    }
+    if (item.requireNormalFromOBJ && (std::strstr(line, ".obj") != nullptr || std::strstr(line, ".OBJ") != nullptr)) {
+        fseek(fp, 0, SEEK_SET);
+        while (fgets(line, sizeof(line), fp)) {
+            // replace all \r to \0 so we can no longer care about if it is CRLF or LF
+            char *p = strchr(line, '\r');
+            if (p) *p = '\0';
+            processFace(line, item, true);
+        }
     }
 
     fclose(fp);

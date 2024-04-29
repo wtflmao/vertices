@@ -68,6 +68,8 @@ add_executable(vertices src/main.cpp
         src/io/infoAppender.h
         lib/JSON/json.hpp
         lib/JSON/json_fwd.hpp
+        src/io/readNormal.cpp
+        src/io/readNormal.h
 )
 
 if (UNIX AND NOT APPLE)
@@ -83,7 +85,7 @@ endif ()
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # GCC  AVX512
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi2 -mprefer-vector-width=512")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mprefer-vector-width=256")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mprefer-vector-width=256")
     # GCC  vectorization with AVX512
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     # GCC  vectorization on
@@ -94,9 +96,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-optimized -fopt-info-loop-optimized")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-trap-all=none -parallel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-ymm-usage=high")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-xmm-usage=high")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-report=5 -qopt-report-phase=loop,vec,openmp")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

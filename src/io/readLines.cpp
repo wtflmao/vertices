@@ -5,8 +5,14 @@
 #include "readLines.h"
 
 
-void processLine(const char* line, Item& p_item) {
+void processLine(const char* line, Item& p_item, const bool faceTrigger) {
     if (line == nullptr) {
+        return;
+    }
+
+    // to check if it is a face
+    if (line[0] == 'f' && line[1] == ' ') {
+        processFace(line, p_item, faceTrigger);
         return;
     }
 
@@ -35,16 +41,9 @@ void processLine(const char* line, Item& p_item) {
         return;
     }
 
-    // to check if it is a face
-    if (line[0] == 'f' && line[1] == ' ') {
-        processFace(line, p_item);
-        return;
-    }
-
     // to check if it is a normal
     if (line[0] == 'v' && line[1] == 'n' && line[2] == ' ') {
-        // processNormal(line);
-        // normal from the file is not used now
+        processNormal(line, p_item);
         return;
     }
 
