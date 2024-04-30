@@ -11,7 +11,7 @@
 
 // d for distance between two pixel's spacial distance
 // d is in micron
-[[deprecated]] inline double overlapFactor(const double d) {
+/*[[deprecated]] inline double overlapFactor(const double d) {
     // sigma determines how big the overlap is as d grows
     // bigger sigma, more smooth
     // smaller sigma, steeper, goes to 0 quickly
@@ -19,9 +19,9 @@
     // A is a zoom factor
     constexpr double A = 0.99;
     return A * std::exp(-d * d) / (2 * sigma * sigma);
-}
+}*/
 
-[[deprecated]] double Pixel::overlapRatio(int delta_i, int delta_j) {
+/*[[deprecated]] double Pixel::overlapRatio(int delta_i, int delta_j) {
     // r is in meter, means 单个像素再目标面上的投影半径
     // angle in std::tan() is half of theta, theta is the single pixel's FOV
     double r = CAMERA_HEIGHT * std::tan(pixelSize * 1e-6 / (2 * focalLength));
@@ -37,7 +37,7 @@
         // 4.2069 is a magic number
         return overlapFactor(d * 4.2069 * 1e2);
     }
-};
+};*/
 
 const std::array<double, spectralBands> &Pixel::getPixelSpectralResp() const noexcept {
     return pixelSpectralResp;
@@ -167,7 +167,7 @@ Vec uniformHemisphereDirectionWithCenterOfMonteCarloSpace(const Vec &normal, con
     }
 }
 
-Ray Pixel::shootRayFromPixel(const Vec &directionVec,
+/*[[deprecated]] Ray Pixel::shootRayFromPixel(const Vec &directionVec,
                              const std::array<double, spectralBands> &sunlightSpectrum) const noexcept {
     const auto posInGnd = coordTransform->camToGnd(posInCam);
     auto ray = Ray{};
@@ -181,7 +181,7 @@ Ray Pixel::shootRayFromPixel(const Vec &directionVec,
 
     // RVO happens here, don't worry about value-returning
     return ray;
-}
+}*/
 
 Ray Pixel::shootRayFromPixelFromImgPlate(const Vec &directionVec,
                                          const std::array<double, spectralBands> &sunlightSpectrum,

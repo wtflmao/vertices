@@ -17,7 +17,7 @@ void processNormal(const char* line, Item& p) {
      *     x_axis y_axis  z_axis
      */
 
-    auto &p_v = p.getMutNormalList();
+    auto& p_v = p.getMutNormalList();
     auto v_i = std::array<double, 3>{0.0};
 #ifdef _WIN32
     sscanf_s(line, "vn %lf %lf %lf", &v_i.at(0), &v_i.at(1), &v_i.at(2));
@@ -25,6 +25,6 @@ void processNormal(const char* line, Item& p) {
     sscanf(line, "vn %lf %lf %lf", &v_i.at(0), &v_i.at(1), &v_i.at(2));
 #endif
     // since vectors start from (0, 0, 0), so we save them as Points() and there's no need to scale them
-    p_v->push_back(std::make_pair<int, Point>(static_cast<int>(p_v->back().first) + 1, {v_i[0], v_i[1], v_i[2]}));
+    p_v->emplace_back(v_i[0], v_i[1], v_i[2]);
 }
 

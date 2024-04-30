@@ -70,6 +70,6 @@ public:
     [[deprecated]] void gndToImg(const Point &gnd, Point &img) noexcept;
 };
 
-const inline auto coordTransform = std::make_shared<CoordTransform>();
+//const inline auto coordTransform = std::make_shared<CoordTransform>();
 
 #endif //VERTEX_COORDTRANSFORM_H

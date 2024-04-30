@@ -36,7 +36,7 @@ private:
     std::string mtlPath = "";
     std::array<double, 6> rawBoundary = {0.0};
 
-    std::unique_ptr<std::vector<std::pair<int, Point> > > normals = std::make_unique<std::vector<std::pair<int, Point> > >();
+    std::unique_ptr<std::vector<Point>> normals = std::make_unique<std::vector<Point>>();
 
 public:
     /*
@@ -74,8 +74,7 @@ public:
     std::array<int, 3> thatCorrectFaceVertices = {1, 2, 4};
     int thatCorrectFaceIndex = 0;
     std::vector<Point> innerPoints;
-    int minNormalIndex = 9999999;
-    bool requireNormalFromOBJ = true;
+    bool requireFromOBJ = true;
 
     [[nodiscard]] const std::vector<Triangle> &getFaces() const noexcept;
     [[nodiscard]] const std::vector<Point> &getVertices() const noexcept;
@@ -133,13 +132,15 @@ public:
     // raw boundary means the "orignal" position coordinates from .obj file, before moved and scaled
     Item& updateRawBoundary() noexcept;
 
-    [[nodiscard]] const std::array<double, 6> &getRawBoundary() const noexcept;
+    [[nodiscard]] const std::array<double, 6>& getRawBoundary() const noexcept;
 
     Item& setRawBoundary(const std::array<double, 6>& p) noexcept;
 
-    [[nodiscard]] const std::unique_ptr<std::vector<std::pair<int, Point> > > &getNormalList() const noexcept;
+    [[nodiscard]] const std::unique_ptr<std::vector<Point>>& getNormalList() const noexcept;
 
-    [[nodiscard]] std::unique_ptr<std::vector<std::pair<int, Point> > > &getMutNormalList() noexcept;
+    [[nodiscard]] std::unique_ptr<std::vector<Point>>& getMutNormalList() noexcept;
+
+    Item& setNoNormalReqFromObjFile() noexcept;
 };
 
 bool readNewItem(const char *filename, Item &item);

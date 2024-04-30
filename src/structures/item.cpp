@@ -149,28 +149,34 @@ Item& Item::setSelfAsBorderWall() noexcept {
 // this method should ONLY be called once, after the ALL faces have been set
 // or the program will encounter serious performance issues
 Item& Item::updateRawBoundary() noexcept {
-    std::array<double, 6> rawBound = {std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(), -std::numeric_limits<double>::max(),};
-    for (auto& face : faces) {
-        if (face.getV0().getX() < rawBound[0]) rawBound[0] = face.getV0().getX();
-        if (face.getV0().getY() < rawBound[1]) rawBound[1] = face.getV0().getY();
-        if (face.getV0().getZ() < rawBound[2]) rawBound[2] = face.getV0().getZ();
-        if (face.getV0().getX() > rawBound[3]) rawBound[3] = face.getV0().getX();
-        if (face.getV0().getY() > rawBound[4]) rawBound[4] = face.getV0().getY();
-        if (face.getV0().getZ() > rawBound[5]) rawBound[5] = face.getV0().getZ();
+    std::array<double, 6> rawBound = {
+        99999999, 99999999, 99999999,
+        -99999999, -99999999, -99999999
+    };
+    for (const auto& face : faces) {
+        const auto& v0 = face.getV0();
+        const auto& v1 = face.getV1();
+        const auto& v2 = face.getV2();
+        if (v0.getX() < rawBound[0]) rawBound[0] = v0.getX();
+        if (v0.getY() < rawBound[1]) rawBound[1] = v0.getY();
+        if (v0.getZ() < rawBound[2]) rawBound[2] = v0.getZ();
+        if (v0.getX() > rawBound[3]) rawBound[3] = v0.getX();
+        if (v0.getY() > rawBound[4]) rawBound[4] = v0.getY();
+        if (v0.getZ() > rawBound[5]) rawBound[5] = v0.getZ();
 
-        if (face.getV1().getX() < rawBound[0]) rawBound[0] = face.getV1().getX();
-        if (face.getV1().getY() < rawBound[1]) rawBound[1] = face.getV1().getY();
-        if (face.getV1().getZ() < rawBound[2]) rawBound[2] = face.getV1().getZ();
-        if (face.getV1().getX() > rawBound[3]) rawBound[3] = face.getV1().getX();
-        if (face.getV1().getY() > rawBound[4]) rawBound[4] = face.getV1().getY();
-        if (face.getV1().getZ() > rawBound[5]) rawBound[5] = face.getV1().getZ();
+        if (v1.getX() < rawBound[0]) rawBound[0] = v1.getX();
+        if (v1.getY() < rawBound[1]) rawBound[1] = v1.getY();
+        if (v1.getZ() < rawBound[2]) rawBound[2] = v1.getZ();
+        if (v1.getX() > rawBound[3]) rawBound[3] = v1.getX();
+        if (v1.getY() > rawBound[4]) rawBound[4] = v1.getY();
+        if (v1.getZ() > rawBound[5]) rawBound[5] = v1.getZ();
 
-        if (face.getV2().getX() < rawBound[0]) rawBound[0] = face.getV2().getX();
-        if (face.getV2().getY() < rawBound[1]) rawBound[1] = face.getV2().getY();
-        if (face.getV2().getZ() < rawBound[2]) rawBound[2] = face.getV2().getZ();
-        if (face.getV2().getX() > rawBound[3]) rawBound[3] = face.getV2().getX();
-        if (face.getV2().getY() > rawBound[4]) rawBound[4] = face.getV2().getY();
-        if (face.getV2().getZ() > rawBound[5]) rawBound[5] = face.getV2().getZ();
+        if (v2.getX() < rawBound[0]) rawBound[0] = v2.getX();
+        if (v2.getY() < rawBound[1]) rawBound[1] = v2.getY();
+        if (v2.getZ() < rawBound[2]) rawBound[2] = v2.getZ();
+        if (v2.getX() > rawBound[3]) rawBound[3] = v2.getX();
+        if (v2.getY() > rawBound[4]) rawBound[4] = v2.getY();
+        if (v2.getZ() > rawBound[5]) rawBound[5] = v2.getZ();
     }
     setRawBoundary(rawBound);
     return *this;
@@ -185,12 +191,17 @@ Item& Item::setRawBoundary(const std::array<double, 6>& p) noexcept {
     return *this;
 }
 
-const std::unique_ptr<std::vector<std::pair<int, Point>>>& Item::getNormalList() const noexcept {
+const std::unique_ptr<std::vector<Point>>& Item::getNormalList() const noexcept {
     return normals;
 }
 
-std::unique_ptr<std::vector<std::pair<int, Point>>>& Item::getMutNormalList() noexcept {
+std::unique_ptr<std::vector<Point>>& Item::getMutNormalList() noexcept {
     return normals;
+}
+
+Item& Item::setNoNormalReqFromObjFile() noexcept {
+    requireFromOBJ = false;
+    return *this;
 }
 
 // I've decided that one item only have one set of BRDF data
@@ -279,10 +290,11 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
         const auto &fwvr = facesWithVertexRefs;
         // traverse the face list to update the adj list
         for (int i = 0; i < fwvr.size(); i++) {
-            if (fwvr[i][0] >= vertexAdjList.size() ||
-                fwvr[i][1] >= vertexAdjList.size() ||
-                fwvr[i][2] >= vertexAdjList.size()) {
-                coutLogger->writeErrorEntry("Index out of range in vertexAdjList");
+            //stdoutLogger->writeInfoEntry(std::to_string(fwvr[i][0]) + ", " + std::to_string(fwvr[i][1]) + ", " + std::to_string(fwvr[i][2]) + ". " + std::to_string(minVertexIndex) + " " + std::to_string(vertexAdjList.size()));
+            if (fwvr[i][0]>= vertexAdjList.size() ||
+                fwvr[i][1]>= vertexAdjList.size() ||
+                fwvr[i][2]>= vertexAdjList.size()) {
+                coutLogger->writeErrorEntry("Index out of range in vertexAdjList: idx bigger than .size() or negative idx encountered");
                 exit(765);
             } else {
                 vertexAdjList[fwvr[i][0]].push_back(i);

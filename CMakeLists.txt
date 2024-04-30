@@ -39,12 +39,12 @@ add_executable(vertices src/main.cpp
         src/structures/camera.h
         src/structures/pixel.cpp
         src/structures/pixel.h
-        src/basic/coordTransform.cpp
-        src/basic/coordTransform.h
-        lib/transform3d/transforms3d.h
-        lib/transform3d/trans_forms.cpp
-        lib/transform3d/trans_forms_group.cpp
-        lib/eigen3/Eigen
+        #src/basic/coordTransform.cpp
+        #src/basic/coordTransform.h
+        #lib/transform3d/transforms3d.h
+        #lib/transform3d/trans_forms.cpp
+        #lib/transform3d/trans_forms_group.cpp
+        #lib/eigen3/Eigen
         src/basic/BRDF.cpp
         src/basic/BRDF.h
         src/logger/loggingFacility.h
@@ -94,6 +94,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-trapping-math -fno-math-errno")
     # GCC vectorization report verbose
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-optimized -fopt-info-loop-optimized")
+    # gcc more warnings
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")

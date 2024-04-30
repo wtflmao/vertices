@@ -32,7 +32,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     coutLogger->writeInfoEntry(s_.str());
 #endif
 
-    const auto &allFaces = field.getAllFaces();
+    const auto& allFaces = field.getAllFaces();
     for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
         auto& ray = rays->at(it);
         ray.setAncestor(ray.getOrigin());
@@ -61,7 +61,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         intersection_other && face_3 != face) {
                         noOtherInTheWay = false;
                         break;
-                        }
+                    }
                 }
                 if (!noOtherInTheWay) continue;
 
@@ -78,7 +78,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                 }
                 if (seeable) {
                     goodRays_per_thread->push_back(ray);
-                } else {
+                }
+                else {
                     for (auto& val : ray.getMutIntensity_p()) val *= 0.1;
                     goodRays_per_thread->push_back(ray);
                 }
@@ -103,7 +104,8 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     int ray_iter_step = 1;
     if (static_cast<int>(std::log10(scatters_waiting_for_checking->size())) < 4) ray_iter_step = 0;
     else ray_iter_step = static_cast<int>(std::floor(std::log10(scatters_waiting_for_checking->size())));
-    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += (ray_iter_step + 1) * (ray_iter_step + 1) + randab(0, 9)) {
+    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += (ray_iter_step + 1) * (ray_iter_step + 1) +
+         randab(0, 9)) {
         auto& scat = scatters_waiting_for_checking->at(it);
         for (const auto& face : allFaces)
             if (auto intersection = scat.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
@@ -127,7 +129,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                         intersection_other && face_3 != face) {
                         noOtherInTheWay = false;
                         break;
-                        }
+                    }
                 }
                 if (!noOtherInTheWay) continue;
 
@@ -145,20 +147,21 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                 }
                 if (seeable) {
                     goodRays_per_thread->push_back(scat);
-                } else {
+                }
+                else {
                     for (auto& val : scat.getMutIntensity_p()) val *= 0.1;
                     goodRays_per_thread->push_back(scat);
                 }
-                    //auto scatters = scat.scatter(*face, intersection, field.brdfList.at(face->faceBRDF), scat.getSourcePixel());
-                    //for (auto &r: scatters) {
-                    //    if (r.getSourcePixelPosInGnd() == BigO) {
-                    //        r.setSourcePixelPosInGnd(scat.getSourcePixelPosInGnd());
-                    //        r.setSourcePixel(scat.getSourcePixel());
-                    //    }
-                    //    r.setAncestor(scat.getAncestor());
-                    //}
-                    //scatters_waiting_for_checking_x2->insert(scatters_waiting_for_checking_x2->end(), scatters.begin(), scatters.end());
-                    //goodRays_per_thread->insert(goodRays_per_thread->end(), scatters.begin(), scatters.end());
+                //auto scatters = scat.scatter(*face, intersection, field.brdfList.at(face->faceBRDF), scat.getSourcePixel());
+                //for (auto &r: scatters) {
+                //    if (r.getSourcePixelPosInGnd() == BigO) {
+                //        r.setSourcePixelPosInGnd(scat.getSourcePixelPosInGnd());
+                //        r.setSourcePixel(scat.getSourcePixel());
+                //    }
+                //    r.setAncestor(scat.getAncestor());
+                //}
+                //scatters_waiting_for_checking_x2->insert(scatters_waiting_for_checking_x2->end(), scatters.begin(), scatters.end());
+                //goodRays_per_thread->insert(goodRays_per_thread->end(), scatters.begin(), scatters.end());
 
             }
     }
@@ -331,19 +334,25 @@ int main(int argc, char* argv[]) {
 #ifdef _WIN32
     std::cout << "win32" << std::endl;
 
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.obj)");
     for (int i = 1; i <= 41; i++)
-        objPaths.emplace_back(R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\21b8_)" + (i/10 == 0 ? "0" + std::to_string(i) : std::to_string(i)) + R"(.obj)");
+        objPaths.emplace_back(
+            R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\21b8_)" + (i / 10 == 0
+                ? "0" + std::to_string(i)
+                : std::to_string(i)) + R"(.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
     //objPaths.emplace_back(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)");
     //objPaths.emplace_back(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)");
 
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
+    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\su7_-z_yobj.mtl)");
 
     // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     for (int i = 1; i <= 41; i++)
         BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
@@ -361,7 +370,8 @@ int main(int argc, char* argv[]) {
 #elif __unix__ || __unix || __APPLE__ || __MACH__ || __linux__
     std::cout << "unix-like" << std::endl;
 
-    objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.obj)")
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.obj)");
     for (int i = 1; i <= 41; i++)
         objPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7/21b8_)" + (i/10 == 0 ? "0" + std::to_string(i) : std::to_string(i)) + R"(.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.obj)");
@@ -369,12 +379,14 @@ int main(int argc, char* argv[]) {
     //objPaths.emplace_back(R"(/home/20009100240/3dmodel/F22_blender/F22.obj)");
 
     mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.mtl)");
+    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.mtl)");
     mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7/su7_-z_yobj.mtl)");
 
     // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
-    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
     for (int i = 1; i <= 41; i++)
         BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
     //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
@@ -398,12 +410,13 @@ int main(int argc, char* argv[]) {
     );
     // cube #1
     field.newClosedObject()
-            .setOBJPath(objPaths.at(0))
-            .setMTLPath(mtlPaths.at(0))
+            .setOBJPath(objPaths.at(1))
+            .setMTLPath(mtlPaths.at(1))
             .setCenter({-11, 11, 4})
             .setScaleFactor({3, 2, 4})
             .setForwardAxis(6)
             .setUpAxis(2)
+            .setNoNormalReqFromObjFile()
             // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
             .setInnerPoints({
                 {-0.1, -0.1, -0.1},
@@ -430,10 +443,10 @@ int main(int argc, char* argv[]) {
             field.getObjects().back().getVertices().size()) + " vertices");
 #endif
     // xiaomi su7
-    for (auto i = 1; i <= 41; i++) {
+    for (auto i = 2; i <= 41+1; i++) {
         field.newClosedObject()
              .setOBJPath(objPaths.at(i))
-             .setMTLPath(mtlPaths.at(1))
+             .setMTLPath(mtlPaths.at(2))
              .setCenter({0, 0, 0})
              .setScaleFactor({5, 5, 5})
              .setForwardAxis(6)
@@ -583,12 +596,13 @@ int main(int argc, char* argv[]) {
     auto camera = Camera();
     // field box's wall and ceiling
     field.newClosedObject()
-         .setOBJPath(objPaths.at(0))
-         .setMTLPath(mtlPaths.at(0))
+         .setOBJPath(objPaths.front())
+         .setMTLPath(mtlPaths.front())
          .setCenter({0.0, 0.0, (-2.0 + CAMERA_HEIGHT * 1.732) / 2.0})
          .setScaleFactor({FIELD_LENGTH_X * 0.98, FIELD_LENGTH_Y * 0.98, (2.0 + CAMERA_HEIGHT * 1.732) * 1.02 / 2.0})
          .setForwardAxis(6)
          .setUpAxis(2)
+         .setNoNormalReqFromObjFile()
          // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
          .setInnerPoints({
              {-3, -2, 2},
@@ -603,12 +617,13 @@ int main(int argc, char* argv[]) {
 
 
     field.newOpenObject()
-         .setOBJPath(objPaths.at(1))
+         .setOBJPath(objPaths.back())
          .setMTLPath(mtlPaths.at(0))
          .setForwardAxis(6)
          .setUpAxis(2)
          .setCenter({0, 0, 0})
          .setScaleFactor({800, 800, 1})
+         //.setNoNormalReqFromObjFile()
          .setThatCorrectFaceVertices({598, 0, 1})
          .setThatCorrectFaceIndex(0)
          .readFromOBJ()
@@ -746,7 +761,7 @@ int main(int argc, char* argv[]) {
     // only for timing
     start = std::chrono::high_resolution_clock::now();
 
-    void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs, std::vector<Ray>* rays,
+    void checker(Field& field, const std::vector<std::shared_ptr<Node>>& node_ptrs, std::vector<Ray>* rays,
                  const std::pair<int, int>& constSubVec, int idx, wrappedRays* ret, const Vec& sunlightVecR,
                  const Vec& planeNormalVec);
 
@@ -780,7 +795,7 @@ int main(int argc, char* argv[]) {
     int i_ = 0;
     for (const auto &sub: subVectors) {
         threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0,
-                &rets->at(i_++), std::ref(camera.sunlightDirectionReverse), std::ref(camera.getImagePlaneOZ()));
+                             &rets->at(i_++), std::ref(camera.sunlightDirectionReverse), std::ref(camera.getImagePlaneOZ()));
     }
     for (auto &thread: threads) {
         try {

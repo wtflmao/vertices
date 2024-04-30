@@ -20,6 +20,7 @@
 #include <memory>
 #include <cstdint>
 #include <thread>
+#include <cmath>
 
 inline std::random_device rd;
 inline std::mt19937 generator(rd());

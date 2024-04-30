@@ -42,18 +42,23 @@ bool readNewItem(const char *filename, Item& item) {
         // replace all \r to \0 so we can no longer care about if it is CRLF or LF
         char *p = strchr(line, '\r');
         if (p) *p = '\0';
-        processLine(line, item, false);
+        processLine(line, item, true);
         count++;
     }
-    if (item.requireNormalFromOBJ && (std::strstr(line, ".obj") != nullptr || std::strstr(line, ".OBJ") != nullptr)) {
+    //std::cout<<"[1] "<<filename<<" minNormalIndex is "<<item.minNormalIndex<<std::endl;
+    //std::cout<<"[1] "<<filename<<" normalVecList size is "<<item.getNormalList()->size()<<std::endl;
+    /*if (item.requireFromOBJ && (std::strstr(line, ".obj") != nullptr || std::strstr(line, ".OBJ") != nullptr)) {
+        //std::cout<<"[2] "<<filename<<" minNormalIndex is "<<item.minNormalIndex<<std::endl;
+        //std::cout<<"[2] "<<filename<<" normalVecList size is "<<item.getNormalList()->size()<<std::endl;
         fseek(fp, 0, SEEK_SET);
         while (fgets(line, sizeof(line), fp)) {
             // replace all \r to \0 so we can no longer care about if it is CRLF or LF
-            char *p = strchr(line, '\r');
+            char* p = strchr(line, '\r');
             if (p) *p = '\0';
-            processFace(line, item, true);
+            if (std::strstr(line, "f ") == line)
+                processFace(line, item, true);
         }
-    }
+    }*/
 
     fclose(fp);
     fprintf(stdout, "Processed %d lines from %s\n", count, filename);
