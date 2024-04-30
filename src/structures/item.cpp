@@ -291,10 +291,11 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
         // traverse the face list to update the adj list
         for (int i = 0; i < fwvr.size(); i++) {
             //stdoutLogger->writeInfoEntry(std::to_string(fwvr[i][0]) + ", " + std::to_string(fwvr[i][1]) + ", " + std::to_string(fwvr[i][2]) + ". " + std::to_string(minVertexIndex) + " " + std::to_string(vertexAdjList.size()));
-            if (fwvr[i][0]>= vertexAdjList.size() ||
-                fwvr[i][1]>= vertexAdjList.size() ||
-                fwvr[i][2]>= vertexAdjList.size()) {
-                coutLogger->writeErrorEntry("Index out of range in vertexAdjList: idx bigger than .size() or negative idx encountered");
+            if (fwvr[i][0] >= vertexAdjList.size() ||
+                fwvr[i][1] >= vertexAdjList.size() ||
+                fwvr[i][2] >= vertexAdjList.size()) {
+                coutLogger->writeErrorEntry(
+                    "Index out of range in vertexAdjList: idx bigger than .size() or negative idx encountered");
                 exit(765);
             } else {
                 vertexAdjList[fwvr[i][0]].push_back(i);

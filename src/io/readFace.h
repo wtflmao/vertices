@@ -15,6 +15,6 @@
 #include "../structures/item.h"
 #include <array>
 
-void processFace(const char* line, Item& p, const bool trigger);
+void processFace(const char* line, Item& p);
 
 #endif //VERTICES_READFACE_H

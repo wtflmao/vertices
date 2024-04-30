@@ -10,7 +10,7 @@
 
 #include "readFace.h"
 
-void processFace(const char* line, Item& p, const bool trigger) {
+void processFace(const char* line, Item& p) {
     /*
      * example:
      * f  5/1/1 3/2/1 1/3/1
@@ -48,7 +48,7 @@ void processFace(const char* line, Item& p, const bool trigger) {
     }
 #else
     if (count == 6) {
-        sscanf(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &v_i[0], &v_i[1], &v_i[2], &vn_i[0], &vn_i[1], &vn_i[2]);
+        sscanf(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &v_i[0], &vn_i[0], &v_i[1], &vn_i[1], &v_i[2], &vn_i[2]);
     } else if (count == 3) {
         sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     } else {
@@ -66,52 +66,34 @@ void processFace(const char* line, Item& p, const bool trigger) {
     // actually vn_i[0] [1] [2] should be the same, but it CAN be different
     if (p.requireFromOBJ) {
         // use the normal vec from obj file
-        //std::cout<<"readFace switch "<<v_i[0] - p.minVertexIndex<<std::endl;
-        //std::cout<<"readFace switch "<<vn_i[0] - p.minNormalIndex<<std::endl;
         try {
-            //p_t.getMutV0().setX(p_v.at(v_i[0] - p.minVertexIndex).getX())
-            //    .setY(p_v.at(v_i[0] - p.minVertexIndex).getY())
-            //    .setZ(p_v.at(v_i[0] - p.minVertexIndex).getZ());
-            //p_t.getMutV1().setX(p_v.at(v_i[1] - p.minVertexIndex).getX())
-            //    .setY(p_v.at(v_i[1] - p.minVertexIndex).getY())
-            //    .setZ(p_v.at(v_i[1] - p.minVertexIndex).getZ());
-            //p_t.getMutV1().setX(p_v.at(v_i[2] - p.minVertexIndex).getX())
-            //    .setY(p_v.at(v_i[2] - p.minVertexIndex).getY())
-            //    .setZ(p_v.at(v_i[2] - p.minVertexIndex).getZ());
-            p_t.getMutV0().setX(p_v.at(v_i[0]).getX())
-                          .setY(p_v.at(v_i[0]).getY())
-                          .setZ(p_v.at(v_i[0]).getZ());
-            p_t.getMutV1().setX(p_v.at(v_i[1]).getX())
-                          .setY(p_v.at(v_i[1]).getY())
-                          .setZ(p_v.at(v_i[1]).getZ());
-            p_t.getMutV2().setX(p_v.at(v_i[2]).getX())
-                          .setY(p_v.at(v_i[2]).getY())
-                          .setZ(p_v.at(v_i[2]).getZ());
-            p_t.computeCentroid();
-            p_t.setNormalVec(Vec{
-                p.getNormalList()->at(vn_i[0]).getX(),
-                p.getNormalList()->at(vn_i[0]).getY(),
-                p.getNormalList()->at(vn_i[0]).getZ()
-            });
-        } catch (std::out_of_range& e) {
-            std::cout<<"In processFace() at readFace.cpp "<<e.what()<<std::endl;
-        } catch (...) {
-            std::cout<<"unknown exception from processFace()"<<std::endl;
+            p_t.setV0(p_v.at(v_i[0])).setV1(p_v.at(v_i[1])).setV2(p_v.at(v_i[2]));
         }
-        p.getMutFWVR().push_back({v_i[0], v_i[1], v_i[2]});
+        catch (std::out_of_range& e) {
+            std::cout << "In processFace() at readFace.cpp " << e.what() << std::endl;
+        } catch (...) {
+            std::cout << "unknown exception from processFace()" << std::endl;
+        }
+        p_t.computeCentroid();
+        try {
+            p_t.setNormalVec({BigO, p.getNormalList()->at(vn_i[0])});
+        } catch (std::out_of_range& e) {
+            std::cout << "In processFace()2 at readFace.cpp " << e.what() << std::endl;
+        } catch (...) {
+            std::cout << "unknown exception from processFace()2" << std::endl;
+        }
     }
     else {
         // sadly, obj doesn't have normal vec at all
         const auto &newV0 = p_v.at(v_i.at(0));
-        const auto &newV1 = p_v.at(v_i.at(1));
-        const auto &newV2 = p_v.at(v_i.at(2));
+        const auto& newV1 = p_v.at(v_i.at(1));
+        const auto& newV2 = p_v.at(v_i.at(2));
         p_t.getMutV0().setX(newV0.getX()).setY(newV0.getY()).setZ(newV0.getZ());
         p_t.getMutV1().setX(newV1.getX()).setY(newV1.getY()).setZ(newV1.getZ());
         p_t.getMutV2().setX(newV2.getX()).setY(newV2.getY()).setZ(newV2.getZ());
         p_t.computeCentroid();
         p_t.updateNormalVec();
-        p.getMutFWVR().push_back({v_i[0], v_i[1], v_i[2]});
     }
 
-    //p.getMutFWVR().push_back({v_i.at(0) - p.minVertexIndex, v_i.at(1) - p.minVertexIndex, v_i.at(2) - p.minVertexIndex});
+    p.getMutFWVR().push_back({v_i[0], v_i[1], v_i[2]});
 }

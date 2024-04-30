@@ -162,7 +162,6 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                 //}
                 //scatters_waiting_for_checking_x2->insert(scatters_waiting_for_checking_x2->end(), scatters.begin(), scatters.end());
                 //goodRays_per_thread->insert(goodRays_per_thread->end(), scatters.begin(), scatters.end());
-
             }
     }
     delete scatters_waiting_for_checking;
@@ -339,8 +338,8 @@ int main(int argc, char* argv[]) {
     for (int i = 1; i <= 41; i++)
         objPaths.emplace_back(
             R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\21b8_)" + (i / 10 == 0
-                ? "0" + std::to_string(i)
-                : std::to_string(i)) + R"(.obj)");
+                    ? "0" + std::to_string(i)
+                    : std::to_string(i)) + R"(.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
     //objPaths.emplace_back(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)");
     //objPaths.emplace_back(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)");
@@ -410,15 +409,15 @@ int main(int argc, char* argv[]) {
     );
     // cube #1
     field.newClosedObject()
-            .setOBJPath(objPaths.at(1))
-            .setMTLPath(mtlPaths.at(1))
-            .setCenter({-11, 11, 4})
-            .setScaleFactor({3, 2, 4})
+         .setOBJPath(objPaths.at(1))
+         .setMTLPath(mtlPaths.at(1))
+         .setCenter({-11, 11, 4})
+         .setScaleFactor({3, 2, 4})
             .setForwardAxis(6)
             .setUpAxis(2)
-            .setNoNormalReqFromObjFile()
-            // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
-            .setInnerPoints({
+         .setNoNormalReqFromObjFile()
+         // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
+         .setInnerPoints({
                 {-0.1, -0.1, -0.1},
                 {0.1, 0.1, 0.1},
                 {0, 0, 0}
@@ -443,7 +442,7 @@ int main(int argc, char* argv[]) {
             field.getObjects().back().getVertices().size()) + " vertices");
 #endif
     // xiaomi su7
-    for (auto i = 2; i <= 41+1; i++) {
+    for (auto i = 2; i <= 41 + 1; i++) {
         field.newClosedObject()
              .setOBJPath(objPaths.at(i))
              .setMTLPath(mtlPaths.at(2))
@@ -623,7 +622,7 @@ int main(int argc, char* argv[]) {
          .setUpAxis(2)
          .setCenter({0, 0, 0})
          .setScaleFactor({800, 800, 1})
-         //.setNoNormalReqFromObjFile()
+         .setNoNormalReqFromObjFile()
          .setThatCorrectFaceVertices({598, 0, 1})
          .setThatCorrectFaceIndex(0)
          .readFromOBJ()
@@ -795,7 +794,8 @@ int main(int argc, char* argv[]) {
     int i_ = 0;
     for (const auto &sub: subVectors) {
         threads.emplace_back(checker, std::ref(field), std::ref(node_ptrs), rays, std::ref(sub), 0,
-                             &rets->at(i_++), std::ref(camera.sunlightDirectionReverse), std::ref(camera.getImagePlaneOZ()));
+                             &rets->at(i_++), std::ref(camera.sunlightDirectionReverse),
+                             std::ref(camera.getImagePlaneOZ()));
     }
     for (auto &thread: threads) {
         try {
