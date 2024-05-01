@@ -30,6 +30,8 @@ public:
 
     bool isBorderWall = false;
 
+    void* pointerToItemMTLDataset = nullptr;
+
     [[nodiscard]] const Vec & getNormal() const noexcept;
 
     Triangle &setNormalVec(const Vec &n) noexcept;
@@ -40,6 +42,9 @@ public:
     Triangle(const Point &v0, const Point &v1, const Point &v2, const Vec &n) noexcept;
 
     Triangle() noexcept;
+
+    explicit Triangle(void* item_p) noexcept;
+
     [[maybe_unused]] [[nodiscard]] bool is_inside_triangle(const Point &p) const;
 
     [[nodiscard]] std::array<std::reference_wrapper<Point>, 3> getVertices() noexcept;

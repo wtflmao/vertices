@@ -23,6 +23,37 @@
 #include <tuple>
 #include <stdexcept>
 
+class MTLDataset final {
+public:
+    /*
+     * Ns 10.0000000: 镜面指数为10.0,控制镜面高光的尖锐程度。
+     * Ni 1.5000000: 折射指数为1.5。
+     * d 1.0000000: 透明度为1.0,即完全不透明。
+     * illum 2: 使用Blinn-Phong光照模型。
+     * Ka r g b: 环境光反射颜色,以RGB三个浮点数表示。
+     * Kd r g b: 漫反射颜色,以RGB三个浮点数表示。
+     * Ks r g b: 镜面反射颜色,以RGB三个浮点数表示。
+     * Ka 0.5880000 0.5880000 0.5880000: 环境光反射颜色为灰色。
+     * Kd 0.5880000 0.5880000 0.5880000: 漫反射颜色也为灰色。
+     * Ks 0.0000000 0.0000000 0.0000000: 镜面反射颜色为黑色,即没有镜面高光。
+     * Ke 0.0000000 0.0000000 0.0000023: emissive color (Physically-based rendering extenxsion)
+     * map_Ka F22.jpg: 使用名为"F22.jpg"的纹理贴图作为环境光反射贴图。
+     * map_Kd F22.jpg: 使用同样的"F22.jpg"纹理作为漫反射贴图。
+     */
+    double Ns = 10.0;
+    double Ni = 0.0;
+    double d = 1.0;
+    double Tr = 0.0;
+    double Tf[3] = {1.0, 1.0, 1.0};
+    int illum = 2;
+    double Ka[4] = {0.588, 0.588, 0.588, 0.0};
+    double Kd[4] = {0.588, 0.588, 0.588, 0.0};
+    double Ks[4] = {0.588, 0.588, 0.588, 0.0};
+    double Ke[4] = {0.588, 0.588, 0.588, 0.0};
+    std::string map_Ka = "F22.jpg";
+    std::string map_Kd = "F22.jpg";
+};
+
 class Item final {
 private:
     std::vector<Triangle> faces;
@@ -39,38 +70,13 @@ private:
     std::unique_ptr<std::vector<Point>> normals = std::make_unique<std::vector<Point>>();
 
 public:
-    /*
-     * Ns 10.0000000: 镜面指数为10.0,控制镜面高光的尖锐程度。
-     * Ni 1.5000000: 折射指数为1.5。
-     * d 1.0000000: 透明度为1.0,即完全不透明。
-     * illum 2: 使用Blinn-Phong光照模型。
-     * Ka r g b: 环境光反射颜色,以RGB三个浮点数表示。
-     * Kd r g b: 漫反射颜色,以RGB三个浮点数表示。
-     * Ks r g b: 镜面反射颜色,以RGB三个浮点数表示。
-     * Ka 0.5880000 0.5880000 0.5880000: 环境光反射颜色为灰色。
-     * Kd 0.5880000 0.5880000 0.5880000: 漫反射颜色也为灰色。
-     * Ks 0.0000000 0.0000000 0.0000000: 镜面反射颜色为黑色,即没有镜面高光。
-     * map_Ka F22.jpg: 使用名为"F22.jpg"的纹理贴图作为环境光反射贴图。
-     * map_Kd F22.jpg: 使用同样的"F22.jpg"纹理作为漫反射贴图。
-     */
     // open mesh be like plane, ground, etc.
     // closed mesh be like ball, cube, cylinder
     bool isOpenMesh = false;
     short brdfIdx = -1;
     int forwardAxis = 6; // 1 2 3 for X Y Z, 4 5 6 for -X -Y -Z
     int upAxis = 3;
-    double Ns = 10.0;
-    double Ni = 1.5;
-    double d = 1.0;
-    double Tr = 0.0;
-    double Tf[3] = {1.0, 1.0, 1.0};
-    double illum = 2.0;
-    double Ka[3] = {0.588, 0.588, 0.588};
-    double Kd[3] = {0.588, 0.588, 0.588};
-    double Ks[3] = {0.588, 0.588, 0.588};
-    double Ke[3] = {0.588, 0.588, 0.588};
-    std::string map_Ka = "F22.jpg";
-    std::string map_Kd = "F22.jpg";
+    MTLDataset mtlDataset = MTLDataset();
     std::array<int, 3> thatCorrectFaceVertices = {1, 2, 4};
     int thatCorrectFaceIndex = 0;
     std::vector<Point> innerPoints;

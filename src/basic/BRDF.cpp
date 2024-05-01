@@ -11,7 +11,6 @@
  */
 
 OpenBRDF::OpenBRDF() noexcept: BRDF(true) {
-
 }
 
 ClosedBRDF::ClosedBRDF() noexcept: BRDF(false) {

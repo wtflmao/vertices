@@ -112,8 +112,8 @@ ImagePlane &ImagePlane::buildImagePlane(const std::shared_ptr<std::vector<std::v
     coutLogger->writeInfoEntry("picElemX and Y: " + std::to_string(picElemX) + " " + std::to_string(picElemY));
 
     // here the 40 is for debug only
-    auto Xcount = std::min(static_cast<int>(FIELD_LENGTH_X / picElemX), 600);
-    auto Ycount = std::min(static_cast<int>(FIELD_LENGTH_Y / picElemY), 600);
+    auto Xcount = std::min(static_cast<int>(FIELD_LENGTH_X / picElemX), 400);
+    auto Ycount = std::min(static_cast<int>(FIELD_LENGTH_Y / picElemY), 400);
     if (Xcount == 0) Xcount = 2;
     if (Ycount == 0) Ycount = 2;
     if (Xcount % 2 == 1) Xcount++;

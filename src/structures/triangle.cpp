@@ -21,6 +21,11 @@ Triangle::Triangle() noexcept {
     computeCentroid();
 };
 
+Triangle::Triangle(void* item_p) noexcept {
+    pointerToItemMTLDataset = item_p;
+    computeCentroid();
+};
+
 Triangle &Triangle::setNormalVec(const Vec &n) noexcept {
     normal = n;
     return *this;

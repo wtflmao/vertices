@@ -40,7 +40,7 @@ const Logger fsLogger = std::make_shared<FilesystemLogger>();
 
 
 // VERTICES_RAY_H
-constexpr int SCATTER_RAYS = 7;
+constexpr int SCATTER_RAYS = 1;
 constexpr double STOP_LENGTH = 9999;
 
 
@@ -73,7 +73,7 @@ constexpr double gsd = 0.12;
 constexpr double focalLength = 20;
 constexpr int CAMERA_RAY_STARTER_SCATTER_LEVEL = 0;
 // FOVx
-constexpr double FOVx = 0.25 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
+constexpr double FOVx = 0.75 * 15.714381; //2 * std::atan(resolutionX * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 // FOVy
 constexpr double FOVy = FOVx; //11.818146;//2 * std::atan(resolutionY * pixelSize * 1e-6 / (2 * focalLength * 1e-3));
 constexpr std::array<double, 3> CENTER_OF_CAMERA_IN_GND = {0, 0, CAMERA_HEIGHT};

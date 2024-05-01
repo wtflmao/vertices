@@ -442,12 +442,13 @@ int main(int argc, char* argv[]) {
             field.getObjects().back().getVertices().size()) + " vertices");
 #endif
     // xiaomi su7
+    // its minX: -2.606214, maxX: 2.630939, minY: -0.029737, maxY: 1.435014, minZ: -1.100205, maxZ: 1.100205
     for (auto i = 2; i <= 41 + 1; i++) {
         field.newClosedObject()
              .setOBJPath(objPaths.at(i))
              .setMTLPath(mtlPaths.at(2))
              .setCenter({0, 0, 0})
-             .setScaleFactor({5, 5, 5})
+             .setScaleFactor({3.5, 3.5, 3.5})
              .setForwardAxis(6)
              .setUpAxis(2)
              .readFromOBJ()
@@ -621,7 +622,7 @@ int main(int argc, char* argv[]) {
          .setForwardAxis(6)
          .setUpAxis(2)
          .setCenter({0, 0, 0})
-         .setScaleFactor({800, 800, 1})
+         .setScaleFactor({400, 400, 1})
          .setNoNormalReqFromObjFile()
          .setThatCorrectFaceVertices({598, 0, 1})
          .setThatCorrectFaceIndex(0)

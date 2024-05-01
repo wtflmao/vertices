@@ -26,7 +26,7 @@ void processFace(const char* line, Item& p) {
     // we don't care about textures
     const std::vector<Point>& p_v = p.getVertices();
     std::vector<Triangle>& p_f = p.getMutFaces();
-    p_f.emplace_back();
+    p_f.emplace_back(&p);
     Triangle& p_t = p_f.back();
     auto v_i = std::array<int, 3>{0};
     auto vn_i = std::array<int, 3>{0};
