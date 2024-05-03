@@ -9,6 +9,7 @@
  */
 
 #include "ray.h"
+#include "mtlDataset.h"
 
 // Constructor
 Ray::Ray(const Point &origin, const Vec &direction) noexcept
@@ -219,8 +220,6 @@ bool Ray::intersectsWithBox(const Box &box) const {
     return true;
 }
 
-
-
 Ray::Ray(const Point &origin, const Vec &direction, const std::array<double, spectralBands> &intesity,
          int scatteredCount)
     : origin(origin), direction(direction), scatteredLevel(scatteredCount) {
@@ -276,10 +275,10 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     std::array<double, spectralBands> reflectedIntensity = {};
 
     // it is a pointer to item's mtlDataset
-    auto dataset = static_cast<MTLDataset *>(tri.pointerToItemMTLDataset);
+    auto dataset = &tri.pointerToItemMTLDataset;
 
     // create reflected ray
-    for (int j = 0; j < reflectedIntensity.size(); j++) {
+    for (int j = 0; j < reflectedIntensity.size(); j += bandLength) {
         if (itemBRDF->type == BRDFType::Open) {
             // here's open mesh's BRDF
             auto w = UPPER_WAVELENGTH + j * WAVELENGTH_STEP;
@@ -432,30 +431,35 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             */
             // since both reflected and normal direction vecs are normalized, we can use it directly without dividing by each length
             //reflectedIntensity[j] = intensity_p[j] * 0.9;
-            for (int k = 0; k < spectralBands; k++) {
-                const auto current = LOWER_WAVELENGTH + k * WAVELENGTH_STEP;
-                auto isRGB = [&current]() {
-                    if (RED_LOWER <= current && current < RED_UPPER) return 0;
-                    if (GREEN_LOWER <= current && current < GREEN_UPPER) return 1;
-                    if (BLUE_LOWER <= current && current <= BLUE_UPPER) return 2;
-                    return 3;
-                }();
-                if (scatteredLevel == CAMERA_RAY_STARTER_SCATTER_LEVEL)
-                    reflectedIntensity[k] = intensity_p[k] * dataset->Ks[isRGB] * dataset->d;
-                else
-                    reflectedIntensity[k] = intensity_p[k] * dataset->Ka[isRGB] * dataset->d;
-            }
+
+            const auto current = UPPER_WAVELENGTH + j * WAVELENGTH_STEP;
+            auto isRGB = [&current]() {
+                if (RED_UPPER <= current && current < RED_LOWER) return 0;
+                if (GREEN_UPPER <= current && current < GREEN_LOWER) return 1;
+                if (BLUE_UPPER <= current && current <= BLUE_LOWER) return 2;
+                coutLogger->writeErrorEntry("current: " + std::to_string(current) + "band seems invalid to me.");
+                return 3;
+            }();
+            /*if (scatteredLevel == CAMERA_RAY_STARTER_SCATTER_LEVEL)
+                reflectedIntensity[j] = intensity_p[j] * (dataset->Ks[isRGB] < 1e-6 ? 0 : dataset->Ks[isRGB]) * dataset->d;
+            else
+                reflectedIntensity[j] = intensity_p[j] * (dataset->Ka[isRGB] < 1e-6 ? 0 : dataset->Ka[isRGB]) * dataset->d;
+            */
+            reflectedIntensity[j] = intensity_p[j] * ((dataset->Ks[isRGB] + dataset->Ka[isRGB] + 0.9)/ 3.0) * dataset->d;
+            //std::cout<<">>>>>"<<isRGB<<dataset->Ks[isRGB]<<dataset->Ka[isRGB]<<((dataset->Ks[isRGB] + dataset->Ka[isRGB] + 0.9)/ 3.0)<<dataset->d<<std::endl;
+            //reflectedIntensity[j] = intensity_p[j] * 0.9;
             // debug only
-            for (auto &intensity_: reflectedIntensity)
-                if (intensity_ < 0) {
-                    std::ostringstream ss;
-                    ss << "ClosedBRDF negative ray intensity generated " << std::setprecision(4) << intensity_;
+            auto &intensity_ = reflectedIntensity[j];
+            if (intensity_ < 0) {
+                std::ostringstream ss;
+                /*ss << "ClosedBRDF negative ray intensity generated " << std::setprecision(4) << intensity_ << " " << intensity_p[k] << " " << scatteredLevel << " " << ((scatteredLevel == CAMERA_RAY_STARTER_SCATTER_LEVEL) ? dataset->Ks[isRGB] : dataset->Ka[isRGB]) << " " << dataset->d << " " << k << std::endl;
 #if VERTICES_CONFIG_CXX_STANDARD >= 20
-                    coutLogger->writeErrorEntry(ss.view());
+                coutLogger->writeErrorEntry(ss.view());
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
-                    coutLogger->writeErrorEntry(ss.str());
-#endif
-                }
+                coutLogger->writeErrorEntry(ss.str());
+#endif*/
+                intensity_ = 0;
+            }
         } else {
             std::cerr << "[Error] no implementation for BRDFType::Default typed BRDF\a" << std::endl;
         }
@@ -473,7 +477,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     auto &totalScatteredIntensity = *totalScatteredIntensity_p;
 
     for (int j = 0; j < reflectedIntensity.size(); j++) {
-        /*if (intensity_p[j] - reflectedIntensity[j] < -1e-10) {
+        if (intensity_p[j] - reflectedIntensity[j] < -1e-10) {
             std::ostringstream ss;
             ss << "Negative ray intensity generated " << std::setprecision(8) << intensity_p[j] << " " <<
                     reflectedIntensity[j];
@@ -482,7 +486,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
 #elif VERTICES_CONFIG_CXX_STANDARD <= 17
             coutLogger->writeErrorEntry(ss.str());
 #endif
-        }*/
+        }
         totalScatteredIntensity[j] = std::max(intensity_p[j] - reflectedIntensity[j], 0.0);
     }
 
@@ -490,18 +494,19 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
     for (int i = 1; i <= SCATTER_RAYS; i++) {
         Vec scatteredDirection = uniformHemisphereDirectionWithCenterOfMonteCarloSpace(normal, reflectedDirection).
             getNormalized();
-        for (int j = 0; j < totalScatteredIntensity.size(); j++) {
+        for (int j = 0; j < totalScatteredIntensity.size(); j += bandLength) {
             //scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS;
-            for (int k = 0; k < spectralBands; k++) {
-                const auto current = LOWER_WAVELENGTH + k * WAVELENGTH_STEP;
-                auto isRGB = [&current]() {
-                    if (RED_LOWER <= current && current < RED_UPPER) return 0;
-                    if (GREEN_LOWER <= current && current < GREEN_UPPER) return 1;
-                    if (BLUE_LOWER <= current && current <= BLUE_UPPER) return 2;
-                    return 3;
-                }();
-                scatteredIntensity[k] = totalScatteredIntensity[k] / SCATTER_RAYS * dataset->Kd[isRGB] * dataset->d;
-            }
+            const auto current = UPPER_WAVELENGTH + j * WAVELENGTH_STEP;
+            auto isRGB = [&current]() {
+                if (RED_UPPER <= current && current < RED_LOWER) return 0;
+                if (GREEN_UPPER <= current && current < GREEN_LOWER) return 1;
+                if (BLUE_UPPER <= current && current <= BLUE_LOWER) return 2;
+                coutLogger->writeErrorEntry("current: " + std::to_string(current) + "band seems invalid to me.");
+                return 3;
+            }();
+            scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS * (dataset->Kd[isRGB] + dataset->Ka[isRGB] + 0.9) / 3.0 * dataset->d;
+
+            //scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS;
         }
         //if (i >= 1 && i < SCATTER_RAYS) {
         theRays[i] = (Ray(intersection, scatteredDirection, scatteredIntensity, scatteredLevel + 1));

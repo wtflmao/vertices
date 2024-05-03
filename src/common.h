@@ -131,6 +131,7 @@ constexpr double mixRatioL = mixRatio;
 constexpr double mixRatioR = mixRatio;
 constexpr double mixRatioU = mixRatio;
 constexpr double mixRatioD = mixRatio;
-
+// to save time, we only handle the bands we wanna output, the other bands just ignore, as we dont care bout their output
+constexpr int bandLength = 19;
 
 #endif //SRC_COMMON_H

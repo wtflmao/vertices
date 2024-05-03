@@ -12,4 +12,6 @@
 #include "readMtl.h"
 #include "readNormal.h"
 
+void processLine(const char* line, Item& p_item);
+
 #endif //VERTICES_READLINES_H

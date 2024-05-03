@@ -323,11 +323,11 @@ void Camera::buildSunlightSpectrum() {
     std::map<int, double> sunlightSpectrumMap_t;
 #ifdef _WIN32
     while (fscanf_s(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
-        sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t;
+        sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t * 100.0;
     }
 #else
     while (fscanf(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
-        sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t;
+        sunlightSpectrumMap_t[waveLength_t] = totalRadiance_t * 100.0;
     }
 #endif
 

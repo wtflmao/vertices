@@ -104,8 +104,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     int ray_iter_step = 1;
     if (static_cast<int>(std::log10(scatters_waiting_for_checking->size())) < 4) ray_iter_step = 0;
     else ray_iter_step = static_cast<int>(std::floor(std::log10(scatters_waiting_for_checking->size())));
-    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += (ray_iter_step + 1) * (ray_iter_step + 1) +
-         randab(0, 9)) {
+    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += (ray_iter_step + 1) * (ray_iter_step + 1) + randab(1, 9)) {
         auto& scat = scatters_waiting_for_checking->at(it);
         for (const auto& face : allFaces)
             if (auto intersection = scat.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
@@ -167,7 +166,19 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     delete scatters_waiting_for_checking;
     scatters_waiting_for_checking = nullptr;
 
-    ret->rays = std::move(*goodRays_per_thread);
+    ret->rays.reserve(goodRays_per_thread->size());
+    for (auto &rawR : *goodRays_per_thread) {
+        bool f = false;
+        for (auto &r : rawR.getMutIntensity_p()) {
+            if (r > 1e-10) {
+                f |= true;
+                break;
+            }
+        }
+        if (f) ret->rays.push_back(rawR);
+    }
+    delete goodRays_per_thread;
+
     ret->done = true;
     std::ostringstream s;
     s << "checker thread " << std::this_thread::get_id() << " done with " << ret->rays.size() << " rays." <<
@@ -327,6 +338,37 @@ int main(int argc, char* argv[]) {
 
     fsLogger->writeInfoEntry("hello hi!");
 
+    // quick abort if hardware don't support avx
+    /*{
+        constexpr int MUL = 2;
+        auto outputs = new std::vector<ToBitmap>;
+
+        const int bandLength = 20;
+        for (int band = 0; band < spectralBands; band += bandLength)
+            outputs->emplace_back(12, 12);
+
+        const auto baseIntensityPercentage = 0.1;
+        const auto maxRespOfAll = 2.1;
+        const double newMaxRespOfAll = (1.0 + baseIntensityPercentage) * maxRespOfAll;
+        for (int k = 0; k < spectralBands; k += bandLength) {
+            auto testOutput = (*outputs)[k / bandLength];
+            for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
+                for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
+                    const auto val = static_cast<std::uint8_t>(rand01() * 0xff);
+                    for (int ii = i; ii < i + MUL; ii++)
+                        for (int jj = j; jj < j + MUL; jj++)
+                            testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
+                }
+            }
+            //auto outpath = testOutput.saveToTmpDir("", "band" + std::to_string(k));
+            // after the saveToTmpDir(), we obtained a path to newly generated file
+            // we need to gather more info so we can attach to it
+
+            //coutLogger->writeInfoEntry(outpath);
+            testOutput.infoAppender->tryAppend();
+        }
+    }*/
+
     std::vector<std::string> objPaths;
     std::vector<std::string> mtlPaths;
     std::vector<std::pair<std::array<int, 2>, std::string> > BRDFPaths;
@@ -335,30 +377,31 @@ int main(int argc, char* argv[]) {
 
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\human-fbx\2a36_01.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\pile-of-old-tires-fbx\source\895e_01.obj)");
     for (int i = 1; i <= 41; i++)
         objPaths.emplace_back(
             R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\21b8_)" + (i / 10 == 0
                     ? "0" + std::to_string(i)
                     : std::to_string(i)) + R"(.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
-    //objPaths.emplace_back(R"(C:\Users\root\3D Objects\snow_apls_low_poly_obj\source\Mesher_-z_y.obj)");
-    //objPaths.emplace_back(R"(C:\Users\root\3D Objects\F22_blender\F22.obj)");
 
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.mtl)");
+    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\human-fbx\human.mtl)");
+    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\pile-of-old-tires-fbx\source\tires_-z_y.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\su7_-z_yobj.mtl)");
+    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
 
     // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
+    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     for (int i = 1; i <= 41; i++)
         BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(C:\Users\root\Downloads\debug.mini.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
@@ -371,26 +414,29 @@ int main(int argc, char* argv[]) {
 
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.obj)");
-    for (int i = 1; i <= 41; i++)
-        objPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7/21b8_)" + (i/10 == 0 ? "0" + std::to_string(i) : std::to_string(i)) + R"(.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/human-fbx/2a36_01.obj)");
+    objPaths.emplace_back(R"(/home/20009100240/3dmodel/pile-of-old-tires-fbx/895e_01.obj)");
+    for (int i = 91; i <= 41; i++)
+        objPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7_towardsY/21b8_)" + (i/10 == 0 ? "0" + std::to_string(i) : std::to_string(i)) + R"(.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.obj)");
-    //objPaths.emplace_back(R"(/home/20009100240/3dmodel/snow_apls_low_poly_obj/source/Mesher_-z_y.obj)");
-    //objPaths.emplace_back(R"(/home/20009100240/3dmodel/F22_blender/F22.obj)");
 
     mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube.mtl)");
     mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.mtl)");
-    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7/su7_-z_yobj.mtl)");
+    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/human-fbx/human.mtl)");
+    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/pile-of-old-tires-fbx/tires_-z_y.mtl)");
+    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7_towardsY/su7_-z_yobj.mtl)");
+    mtlPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.mtl)");
+
 
     // BRDFPaths' sequence should follow your object's sequence!!!!!!!!!!
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
+    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
-    for (int i = 1; i <= 41; i++)
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
+    for (int i = 91; i <= 41; i++)
         BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/chrome-steel.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(/home/20009100240/3dmodel/BRDF/debug.mini.459.479.txt)");
     BRDFPaths.emplace_back(std::array<int, 2>{GREEN_UPPER, GREEN_LOWER},
@@ -408,10 +454,10 @@ int main(int argc, char* argv[]) {
         Point(FIELD_LENGTH_X / 2.0, FIELD_LENGTH_Y / 2.0, CAMERA_HEIGHT * 1.732)
     );
     // cube #1
-    field.newClosedObject()
+    /*field.newClosedObject()
          .setOBJPath(objPaths.at(1))
          .setMTLPath(mtlPaths.at(1))
-         .setCenter({-11, 11, 4})
+         .setCenter({-14, 11, 4})
          .setScaleFactor({3, 2, 4})
             .setForwardAxis(6)
             .setUpAxis(2)
@@ -424,51 +470,48 @@ int main(int argc, char* argv[]) {
             })
             .readFromOBJ()
             .readFromMTL()
-            .inspectNormalVecForAllFaces();
+            .inspectNormalVecForAllFaces()
+    .verbose(field.getObjects().size());*/
 
-#if VERTICES_CONFIG_CXX_STANDARD >= 20
-    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
-    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
-                                           field.getObjects().back().getFaces().size()));
-    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
-                                           field.getObjects().back().getVertices().size()));
-#elif VERTICES_CONFIG_CXX_STANDARD <= 17
-    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
-    coutLogger->writeInfoEntry(
-        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
-            field.getObjects().back().getFaces().size()) + " faces");
-    coutLogger->writeInfoEntry(
-        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
-            field.getObjects().back().getVertices().size()) + " vertices");
-#endif
+    // human
+    field.newClosedObject()
+         .setOBJPath(objPaths.at(2))
+         .setMTLPath(mtlPaths.at(2))
+         .setCenter({-14, -11, 0})
+         .setScaleFactor({4.5, 4.5, 4.5}) // it's already 1.8m tall at the scale of 1.0
+         .setForwardAxis(2)
+         .setUpAxis(3)
+         .readFromOBJ()
+         .readFromMTL()
+    .verbose(field.getObjects().size());
+    //.inspectNormalVecForAllFaces();
+
+    // piles of tires
+    field.newClosedObject()
+         .setOBJPath(objPaths.at(3))
+         .setMTLPath(mtlPaths.at(3))
+         .setCenter({-14, 11, 0})
+         .setScaleFactor({4.5, 4.5, 4.5})
+         .setForwardAxis(2)
+         .setUpAxis(3)
+         .readFromOBJ()
+         .readFromMTL()
+    .verbose(field.getObjects().size());
+    //.inspectNormalVecForAllFaces();
+
     // xiaomi su7
     // its minX: -2.606214, maxX: 2.630939, minY: -0.029737, maxY: 1.435014, minZ: -1.100205, maxZ: 1.100205
-    for (auto i = 2; i <= 41 + 1; i++) {
+    for (auto i = 3+99; i <= 41 + 2; i++) {
         field.newClosedObject()
              .setOBJPath(objPaths.at(i))
-             .setMTLPath(mtlPaths.at(2))
+             .setMTLPath(mtlPaths.at(3))
              .setCenter({0, 0, 0})
-             .setScaleFactor({3.5, 3.5, 3.5})
+             .setScaleFactor({4.5, 4.5, -4.5})
              .setForwardAxis(6)
              .setUpAxis(2)
              .readFromOBJ()
-             .readFromMTL();
-
-#if VERTICES_CONFIG_CXX_STANDARD >= 20
-        coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
-        coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
-                                               field.getObjects().back().getFaces().size()));
-        coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
-                                               field.getObjects().back().getVertices().size()));
-#elif VERTICES_CONFIG_CXX_STANDARD <= 17
-        coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
-        coutLogger->writeInfoEntry(
-            "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
-                field.getObjects().back().getFaces().size()) + " faces");
-        coutLogger->writeInfoEntry(
-            "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
-                field.getObjects().back().getVertices().size()) + " vertices");
-#endif
+             .readFromMTL()
+            .verbose(field.getObjects().size());
     }
 
     // cube #2
@@ -613,7 +656,8 @@ int main(int argc, char* argv[]) {
          .readFromOBJ()
          .readFromMTL()
          .inspectNormalVecForAllFaces()
-         .setSelfAsBorderWall();
+         .setSelfAsBorderWall()
+    .verbose(field.getObjects().size());
 
 
     field.newOpenObject()
@@ -628,23 +672,8 @@ int main(int argc, char* argv[]) {
          .setThatCorrectFaceIndex(0)
          .readFromOBJ()
          .readFromMTL()
-         .inspectNormalVecForAllFaces();
-
-#if VERTICES_CONFIG_CXX_STANDARD >= 20
-    coutLogger->writeInfoEntry(std::format("Object #{} has been loaded", field.getObjects().size()));
-    coutLogger->writeInfoEntry(std::format("Object #{} has {} faces", field.getObjects().size(),
-                                           field.getObjects().back().getFaces().size()));
-    coutLogger->writeInfoEntry(std::format("Object #{} has {} vertices", field.getObjects().size(),
-                                           field.getObjects().back().getVertices().size()));
-#elif VERTICES_CONFIG_CXX_STANDARD <= 17
-    coutLogger->writeInfoEntry("Object #{" + std::to_string(field.getObjects().size()) + "} has been loaded");
-    coutLogger->writeInfoEntry(
-        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
-            field.getObjects().back().getFaces().size()) + " faces");
-    coutLogger->writeInfoEntry(
-        "Object #{" + std::to_string(field.getObjects().size()) + "} has " + std::to_string(
-            field.getObjects().back().getVertices().size()) + " vertices");
-#endif
+         .inspectNormalVecForAllFaces()
+    .verbose(field.getObjects().size());
 
 
     // only for timing
@@ -767,9 +796,9 @@ int main(int argc, char* argv[]) {
 
 #ifdef VERTICES_CONFIG_SINGLE_THREAD_FOR_CAMRAYS
     auto ret = new wrappedRays();
-    //for (auto &ray: *rays) {
+    /for (auto &ray: *rays) {
     checker(field, node_ptrs, rays, std::make_pair(0, rays->size()), 0, ret, std::ref(camera.sunlightDirectionReverse), std::ref(camera.getPlaneNormal()));
-    //}
+    /}
     auto *goodRays_t = std::move(&ret->rays);
     delete ret;
 
@@ -855,6 +884,7 @@ int main(int argc, char* argv[]) {
     delete goodRays_tt;
     subVectors.clear();
     threads.clear();
+
 #endif
 
     // clean up rays that have no spectrum response
@@ -863,8 +893,9 @@ int main(int argc, char* argv[]) {
     for (auto &ray: *goodRays_t) {
         bool flaga = false;
         for (auto &spectrumResp: ray.getIntensity_p()) {
-            if (std::abs(spectrumResp) > 1e-10) {
+            if (spectrumResp > 1e-10) {
                 flaga = true;
+                break;
             }
         }
         if (flaga) {
@@ -902,8 +933,7 @@ int main(int argc, char* argv[]) {
     // here we make a copy of the original pixel vectors as we want to mix them up
     auto camPixelsBackup = std::make_shared<std::vector<std::vector<Pixel>>>(*camera.getPixel2D());
     // fetch max response per band
-    // to save time, we only handle the bands we wanna output, the other bands just ignore, as we dont care bout their output
-    constexpr int bandLength = 19;
+
     auto maxRespPerBand = std::vector<double>();
     double maxRespOfAll = -1.0f;
     for (int band = 0; band <= spectralBands; band += bandLength) {
@@ -948,18 +978,21 @@ int main(int argc, char* argv[]) {
 
     const double newMaxRespOfAll = (1.0 + baseIntensityPercentage) * maxRespOfAll;
     for (int k = 0; k < spectralBands; k += bandLength) {
+        printf("band%d:\n", k);
         auto testOutput = (*outputs)[k / bandLength];
         for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
             for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
-                const auto val = static_cast<std::uint8_t>(std::round(
-                    ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k]
-                        /*+ maxRespOfAll * baseIntensityPercentage*/)
-                    / ((1.0 + baseIntensityPercentage) * maxRespPerBand[k / bandLength]) * 0xff));
+                const auto val = static_cast<std::uint8_t>(std::min(255.0, std::round(
+                    ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k])
+                    / ((1.0 + baseIntensityPercentage ) * maxRespPerBand[k / bandLength]) * 0xff)));
+                    /// ((1.0) * maxRespOfAll) * 0xff)));
                 for (int ii = i; ii < i + MUL; ii++)
                     for (int jj = j; jj < j + MUL; jj++)
                         testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
+                printf("%d%c", val, j == testOutput.getResolutionY() - 1 ? '\n' : ',');
             }
         }
+        puts("");
         auto outpath = testOutput.saveToTmpDir("", "band" + std::to_string(k));
         // after the saveToTmpDir(), we obtained a path to newly generated file
         // we need to gather more info so we can attach to it

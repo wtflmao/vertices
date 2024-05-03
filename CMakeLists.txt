@@ -24,6 +24,7 @@ add_executable(vertices src/main.cpp
         src/io/readTexture.cpp
         src/io/readTexture.h
         src/io/readNewItem.h
+        src/io/readMtl.h
         src/common.h
         src/io/readMtl.cpp
         src/io/readMtl.h
@@ -70,6 +71,7 @@ add_executable(vertices src/main.cpp
         lib/JSON/json_fwd.hpp
         src/io/readNormal.cpp
         src/io/readNormal.h
+        src/structures/mtlDataset.h
 )
 
 if (UNIX AND NOT APPLE)
@@ -89,9 +91,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     # GCC  vectorization with AVX512
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     # GCC  vectorization on
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftree-vectorize -march=native -mtune=native -fstrict-aliasing -fopenmp-simd")
+    ##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftree-vectorize -march=native -mtune=native -fstrict-aliasing -fopenmp-simd")
     # GCC turn off sth
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-trapping-math -fno-math-errno")
+    ##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-trapping-math -fno-math-errno")
     # GCC vectorization report verbose
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopt-info-vec-optimized -fopt-info-loop-optimized")
     # gcc more warnings
@@ -99,8 +101,8 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-trap-all=none -parallel")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-xmm-usage=high")
+    ##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-trap-all=none -parallel")
+    ##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-xmm-usage=high")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-report=5 -qopt-report-phase=loop,vec,openmp")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

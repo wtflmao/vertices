@@ -129,6 +129,7 @@ Item &Item::readFromOBJ() {
         std::cerr << "\aError when attempting to run Item::readOBJ() for " << objPath << std::endl;
         throw std::runtime_error("Error when attempting to run Item::readOBJ() for " + objPath);
     }
+    updateRawBoundary();
     return *this;
 }
 
@@ -420,5 +421,18 @@ Item &Item::inspectNormalVecForAllFaces() noexcept {
     }
     // free the memory it consumed, as I shouldn't use it anymore
     facesWithVertexRefs.clear();
+    return *this;
+}
+
+Item& Item::verbose(const int hashtag) noexcept {
+    const std::string tag = hashtag == -1 ? "N/A" : std::to_string(hashtag);
+    std::ostringstream oss;
+    oss << "Object #{" << tag << "} loaded. It has " << faces.size() << " faces and " << vertices.size() << " vertices." << std::endl
+        << "Boundary(RawOBJ): {" << rawBoundary[0] << ", " << rawBoundary[1] << ", " << rawBoundary[2] << ", "
+        << rawBoundary[3] << ", " << rawBoundary[4] << ", " << rawBoundary[5] << "}" << std::endl
+        << "\td=" << mtlDataset.d << " Ka={" << mtlDataset.Ka[0] << ", " << mtlDataset.Ka[1] << ", " << mtlDataset.Ka[2] << "}"
+        << " Kd={" << mtlDataset.Kd[0] << ", " << mtlDataset.Kd[1] << ", " << mtlDataset.Kd[2] << "}"
+        << " Ks={" << mtlDataset.Ks[0] << ", " << mtlDataset.Ks[1] << ", " << mtlDataset.Ks[2] << "}" << std::endl;
+    coutLogger->writeInfoEntry(oss.str());
     return *this;
 }

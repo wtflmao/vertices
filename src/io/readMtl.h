@@ -11,6 +11,8 @@
 
 #include <sstream>
 
+void processUsemtl(const char*, Item&);
+[[nodiscard]] bool processNewmtl(const char*, Item&);
 void processNs(const char*, Item&);
 void processKa(const char*, Item&);
 void processKd(const char*, Item&);

@@ -63,7 +63,7 @@ public:
         int scatteredCount);
 
     [[nodiscard]] std::array<Ray, SCATTER_RAYS + 1> scatter(const Triangle &tri, const Point &intersection,
-                                                            BRDF *itemBRDF, void *sourcePixel_p = nullptr) const;
+                                                            BRDF* itemBRDF, void* sourcePixel_p = nullptr) const;
 
     void setRayStopPoint(const Point &stopPoint_t) noexcept;
 

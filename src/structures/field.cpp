@@ -182,9 +182,10 @@ const Point& Field::getBoundsMax() const noexcept
         rawBoundary[3], rawBoundary[4], rawBoundary[5]
     } << std::endl;
     //std::cout<<"Object #"<<objects.size()<<"'s refraction index is "<<object.Ni<<std::endl;
-    //std::cout<<"Object #"<<objects.size()<<"'s Ka is "<<object.Ka[0]<<" "<<object.Ka[1]<<" "<<object.Ka[2]<<std::endl;
-    //std::cout<<"Object #"<<objects.size()<<"'s Kd is "<<object.Kd[0]<<" "<<object.Kd[1]<<" "<<object.Kd[2]<<std::endl;
-    //std::cout<<"Object #"<<objects.size()<<"'s Ks is "<<object.Ks[0]<<" "<<object.Ks[1]<<" "<<object.Ks[2]<<std::endl;
+    std::cout<<"Object #"<<objects.size()<<"'s d is "<<object.mtlDataset.d<<std::endl;
+    std::cout<<"Object #"<<objects.size()<<"'s Ka is "<<object.mtlDataset.Ka[0]<<" "<<object.mtlDataset.Ka[1]<<" "<<object.mtlDataset.Ka[2]<<std::endl;
+    std::cout<<"Object #"<<objects.size()<<"'s Kd is "<<object.mtlDataset.Kd[0]<<" "<<object.mtlDataset.Kd[1]<<" "<<object.mtlDataset.Kd[2]<<std::endl;
+    std::cout<<"Object #"<<objects.size()<<"'s Ks is "<<object.mtlDataset.Ks[0]<<" "<<object.mtlDataset.Ks[1]<<" "<<object.mtlDataset.Ks[2]<<std::endl;
     std::cout<<std::endl;
 
     return true;

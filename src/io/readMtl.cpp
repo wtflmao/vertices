@@ -3,6 +3,23 @@
 //
 
 #include "readMtl.h"
+void processUsemtl(const char* line, Item& p) {
+    std::istringstream ss(line);
+    std::string temp, usemtlName;
+    ss >> temp >> usemtlName;
+    p.mtlDataset.mtlGroupName = usemtlName;
+}
+
+bool processNewmtl(const char* line, Item& p) {
+    std::istringstream ss(line);
+    std::string temp, newMtlName;
+    ss >> temp >> newMtlName;
+    if (newMtlName == p.mtlDataset.mtlGroupName) {
+        return true;
+    }
+    return false;
+}
+
 void processNs(const char* line, Item& p) {
     sscanf(line, "Ns %lf", &p.mtlDataset.Ns);
 }

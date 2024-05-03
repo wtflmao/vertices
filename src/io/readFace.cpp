@@ -26,7 +26,7 @@ void processFace(const char* line, Item& p) {
     // we don't care about textures
     const std::vector<Point>& p_v = p.getVertices();
     std::vector<Triangle>& p_f = p.getMutFaces();
-    p_f.emplace_back(&p);
+    p_f.emplace_back(p.mtlDataset);
     Triangle& p_t = p_f.back();
     auto v_i = std::array<int, 3>{0};
     auto vn_i = std::array<int, 3>{0};
@@ -42,7 +42,7 @@ void processFace(const char* line, Item& p) {
     if (count == 6) {
         sscanf_s(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &v_i[0], &vn_i[0], &v_i[1], &vn_i[1], &v_i[2], &vn_i[2]);
     } else if (count == 3) {
-        sscanf_s(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+        sscanf_s(line, "f %d/%d %d/%d %d/%d", &v_i[0], &vn_i[0], &v_i[1], &vn_i[1], &v_i[2], &vn_i[2]);
     } else {
         sscanf_s(line, "f %d %d %d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     }
@@ -50,7 +50,7 @@ void processFace(const char* line, Item& p) {
     if (count == 6) {
         sscanf(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &v_i[0], &vn_i[0], &v_i[1], &vn_i[1], &v_i[2], &vn_i[2]);
     } else if (count == 3) {
-        sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
+        sscanf(line, "f %d/%d %d/%d %d/%d", &v_i[0], &vn_i[0], &v_i[1], &vn_i[1], &v_i[2], &vn_i[2]);
     } else {
         sscanf(line, "f %d %d %d", &v_i.at(0), &v_i.at(1), &v_i.at(2));
     }
