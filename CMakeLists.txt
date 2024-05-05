@@ -100,9 +100,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wno-unused-parameter")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")
-    ##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-trap-all=none -parallel")
-    ##set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-xmm-usage=high")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xCOMMON-AVX2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-zmm-usage=high -fp-model fast=2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-trap-all=none -parallel")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ansi-alias -qopenmp-simd -qopt-xmm-usage=high")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -qopt-report=5 -qopt-report-phase=loop,vec,openmp")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

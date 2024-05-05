@@ -445,7 +445,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
             else
                 reflectedIntensity[j] = intensity_p[j] * (dataset->Ka[isRGB] < 1e-6 ? 0 : dataset->Ka[isRGB]) * dataset->d;
             */
-            reflectedIntensity[j] = intensity_p[j] * ((dataset->Ks[isRGB] + dataset->Ka[isRGB] + 0.9)/ 3.0) * dataset->d;
+            reflectedIntensity[j] = intensity_p[j] * ((dataset->Kd[isRGB])) * dataset->d;
             //std::cout<<">>>>>"<<isRGB<<dataset->Ks[isRGB]<<dataset->Ka[isRGB]<<((dataset->Ks[isRGB] + dataset->Ka[isRGB] + 0.9)/ 3.0)<<dataset->d<<std::endl;
             //reflectedIntensity[j] = intensity_p[j] * 0.9;
             // debug only
@@ -504,7 +504,7 @@ std::array<Ray, SCATTER_RAYS + 1> Ray::scatter(const Triangle &tri, const Point 
                 coutLogger->writeErrorEntry("current: " + std::to_string(current) + "band seems invalid to me.");
                 return 3;
             }();
-            scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS * (dataset->Kd[isRGB] + dataset->Ka[isRGB] + 0.9) / 3.0 * dataset->d;
+            scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS * (dataset->Kd[isRGB]) * dataset->d;
 
             //scatteredIntensity[j] = totalScatteredIntensity[j] / SCATTER_RAYS;
         }

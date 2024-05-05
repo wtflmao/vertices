@@ -466,32 +466,33 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
     std::vector<std::thread> threads;
 
     std::atomic_int activeThreads(0);
-    for (int n = 0; n < multiplier; n++) {
-        for (int i = 0; i < pixel2D->size(); i++) {
-            if (activeThreads.load() <= threadAmount) {
-                rets->emplace_back();
-                // we place ++activeThreads AFTER a thread is created cuz it easily exceeds the limit A LOT, so it's faster than not to do so
-                threads.emplace_back([&](int j) {
-                    ++activeThreads;
-                    auto raysForThisThread = new std::vector<Ray>;
-                    for (auto &pixel: pixel2D->at(j)) {
+    for (int i = 0; i < pixel2D->size(); i++) {
+        if (activeThreads.load() <= threadAmount) {
+            rets->emplace_back();
+            // we place ++activeThreads AFTER a thread is created cuz it easily exceeds the limit A LOT, so it's faster than not to do so
+            threads.emplace_back([&](int j) {
+                ++activeThreads;
+                auto raysForThisThread = new std::vector<Ray>;
+                for (auto &pixel: pixel2D->at(j)) {
+                    for (int n = 0; n < multiplier; n++)
                         raysForThisThread->push_back(
                             pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel,
-                                                                imgPlane_u->getAngleToZ()));
-                        //raysForThisThread->push_back(
-                        //    pixel.shootSkyScatteredRaysFromPixelFromImgPlate(planeNormVecR, sunlightSpectrum, &pixel,
-                        //    imgPlane_u->getAngleToZ()));
-                    }
-                    //coutLogger->writeInfoEntry("raysForThisThread size is " + std::to_string(raysForThisThread->size()) + " " + std::to_string(activeThreads.load()));
-                    rets->at(j).rays = std::move(*raysForThisThread);
-                    rets->at(j).done = true;
-                    --activeThreads;
-                    return;
-                }, i);
-            } else {
-                i--;
-                std::this_thread::sleep_for(std::chrono::milliseconds(randab(4, 49)));
-            }
+                                                                  imgPlane_u->getAngleToZ()));
+                    //raysForThisThread->push_back(
+                    //    pixel.shootSkyScatteredRaysFromPixelFromImgPlate(planeNormVecR, sunlightSpectrum, &pixel,
+                    //    imgPlane_u->getAngleToZ()));
+                }
+                //coutLogger->writeInfoEntry("raysForThisThread size is " + std::to_string(raysForThisThread->size()) + " " + std::to_string(activeThreads.load()));
+                //rets->at(j).rays = std::move(*raysForThisThread);
+                rets->at(j).rays.insert(rets->at(j).rays.end(), raysForThisThread->begin(), raysForThisThread->end());
+                rets->at(j).done = true;
+                delete raysForThisThread;
+                --activeThreads;
+                return;
+            }, i);
+        } else {
+            i--;
+            std::this_thread::sleep_for(std::chrono::milliseconds(randab(4, 49)));
         }
     }
     for (auto &thread: threads) {

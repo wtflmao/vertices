@@ -33,7 +33,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
 #endif
 
     const auto& allFaces = field.getAllFaces();
-    for (auto it = constSubVec.first; it < constSubVec.second; ++it) {
+    for (auto it = constSubVec.first; it < constSubVec.second && idx == 0; ++it) {
         auto& ray = rays->at(it);
         ray.setAncestor(ray.getOrigin());
 
@@ -59,6 +59,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                     if (face_3->isBorderWall) continue;
                     if (auto intersection_other = theWay.mollerTrumboreIntersection(*face_3); NO_INTERSECT !=
                         intersection_other && face_3 != face) {
+                        //if (face_3->pointerToItemMTLDataset.d != 1.0) continue;
                         noOtherInTheWay = false;
                         break;
                     }
@@ -72,6 +73,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                     if (face_2->isBorderWall) continue;
                     if (auto intersection_seen = seenRay.mollerTrumboreIntersection(*face_2); NO_INTERSECT !=
                         intersection_seen && face_2 != face) {
+                        //if (face_2->pointerToItemMTLDataset.d != 1.0) continue;
                         seeable = false;
                         break;
                     }
@@ -98,13 +100,18 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                                                       scatters.end());
             }
     }
-    coutLogger->
-        writeInfoEntry("checker thread " + std::to_string(scatters_waiting_for_checking->size()) + " generated");
+
 
     int ray_iter_step = 1;
-    if (static_cast<int>(std::log10(scatters_waiting_for_checking->size())) < 4) ray_iter_step = 0;
+    if (idx != 0) {
+        delete scatters_waiting_for_checking;
+        scatters_waiting_for_checking = rays;
+    } else {
+        coutLogger->writeInfoEntry("checker thread " + std::to_string(scatters_waiting_for_checking->size()) + " generated");
+    }
+    if (static_cast<int>(std::log10(scatters_waiting_for_checking->size())) <= 4) ray_iter_step = 1;
     else ray_iter_step = static_cast<int>(std::floor(std::log10(scatters_waiting_for_checking->size())));
-    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += (ray_iter_step + 1) * (ray_iter_step + 1) + randab(1, 9)) {
+    for (auto it = 0; it < scatters_waiting_for_checking->size(); it += ray_iter_step) {
         auto& scat = scatters_waiting_for_checking->at(it);
         for (const auto& face : allFaces)
             if (auto intersection = scat.mollerTrumboreIntersection(*face); NO_INTERSECT != intersection) {
@@ -126,6 +133,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                     if (face_3->isBorderWall) continue;
                     if (auto intersection_other = theWay.mollerTrumboreIntersection(*face_3); NO_INTERSECT !=
                         intersection_other && face_3 != face) {
+                        //if (face_3->pointerToItemMTLDataset.d != 1.0) continue;
                         noOtherInTheWay = false;
                         break;
                     }
@@ -140,6 +148,7 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                     if (face_2->isBorderWall) continue;
                     if (auto intersection_seen = seenRay.mollerTrumboreIntersection(*face_2); NO_INTERSECT !=
                         intersection_seen && intersection_seen != intersection) {
+                        //if (face_2->pointerToItemMTLDataset.d != 1.0) continue;
                         seeable = false;
                         break;
                     }
@@ -163,10 +172,11 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                 //goodRays_per_thread->insert(goodRays_per_thread->end(), scatters.begin(), scatters.end());
             }
     }
-    delete scatters_waiting_for_checking;
+    if (idx == 0) delete scatters_waiting_for_checking;
     scatters_waiting_for_checking = nullptr;
 
-    ret->rays.reserve(goodRays_per_thread->size());
+    //ret->rays.reserve(goodRays_per_thread->size());
+    auto callerArg = new std::vector<Ray>();
     for (auto &rawR : *goodRays_per_thread) {
         bool f = false;
         for (auto &r : rawR.getMutIntensity_p()) {
@@ -175,11 +185,18 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
                 break;
             }
         }
-        if (f) ret->rays.push_back(rawR);
+        if (f) callerArg->push_back(rawR);
     }
     delete goodRays_per_thread;
-
-    ret->done = true;
+    goodRays_per_thread = nullptr;
+    if (idx == 0) {
+        //ret->rays.insert(ret->rays.end(), callerArg->begin(), callerArg->end());
+        checker(field, node_ptrs, callerArg, std::make_pair<int, int>(0, callerArg->size()), 1, ret, sunlightVecR, planeNormalVec);
+    } else {
+        ret->rays.insert(ret->rays.end(), callerArg->begin(), callerArg->end());
+        ret->done = true;
+    }
+    delete callerArg;
     std::ostringstream s;
     s << "checker thread " << std::this_thread::get_id() << " done with " << ret->rays.size() << " rays." <<
             constSubVec.first << " " << constSubVec.second;
@@ -397,7 +414,7 @@ int main(int argc, char* argv[]) {
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(C:\Users\root\Downloads\empty_brdf_debug.binary)");
     for (int i = 1; i <= 41; i++)
@@ -416,7 +433,7 @@ int main(int argc, char* argv[]) {
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/mycube/mycube_x32.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/human-fbx/2a36_01.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/pile-of-old-tires-fbx/895e_01.obj)");
-    for (int i = 91; i <= 41; i++)
+    for (int i = 1; i <= 41; i++)
         objPaths.emplace_back(R"(/home/20009100240/3dmodel/xiaomi_su7_towardsY/21b8_)" + (i/10 == 0 ? "0" + std::to_string(i) : std::to_string(i)) + R"(.obj)");
     objPaths.emplace_back(R"(/home/20009100240/3dmodel/hot_desert_biome_obj/source/CalidiousDesert_obj_-z_y.obj)");
 
@@ -432,10 +449,10 @@ int main(int argc, char* argv[]) {
     // and blue should always be the first, then green, then red, then shortwave infrared if possible
 
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
-    //BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
-    for (int i = 91; i <= 41; i++)
+    BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
+    for (int i = 1; i <= 41; i++)
         BRDFPaths.emplace_back(std::array<int, 2>{0, 0}, R"(/home/20009100240/3dmodel/BRDF/empty_brdf_debug.binary)");
     BRDFPaths.emplace_back(std::array<int, 2>{BLUE_UPPER, BLUE_LOWER},
                            R"(/home/20009100240/3dmodel/BRDF/debug.mini.459.479.txt)");
@@ -454,10 +471,10 @@ int main(int argc, char* argv[]) {
         Point(FIELD_LENGTH_X / 2.0, FIELD_LENGTH_Y / 2.0, CAMERA_HEIGHT * 1.732)
     );
     // cube #1
-    /*field.newClosedObject()
+    field.newClosedObject()
          .setOBJPath(objPaths.at(1))
          .setMTLPath(mtlPaths.at(1))
-         .setCenter({-14, 11, 4})
+         .setCenter({11, 11, 4})
          .setScaleFactor({3, 2, 4})
             .setForwardAxis(6)
             .setUpAxis(2)
@@ -471,7 +488,7 @@ int main(int argc, char* argv[]) {
             .readFromOBJ()
             .readFromMTL()
             .inspectNormalVecForAllFaces()
-    .verbose(field.getObjects().size());*/
+    .verbose(field.getObjects().size());
 
     // human
     field.newClosedObject()
@@ -501,11 +518,11 @@ int main(int argc, char* argv[]) {
 
     // xiaomi su7
     // its minX: -2.606214, maxX: 2.630939, minY: -0.029737, maxY: 1.435014, minZ: -1.100205, maxZ: 1.100205
-    for (auto i = 3+99; i <= 41 + 2; i++) {
+    for (auto i = 4; i <= 41 + 3; i++) {
         field.newClosedObject()
              .setOBJPath(objPaths.at(i))
              .setMTLPath(mtlPaths.at(3))
-             .setCenter({0, 0, 0})
+             .setCenter({8, -8, 0})
              .setScaleFactor({4.5, 4.5, -4.5})
              .setForwardAxis(6)
              .setUpAxis(2)
@@ -666,7 +683,7 @@ int main(int argc, char* argv[]) {
          .setForwardAxis(6)
          .setUpAxis(2)
          .setCenter({0, 0, 0})
-         .setScaleFactor({400, 400, 1})
+         .setScaleFactor({800, 800, 1})
          .setNoNormalReqFromObjFile()
          .setThatCorrectFaceVertices({598, 0, 1})
          .setThatCorrectFaceIndex(0)
@@ -837,15 +854,16 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    auto goodRays_tt = new std::vector<Ray>;
+    auto goodRays_t = new std::vector<Ray>;
     // actually after .join(), all rets should be done==true
     for (auto &[rays, done]: *rets) {
-        if (done) goodRays_tt->insert(goodRays_tt->end(), rays.begin(), rays.end());
+        if (done) goodRays_t->insert(goodRays_t->end(), rays.begin(), rays.end());
     }
     delete rets;
     subVectors.clear();
     threads.clear();
 
+    /*
     // again--------------------------------------------
     chunkSize = static_cast<int>(goodRays_tt->size() / threadAmount) + 1;
     rets = new std::vector<wrappedRays>();
@@ -883,7 +901,7 @@ int main(int argc, char* argv[]) {
     delete rets;
     delete goodRays_tt;
     subVectors.clear();
-    threads.clear();
+    threads.clear();*/
 
 #endif
 
@@ -934,27 +952,50 @@ int main(int argc, char* argv[]) {
     auto camPixelsBackup = std::make_shared<std::vector<std::vector<Pixel>>>(*camera.getPixel2D());
     // fetch max response per band
 
-    auto maxRespPerBand = std::vector<double>();
+    auto maxRespPerBand = std::vector<double>(spectralBands, 0.0f);
+    auto minRespPerBand = std::vector<double>(spectralBands, std::numeric_limits<double>::max());
+    auto sumRespPerBand = std::vector<double>(spectralBands, 0.0f);
     double maxRespOfAll = -1.0f;
-    for (int band = 0; band <= spectralBands; band += bandLength) {
+    double minRespOfAll = std::numeric_limits<double>::max();
+    for (int band = 0; band < spectralBands; band += bandLength) {
         //outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(band).size() * MUL);
-        maxRespPerBand.emplace_back(-1.0f);
         for (int i = 0; i < camera.getPixel2D()->size(); i++)
             for (const auto& j : (*camera.getPixel2D())[i]) {
-                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band / bandLength])
-                    maxRespPerBand[band / bandLength] = j.getPixelSpectralResp()[band];
+                if (j.getPixelSpectralResp()[band] > maxRespPerBand[band])
+                    maxRespPerBand[band] = j.getPixelSpectralResp()[band];
                 if (j.getPixelSpectralResp()[band] > maxRespOfAll)
                     maxRespOfAll = j.getPixelSpectralResp()[band];
+                if (j.getPixelSpectralResp()[band] < minRespPerBand[band])
+                    minRespPerBand[band] = j.getPixelSpectralResp()[band];
+                if (j.getPixelSpectralResp()[band] < minRespOfAll)
+                    minRespOfAll = j.getPixelSpectralResp()[band];
+                //sumRespPerBand[band] += j.getPixelSpectralResp()[band];
             }
         coutLogger->writeInfoEntry("Max resp at band[" + std::to_string(band) + "] :" + std::to_string(maxRespPerBand[
-            band / bandLength]));
+            band]));
     }
     // and add some "initial background light intensity" to every pixel
-    constexpr double baseIntensityPercentage = 0.1;
+    auto baseRespPerBand = std::vector<double>(spectralBands, 0.0f);
+    for (int band = 0; band < spectralBands; band += bandLength)
+        baseRespPerBand[band] = (maxRespPerBand[band] - minRespPerBand[band]) * 0.2f;
+
+    maxRespPerBand = std::vector<double>(spectralBands, 0.0f);
+    minRespPerBand = std::vector<double>(spectralBands, std::numeric_limits<double>::max());
+    maxRespOfAll = -1.0f;
+    minRespOfAll = std::numeric_limits<double>::max();
     for (auto& pixelRow : *camPixelsBackup)
         for (auto& pixel : pixelRow)
-            for (int band = 0; band < spectralBands; band += bandLength)
-                pixel.getMutPixelSpectralResp()[band] += baseIntensityPercentage * maxRespPerBand[band / bandLength];
+            for (int band = 0; band < spectralBands; band += bandLength) {
+                pixel.getMutPixelSpectralResp()[band] += baseRespPerBand[band];
+                if (pixel.getPixelSpectralResp()[band] > maxRespOfAll)
+                    maxRespOfAll = pixel.getPixelSpectralResp()[band];
+                if (pixel.getPixelSpectralResp()[band] < minRespOfAll)
+                    minRespOfAll = pixel.getPixelSpectralResp()[band];
+                if (pixel.getPixelSpectralResp()[band] > maxRespPerBand[band])
+                    maxRespPerBand[band] = pixel.getPixelSpectralResp()[band];
+                if (pixel.getPixelSpectralResp()[band] < minRespPerBand[band])
+                    minRespPerBand[band] = pixel.getPixelSpectralResp()[band];
+            }
 
     // here we make a copy of the original pixel vectors as we want to mix them up
     // then mix up neighboring pixel's intensity
@@ -975,21 +1016,19 @@ int main(int argc, char* argv[]) {
     for (int band = 0; band < spectralBands; band += bandLength)
         outputs->emplace_back(camera.getPixel2D()->size() * MUL, camera.getPixel2D()->at(0).size() * MUL);
 
-
-    const double newMaxRespOfAll = (1.0 + baseIntensityPercentage) * maxRespOfAll;
     for (int k = 0; k < spectralBands; k += bandLength) {
         printf("band%d:\n", k);
         auto testOutput = (*outputs)[k / bandLength];
         for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
             for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
-                const auto val = static_cast<std::uint8_t>(std::min(255.0, std::round(
+                const auto val = static_cast<std::uint8_t>(std::min(255.0, std::round(6.35 * std::pow(
                     ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k])
-                    / ((1.0 + baseIntensityPercentage ) * maxRespPerBand[k / bandLength]) * 0xff)));
+                    / (maxRespPerBand[k]) * 0xff, 0.67))));
                     /// ((1.0) * maxRespOfAll) * 0xff)));
                 for (int ii = i; ii < i + MUL; ii++)
                     for (int jj = j; jj < j + MUL; jj++)
                         testOutput.setPixel(ii, jj, grayscaleToRGB_int(val));
-                printf("%d%c", val, j == testOutput.getResolutionY() - 1 ? '\n' : ',');
+                printf("%d%c", val, j >= testOutput.getResolutionY() - MUL ? '\n' : ',');
             }
         }
         puts("");
