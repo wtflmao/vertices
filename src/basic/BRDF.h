@@ -58,7 +58,27 @@ public:
     // 0: undefined  1: ground(like grassland, desert, plateau)  2: objects (like ball, chair, car, rock)
     BRDFType type = BRDFType::Default;
 
+    std::array<double, spectralBands> R = {0.01};
+
+    std::array<double, spectralBands> G = {0.01};
+
+    std::array<double, spectralBands> B = {0.01};
+
     explicit BRDF(bool isOpen) noexcept;
+
+    BRDF& buildSpectrum(const std::string& a);
+
+    bool isSpectrumRBuilt = false;
+
+    bool isSpectrumGBuilt = false;
+
+    bool isSpectrumBBuilt = false;
+
+    void none(const double a) noexcept {
+        std::fill(R.begin(), R.end(), a);
+        std::fill(G.begin(), G.end(), a);
+        std::fill(B.begin(), B.end(), a);
+    };
 
     virtual ~BRDF() = default;
 

@@ -106,8 +106,10 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     if (idx != 0) {
         delete scatters_waiting_for_checking;
         scatters_waiting_for_checking = rays;
-    } else {
-        coutLogger->writeInfoEntry("checker thread " + std::to_string(scatters_waiting_for_checking->size()) + " generated");
+    }
+    else {
+        coutLogger->writeInfoEntry(
+            "checker thread " + std::to_string(scatters_waiting_for_checking->size()) + " generated");
     }
     if (static_cast<int>(std::log10(scatters_waiting_for_checking->size())) <= 4) ray_iter_step = 1;
     else ray_iter_step = static_cast<int>(std::floor(std::log10(scatters_waiting_for_checking->size())));
@@ -191,8 +193,10 @@ void checker(Field &field, const std::vector<std::shared_ptr<Node> > &node_ptrs,
     goodRays_per_thread = nullptr;
     if (idx == 0) {
         //ret->rays.insert(ret->rays.end(), callerArg->begin(), callerArg->end());
-        checker(field, node_ptrs, callerArg, std::make_pair<int, int>(0, callerArg->size()), 1, ret, sunlightVecR, planeNormalVec);
-    } else {
+        checker(field, node_ptrs, callerArg, std::make_pair<int, int>(0, callerArg->size()), 1, ret, sunlightVecR,
+                planeNormalVec);
+    }
+    else {
         ret->rays.insert(ret->rays.end(), callerArg->begin(), callerArg->end());
         ret->done = true;
     }
@@ -394,7 +398,7 @@ int main(int argc, char* argv[]) {
 
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.obj)");
-    objPaths.emplace_back(R"(C:\Users\root\3D Objects\human-fbx\2a36_01.obj)");
+    objPaths.emplace_back(R"(C:\Users\root\3D Objects\human-fbx\source\2a36_01.obj)");
     objPaths.emplace_back(R"(C:\Users\root\3D Objects\pile-of-old-tires-fbx\source\895e_01.obj)");
     for (int i = 1; i <= 41; i++)
         objPaths.emplace_back(
@@ -405,7 +409,7 @@ int main(int argc, char* argv[]) {
 
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\mycube\mycube_x32.mtl)");
-    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\human-fbx\human.mtl)");
+    mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\human-fbx\source\human.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\pile-of-old-tires-fbx\source\tires_-z_y.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\xiaomi_su7_fbx\objexport\groupByParts\su7_-z_yobj.mtl)");
     mtlPaths.emplace_back(R"(C:\Users\root\3D Objects\hot_desert_biome_obj\source\CalidiousDesert_obj_-z_y.obj)");
@@ -476,19 +480,19 @@ int main(int argc, char* argv[]) {
          .setMTLPath(mtlPaths.at(1))
          .setCenter({11, 11, 4})
          .setScaleFactor({3, 2, 4})
-            .setForwardAxis(6)
-            .setUpAxis(2)
+         .setForwardAxis(6)
+         .setUpAxis(2)
          .setNoNormalReqFromObjFile()
          // innerPoints should be in cube {-1, -1, -1}--{1, 1, 1}
          .setInnerPoints({
-                {-0.1, -0.1, -0.1},
-                {0.1, 0.1, 0.1},
-                {0, 0, 0}
-            })
-            .readFromOBJ()
-            .readFromMTL()
-            .inspectNormalVecForAllFaces()
-    .verbose(field.getObjects().size());
+             {-0.1, -0.1, -0.1},
+             {0.1, 0.1, 0.1},
+             {0, 0, 0}
+         })
+         .readFromOBJ()
+         .readFromMTL()
+         .inspectNormalVecForAllFaces()
+         .verbose(field.getObjects().size());
 
     // human
     field.newClosedObject()
@@ -755,6 +759,25 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    int bcnt = 0;
+    //cube, human, tire, xiaomisu7 * 41,cubewall, , ground
+    dynamic_cast<BRDF*>(field.brdfList.at(bcnt++))->buildSpectrum("r").buildSpectrum("g").buildSpectrum("b");
+    dynamic_cast<BRDF*>(field.brdfList.at(bcnt++))->buildSpectrum("r").buildSpectrum("g").buildSpectrum("b");
+    dynamic_cast<BRDF*>(field.brdfList.at(bcnt++))->buildSpectrum("r").buildSpectrum("g").buildSpectrum("b");
+    for (int iii = 0; iii < 41; iii++)
+        dynamic_cast<BRDF*>(field.brdfList.at(bcnt++))->buildSpectrum("r").buildSpectrum("g").buildSpectrum("b");
+    dynamic_cast<BRDF*>(field.brdfList.at(bcnt++))->none(1.0);
+    dynamic_cast<BRDF*>(field.brdfList.at(bcnt++))->buildSpectrum("r").buildSpectrum("g").buildSpectrum("b");
+
+    coutLogger->writeInfoEntry("aaa");
+    if (field.brdfList.size() != b_cnt) {
+        fprintf(stderr, "Error when initializing BRDFs. Reason: AAAAA not enough BRDFs in the list.\a\n");
+        return 63;
+    }
+
+
+
+
     // since brdf has been initialized, now asign every face with a pointer to a brdf that the owner item has
     // it's such a stupid design pattern i know, but there's no way back
     std::cout << "face's brdf initializing only for BVH..." << std::endl;
@@ -856,7 +879,7 @@ int main(int argc, char* argv[]) {
 
     auto goodRays_t = new std::vector<Ray>;
     // actually after .join(), all rets should be done==true
-    for (auto &[rays, done]: *rets) {
+    for (auto &[rays, done] : *rets) {
         if (done) goodRays_t->insert(goodRays_t->end(), rays.begin(), rays.end());
     }
     delete rets;
@@ -1018,12 +1041,25 @@ int main(int argc, char* argv[]) {
 
     for (int k = 0; k < spectralBands; k += bandLength) {
         printf("band%d:\n", k);
+        coutLogger->writeErrorEntry("band" + std::to_string(k) + ":");
+        coutLogger->writeErrorEntry("InImg:(71,332) (192,44) (257,200) (374,194) || (26,158) (210,166) (312,162) (220,233)");
         auto testOutput = (*outputs)[k / bandLength];
         for (int i = 0; i < testOutput.getResolutionX(); i += MUL) {
             for (int j = 0; j < testOutput.getResolutionY(); j += MUL) {
                 const auto val = static_cast<std::uint8_t>(std::min(255.0, std::round(6.35 * std::pow(
-                    ((*camera.getPixel2D())[i / MUL][j / MUL].getPixelSpectralResp()[k])
-                    / (maxRespPerBand[k]) * 0xff, 0.67))));
+                                                                        ((*camera.getPixel2D())[i / MUL][j / MUL].
+                                                                            getPixelSpectralResp()[k])
+                                                                        / (maxRespPerBand[k]) * 0xff, 0.67))));
+
+                if (i == 26*MUL && j == 158*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 71*MUL && j == 332*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 192*MUL && j == 44*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 210*MUL && j == 166*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 220*MUL && j == 233*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 257*MUL && j == 200*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 312*MUL && j == 162*MUL) coutLogger->writeErrorEntry(std::to_string(val) + ",");
+                if (i == 374*MUL && j == 194*MUL) coutLogger->writeErrorEntry(std::to_string(val) + "\n");
+
                     /// ((1.0) * maxRespOfAll) * 0xff)));
                 for (int ii = i; ii < i + MUL; ii++)
                     for (int jj = j; jj < j + MUL; jj++)

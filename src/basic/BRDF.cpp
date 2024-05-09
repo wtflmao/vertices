@@ -434,3 +434,76 @@ void ClosedBRDF::ClosedBRDFInsert(const char *pathToDataset) {
 }
 */
 
+BRDF& BRDF::buildSpectrum(const std::string &a) {
+    if (isSpectrumRBuilt && a == "r")
+        return *this;
+    if (isSpectrumGBuilt && a == "g")
+        return *this;
+    if (isSpectrumBBuilt && a == "b")
+        return *this;
+    if (a != "r" && a != "g" && a != "b") {
+        coutLogger->writeErrorEntry("Wrong spectrum type: " + a);
+        exit(888);
+    }
+    // sunlight energy distribution should be constant here
+    // source: MODTRAN
+    // final_height = 0.0, observer height: 0.2, observer zenith angle: 0
+    // sun zenith angle: 30, day of year: 173, aztmuth observer to sun: 180
+#ifdef _WIN32
+    //const std::string path = R"(..\data\)" + a + R"(.csv)";
+    const std::string path = R"(..\data\one.csv)";
+    FILE *fp = fopen(path.c_str(), "rt");
+    if (fp == nullptr) {
+        fprintf(stderr, "Cannot open %s\a\n", path.c_str());
+        exit(2);
+    }
+#else
+    //const std::string path = R"(./data/)" + a + R"(.csv)";
+    const std::string path = R"(./data/one.csv)";
+    FILE *fp = fopen(path.c_str(), "rt");
+    if (fp == nullptr) {
+        fprintf(stderr, "Cannot open %s\a\n", path.c_str());
+        exit(2);
+    }
+#endif
+    int waveLength_t = 0;
+    double totalRadiance_t = 0.0;
+    double maximumTotRad = 0.0;
+
+    std::map<int, double> spectrumMap_t;
+#ifdef _WIN32
+    while (fscanf_s(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
+        spectrumMap_t[waveLength_t] = totalRadiance_t * 100.0;
+    }
+#else
+    while (fscanf(fp, "%d,%lf", &waveLength_t, &totalRadiance_t) != EOF) {
+        spectrumMap_t[waveLength_t] = totalRadiance_t * 100.0;
+    }
+#endif
+
+    fclose(fp); // close
+    for (int i = UPPER_WAVELENGTH; i <= LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
+        if (spectrumMap_t[i] > maximumTotRad) {
+            maximumTotRad = spectrumMap_t[i];
+        }
+    }
+
+    int cnt = 0;
+    if (a == "r") {
+        for (int i = UPPER_WAVELENGTH; i < LOWER_WAVELENGTH; i += WAVELENGTH_STEP)
+            R[cnt++] = spectrumMap_t[i] / maximumTotRad;
+        isSpectrumRBuilt = true;
+        //std::cout << "Default R spectrum has been built." << std::endl;
+    } else if (a == "g") {
+        for (int i = UPPER_WAVELENGTH; i < LOWER_WAVELENGTH; i += WAVELENGTH_STEP)
+            G[cnt++] = spectrumMap_t[i] / maximumTotRad;
+        isSpectrumGBuilt = true;
+        //std::cout << "Default G spectrum has been built." << std::endl;
+    } else {
+        for (int i = UPPER_WAVELENGTH; i < LOWER_WAVELENGTH; i += WAVELENGTH_STEP)
+            B[cnt++] = spectrumMap_t[i] / maximumTotRad;
+        isSpectrumBBuilt = true;
+        //std::cout << "Default B spectrum has been built." << std::endl;
+    }
+    return *this;
+}

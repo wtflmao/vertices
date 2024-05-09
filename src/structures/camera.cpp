@@ -342,6 +342,10 @@ void Camera::buildSunlightSpectrum() {
     for (int i = UPPER_WAVELENGTH; i < LOWER_WAVELENGTH; i += WAVELENGTH_STEP) {
         sunlightSpectrum[cnt++] = sunlightSpectrumMap_t[i] / maximumTotRad;
     }
+    for (int i = 0; i < spectralBands; i++) {
+        printf("%f,", sunlightSpectrum[i]);
+    }
+    puts("");
     std::cout << "Default sunlight spectrum has been built." << std::endl;
 }
 
@@ -473,11 +477,11 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
             threads.emplace_back([&](int j) {
                 ++activeThreads;
                 auto raysForThisThread = new std::vector<Ray>;
-                for (auto &pixel: pixel2D->at(j)) {
+                for (auto& pixel : pixel2D->at(j)) {
                     for (int n = 0; n < multiplier; n++)
                         raysForThisThread->push_back(
                             pixel.shootRayFromPixelFromImgPlate(planeNormVec, sunlightSpectrum, &pixel,
-                                                                  imgPlane_u->getAngleToZ()));
+                                                                imgPlane_u->getAngleToZ()));
                     //raysForThisThread->push_back(
                     //    pixel.shootSkyScatteredRaysFromPixelFromImgPlate(planeNormVecR, sunlightSpectrum, &pixel,
                     //    imgPlane_u->getAngleToZ()));
@@ -490,7 +494,8 @@ std::vector<Ray> *Camera::shootRays(const int multiplier) const noexcept {
                 --activeThreads;
                 return;
             }, i);
-        } else {
+        }
+        else {
             i--;
             std::this_thread::sleep_for(std::chrono::milliseconds(randab(4, 49)));
         }
